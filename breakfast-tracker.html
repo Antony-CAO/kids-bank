@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>早餐经营记录</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background: #f5f5f5; padding: 12px; max-width: 480px; margin: 0 auto; }
+  
+  h1 { text-align: center; color: #e65100; font-size: 22px; margin-bottom: 16px; }
+  h2 { font-size: 16px; color: #333; margin: 16px 0 8px; border-left: 4px solid #e65100; padding-left: 8px; }
+
+  .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  
+  .date-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .date-row input[type=date] { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; }
+  
+  .item-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 40px; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .item-row input { padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; text-align: center; width: 100%; }
+  .item-row input[readonly] { background: #f5f5f5; color: #333; font-weight: bold; cursor: not-allowed; }
+  .item-row .name-input { text-align: left; }
+  .item-header { font-size: 12px; color: #999; padding: 0 8px; }
+  .delete-btn { background: #ff5252; color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 16px; cursor: pointer; }
+  
+  .btn { display: inline-block; padding: 10px 20px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; width: 100%; margin-top: 8px; }
+  .btn-primary { background: #e65100; color: #fff; }
+  .btn-success { background: #2e7d32; color: #fff; }
+  .btn-secondary { background: #fff; color: #e65100; border: 2px solid #e65100; }
+  .btn-small { padding: 6px 12px; font-size: 13px; width: auto; }
+  .btn + .btn { margin-top: 8px; }
+  
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-box { background: #fafafa; border-radius: 8px; padding: 10px; text-align: center; }
+  .stat-num { font-size: 22px; font-weight: bold; color: #e65100; }
+  .stat-label { font-size: 12px; color: #999; }
+  
+  .recommend { background: #fff3e0; border-left: 4px solid #e65100; padding: 10px 12px; border-radius: 0 8px 8px 0; margin-top: 8px; font-size: 14px; line-height: 1.6; }
+  .recommend strong { color: #e65100; }
+  
+  .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .history-table th { background: #f5f5f5; padding: 6px 4px; text-align: center; color: #666; }
+  .history-table td { padding: 6px 4px; text-align: center; border-bottom: 1px solid #eee; }
+  
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 12px; }
+  .tab { flex: 1; padding: 8px; text-align: center; background: #fff; border-radius: 8px; cursor: pointer; font-size: 14px; color: #999; }
+  .tab.active { background: #e65100; color: #fff; }
+  
+  .hidden { display: none !important; }
+  .tag-good { color: #2e7d32; font-weight: bold; }
+  .tag-warn { color: #f57f17; font-weight: bold; }
+  .tag-bad { color: #d32f2f; font-weight: bold; }
+  
+  .empty-tip { text-align: center; color: #ccc; padding: 32px 0; font-size: 14px; }
+  
+  input:focus { outline: none; border-color: #e65100; }
+</style>
+</head>
+<body>
+
+<h1>🥟 早餐经营记录</h1>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('record')">📝 记录</div>
+  <div class="tab" onclick="switchTab('analysis')">📊 分析</div>
+  <div class="tab" onclick="switchTab('history')">📋 历史</div>
+</div>
+
+<!-- 记录页 -->
+<div id="tab-record">
+  <div class="card">
+    <h2>今日记录</h2>
+    <div class="date-row">
+      <input type="date" id="record-date">
+      <button class="btn btn-small btn-secondary" onclick="setToday()">今天</button>
+    </div>
+
+    <div class="item-header item-row">
+      <div class="name-input">品类</div>
+      <div>备货</div>
+      <div>卖出</div>
+      <div>剩余<span style="font-size:10px;color:#999;margin-left:2px;">自动</span></div>
+      <div></div>
+    </div>
+    <div id="items-list"></div>
+    <button class="btn btn-secondary btn-small" onclick="addItem()">+ 添加品类</button>
+  </div>
+
+  <button class="btn btn-primary" onclick="saveRecord()">💾 保存今日记录</button>
+  <button class="btn btn-success" onclick="saveAndAnalyze()">💾 保存并查看分析</button>
+</div>
+
+<!-- 分析页 -->
+<div id="tab-analysis" class="hidden">
+  <div class="card">
+    <h2>📊 总体概况</h2>
+    <div class="stats-grid" id="overall-stats"></div>
+  </div>
+  <div class="card">
+    <h2>🍳 各品类分析</h2>
+    <div id="item-analysis"></div>
+  </div>
+  <div class="card">
+    <h2>💡 备货建议</h2>
+    <div id="recommendations"></div>
+  </div>
+</div>
+
+<!-- 历史页 -->
+<div id="tab-history" class="hidden">
+  <div class="card">
+    <h2>📋 历史记录</h2>
+    <div style="overflow-x:auto;">
+      <table class="history-table" id="history-table">
+        <thead><tr><th>日期</th><th>品类</th><th>备货</th><th>卖出</th><th>剩余</th><th>售罄率</th></tr></thead>
+        <tbody id="history-body"></tbody>
+      </table>
+    </div>
+    <div class="empty-tip" id="history-empty">暂无记录，去记录页添加吧～</div>
+    <button class="btn btn-small btn-secondary" onclick="exportData()" style="margin-top:12px;">📤 导出数据</button>
+    <button class="btn btn-small btn-secondary" onclick="document.getElementById('import-file').click()" style="margin-top:8px;">📥 导入数据</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="btn btn-small" style="background:#ff5252;color:#fff;margin-top:8px;" onclick="clearAll()">🗑️ 清空所有数据</button>
+  </div>
+</div>
+
+<script>
+let records = JSON.parse(localStorage.getItem('breakfast_records') || '[]');
+let items = JSON.parse(localStorage.getItem('breakfast_items') || '["包子","茶叶蛋","豆浆","玉米"]');
+
+function init() {
+  setToday();
+  renderItems();
+  renderHistory();
+  renderAnalysis();
+}
+
+function setToday() {
+  document.getElementById('record-date').value = new Date().toISOString().slice(0,10);
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('[id^=tab-]').forEach(t => t.classList.add('hidden'));
+  document.getElementById('tab-' + tab).classList.remove('hidden');
+  event.target.classList.add('active');
+  if (tab === 'analysis') renderAnalysis();
+  if (tab === 'history') renderHistory();
+}
+
+// 保存当前所有输入框的值（按品类名保存，不受索引变化影响）
+function saveInputs() {
+  const data = {};
+  items.forEach((item, i) => {
+    const prepEl = document.getElementById(`prep-${i}`);
+    const soldEl = document.getElementById(`sold-${i}`);
+    if (prepEl || soldEl) {
+      data[item] = {
+        prep: prepEl ? prepEl.value : '',
+        sold: soldEl ? soldEl.value : '',
+      };
+    }
+  });
+  return data;
+}
+
+// 恢复输入框的值（按品类名匹配）
+function restoreInputs(data) {
+  items.forEach((item, i) => {
+    if (data[item]) {
+      const prepEl = document.getElementById(`prep-${i}`);
+      const soldEl = document.getElementById(`sold-${i}`);
+      if (prepEl && data[item].prep) prepEl.value = data[item].prep;
+      if (soldEl && data[item].sold) soldEl.value = data[item].sold;
+      calcWaste(i);
+    }
+  });
+}
+
+function renderItems() {
+  const list = document.getElementById('items-list');
+  list.innerHTML = '';
+  items.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+      <input class="name-input" value="${item}" placeholder="品类名" onchange="items[${i}]=this.value;saveItems()">
+      <input type="number" id="prep-${i}" placeholder="备货" min="0" oninput="calcWaste(${i})">
+      <input type="number" id="sold-${i}" placeholder="卖出" min="0" oninput="calcWaste(${i})">
+      <input type="number" id="waste-${i}" placeholder="剩余" min="0" readonly>
+      <button class="delete-btn" onclick="removeItem(${i})">×</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function addItem() {
+  const saved = saveInputs();
+  items.push('新品');
+  saveItems();
+  renderItems();
+  restoreInputs(saved);
+}
+
+function removeItem(i) {
+  const saved = saveInputs();
+  items.splice(i, 1);
+  saveItems();
+  renderItems();
+  restoreInputs(saved);
+}
+
+function saveItems() {
+  localStorage.setItem('breakfast_items', JSON.stringify(items));
+}
+
+// 自动计算剩余 = 备货 - 卖出
+function calcWaste(i) {
+  const prep = parseInt(document.getElementById(`prep-${i}`).value) || 0;
+  const sold = parseInt(document.getElementById(`sold-${i}`).value) || 0;
+  const waste = Math.max(0, prep - sold);
+  document.getElementById(`waste-${i}`).value = (prep > 0) ? waste : '';
+}
+
+// 保存前自动计算所有品类的剩余
+function autoCalcAll() {
+  items.forEach((_, i) => calcWaste(i));
+}
+
+function saveRecord() {
+  // 先自动计算剩余
+  autoCalcAll();
+  
+  const date = document.getElementById('record-date').value;
+  if (!date) return alert('请选择日期！');
+  
+  const record = { date, items: [] };
+  let hasData = false;
+  
+  items.forEach((item, i) => {
+    const prep = parseInt(document.getElementById(`prep-${i}`).value) || 0;
+    const sold = parseInt(document.getElementById(`sold-${i}`).value) || 0;
+    const waste = parseInt(document.getElementById(`waste-${i}`).value) || 0;
+    if (prep || sold || waste) {
+      record.items.push({ name: item, prep, sold, waste });
+      hasData = true;
+    }
+  });
+  
+  if (!hasData) return alert('请至少填写一个品类的数量！');
+  
+  // 去重（同一天同品类覆盖）
+  records = records.filter(r => r.date !== date || !record.items.find(n => r.items.find(ri => ri.name === n.name)));
+  // 更简单：直接删除当天所有记录再添加
+  records = records.filter(r => r.date !== date);
+  records.push(record);
+  
+  localStorage.setItem('breakfast_records', JSON.stringify(records));
+  alert('✅ 保存成功！');
+  clearInputs();
+}
+
+function saveAndAnalyze() {
+  saveRecord();
+  setTimeout(() => { switchTab('analysis'); document.querySelectorAll('.tab')[1].click(); }, 100);
+}
+
+function clearInputs() {
+  items.forEach((_, i) => {
+    ['prep','sold','waste'].forEach(k => document.getElementById(`${k}-${i}`).value = '');
+  });
+}
+
+function renderAnalysis() {
+  if (records.length === 0) {
+    document.getElementById('overall-stats').innerHTML = '<div class="empty-tip">暂无数据，请先记录</div>';
+    document.getElementById('item-analysis').innerHTML = '';
+    document.getElementById('recommendations').innerHTML = '';
+    return;
+  }
+  
+  // 总体统计
+  let totalPrep = 0, totalSold = 0, totalWaste = 0;
+  const itemStats = {};
+  
+  records.forEach(r => {
+    r.items.forEach(it => {
+      totalPrep += it.prep;
+      totalSold += it.sold;
+      totalWaste += it.waste;
+      if (!itemStats[it.name]) itemStats[it.name] = { prep: 0, sold: 0, waste: 0, days: 0 };
+      itemStats[it.name].prep += it.prep;
+      itemStats[it.name].sold += it.sold;
+      itemStats[it.name].waste += it.waste;
+      itemStats[it.name].days++;
+    });
+  });
+  
+  const avgSold = Math.round(totalSold / records.length);
+  const sellRate = totalPrep ? Math.round(totalSold / totalPrep * 100) : 0;
+  const wasteRate = totalPrep ? Math.round(totalWaste / totalPrep * 100) : 0;
+  
+  document.getElementById('overall-stats').innerHTML = `
+    <div class="stat-box"><div class="stat-num">${records.length}</div><div class="stat-label">记录天数</div></div>
+    <div class="stat-box"><div class="stat-num">${avgSold}</div><div class="stat-label">日均销量(份)</div></div>
+    <div class="stat-box"><div class="stat-num">${sellRate}%</div><div class="stat-label">平均售罄率</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:${wasteRate>15?'#d32f2f':'#2e7d32'}">${wasteRate}%</div><div class="stat-label">平均浪费率</div></div>
+  `;
+  
+  // 各品类分析
+  let itemHtml = '';
+  for (const [name, stat] of Object.entries(itemStats)) {
+    const avgSoldItem = Math.round(stat.sold / stat.days);
+    const avgPrepItem = Math.round(stat.prep / stat.days);
+    const sellRateItem = stat.prep ? Math.round(stat.sold / stat.prep * 100) : 0;
+    const wasteRateItem = stat.prep ? Math.round(stat.waste / stat.prep * 100) : 0;
+    const recommend = Math.ceil(avgSoldItem * 1.2);
+    
+    let tag = '';
+    if (sellRateItem >= 95) tag = '<span class="tag-good">🔥 供不应求</span>';
+    else if (sellRateItem >= 80) tag = '<span class="tag-warn">✅ 正常</span>';
+    else if (sellRateItem >= 60) tag = '<span class="tag-warn">⚠️ 备货偏多</span>';
+    else tag = '<span class="tag-bad">❌ 严重过剩</span>';
+    
+    itemHtml += `
+      <div class="card" style="margin-bottom:8px;padding:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong>${name}</strong> ${tag}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-top:8px;font-size:13px;text-align:center;">
+          <div><div style="color:#999;">日均备货</div><div>${avgPrepItem}</div></div>
+          <div><div style="color:#999;">日均卖出</div><div>${avgSoldItem}</div></div>
+          <div><div style="color:#999;">售罄率</div><div>${sellRateItem}%</div></div>
+          <div><div style="color:#999;">浪费率</div><div style="color:${wasteRateItem>15?'#d32f2f':'inherit'}">${wasteRateItem}%</div></div>
+        </div>
+        <div class="recommend" style="margin-top:8px;">
+          💡 <strong>建议备货量：${recommend}份</strong>（日均销量×1.2）
+        </div>
+      </div>
+    `;
+  }
+  document.getElementById('item-analysis').innerHTML = itemHtml;
+  
+  // 建议
+  let recHtml = '';
+  for (const [name, stat] of Object.entries(itemStats)) {
+    const sellRateItem = stat.prep ? Math.round(stat.sold / stat.prep * 100) : 0;
+    const avgSoldItem = Math.round(stat.sold / stat.days);
+    if (sellRateItem >= 95) {
+      recHtml += `<div class="recommend">🔥 <strong>${name}</strong>：供不应求！建议增加备货至 <strong>${Math.ceil(avgSoldItem * 1.4)}份</strong>，或增加品类。</div>`;
+    } else if (sellRateItem < 70) {
+      recHtml += `<div class="recommend">⚠️ <strong>${name}</strong>：浪费较多，建议减少备货至 <strong>${Math.ceil(avgSoldItem * 1.1)}份</strong>。</div>`;
+    }
+  }
+  if (!recHtml) recHtml = '<div class="recommend">✅ 各品类备货合理，继续保持！</div>';
+  document.getElementById('recommendations').innerHTML = recHtml;
+}
+
+function renderHistory() {
+  const tbody = document.getElementById('history-body');
+  const empty = document.getElementById('history-empty');
+  tbody.innerHTML = '';
+  
+  if (records.length === 0) { empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  
+  // 展平所有记录
+  const rows = [];
+  records.forEach(r => {
+    r.items.forEach(it => {
+      const rate = it.prep ? Math.round(it.sold / it.prep * 100) + '%' : '-';
+      rows.push(`<tr><td>${r.date}</td><td>${it.name}</td><td>${it.prep}</td><td>${it.sold}</td><td>${it.waste}</td><td>${rate}</td></tr>`);
+    });
+  });
+  tbody.innerHTML = rows.join('');
+}
+
+function exportData() {
+  const data = JSON.stringify({ records, items }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `早餐记录_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.records) records = data.records;
+      if (data.items) items = data.items;
+      localStorage.setItem('breakfast_records', JSON.stringify(records));
+      localStorage.setItem('breakfast_items', JSON.stringify(items));
+      renderItems();
+      alert('✅ 导入成功！');
+    } catch(err) {
+      alert('❌ 文件格式错误！');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function clearAll() {
+  if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+    localStorage.removeItem('breakfast_records');
+    records = [];
+    renderHistory();
+    renderAnalysis();
+    alert('已清空');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
