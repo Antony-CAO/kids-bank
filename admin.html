@@ -306,11 +306,11 @@ function renderAdmin() {
         <div class="avatar">🧒</div>
         <div class="info">
           <div class="name">${u.name}</div>
-          <div class="status">${u.activated ? '✅ 已激活' : '❌ 未激活'}</div>
+          <div class="status">${u.activated ? '✅ 已激活' : '❌ 未激活'} | 🎫 ${u.activateCode}</div>
         </div>
         <div class="balance">¥${u.balance}</div>
         <div class="actions">
-          ${!u.activated ? `<button class="btn-copy" onclick="showCode('${u.id}')">🎫</button>` : ''}
+          <button class="btn-copy" onclick="showCode('${u.id}')">🎫</button>
           <button class="btn-edit" onclick="selectWanzi('${u.id}')">📋</button>
           <button class="btn-del" onclick="deleteWanzi('${u.id}')">🗑</button>
         </div>
