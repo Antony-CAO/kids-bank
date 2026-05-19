@@ -10,6 +10,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;backg
 h1{text-align:center;font-size:26px;margin-bottom:4px}
 .subtitle{text-align:center;color:#999;font-size:13px;margin-bottom:16px}
 .card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.login-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#e0f7fa,#fff9c4);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
+.login-box{background:#fff;border-radius:20px;padding:32px 24px;width:85%;max-width:320px;box-shadow:0 4px 24px rgba(0,0,0,.15)}
+.login-box h2{text-align:center;margin-bottom:20px;font-size:20px}
+.login-box input{width:100%;padding:12px;border:2px solid #eee;border-radius:12px;font-size:16px;margin-bottom:12px;text-align:center}
+.login-box input:focus{outline:none;border-color:#1565c0}
+.login-btn{width:100%;padding:14px;background:#1565c0;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:8px}
+.login-btn:active{transform:scale(.98)}
+.login-tip{text-align:center;font-size:12px;color:#999;margin-top:16px;line-height:1.6}
+.login-tip a{color:#1565c0;text-decoration:none}
 
 /* 余额卡片 */
 .balance-card{background:linear-gradient(135deg,#1565c0,#42a5f5);color:#fff;text-align:center;padding:24px 16px}
@@ -23,12 +32,13 @@ h1{text-align:center;font-size:26px;margin-bottom:4px}
 
 /* 操作按钮 */
 .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.action-btn{padding:14px 0;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;color:#fff;transition:transform .1s}
+.action-btn{padding:14px 0;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;color:#fff;transition:transform .1s;display:flex;align-items:center;justify-content:center;gap:6px}
 .action-btn:active{transform:scale(.96)}
 .btn-deposit{background:linear-gradient(135deg,#2e7d32,#66bb6a)}
 .btn-withdraw{background:linear-gradient(135deg,#c62828,#ef5350)}
 .btn-interest{background:linear-gradient(135deg,#e65100,#ffa726)}
 .btn-goal{background:linear-gradient(135deg,#6a1b9a,#ab47bc)}
+.btn-logout{background:#78909c;grid-column:span 2;font-size:13px;padding:10px}
 
 /* 弹窗 */
 .modal-mask{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:999}
@@ -44,6 +54,12 @@ h1{text-align:center;font-size:26px;margin-bottom:4px}
 .modal .btn-cancel{flex:1;padding:10px;border:2px solid #ddd;background:#fff;border-radius:10px;font-size:15px;cursor:pointer}
 .modal .btn-confirm{flex:1;padding:10px;border:none;border-radius:10px;font-size:15px;font-weight:bold;color:#fff;cursor:pointer}
 .hidden{display:none!important}
+
+/* 用户只能看的按钮样式 */
+.view-only .action-btn{opacity:.5;pointer-events:none}
+.view-only .task-check{pointer-events:auto}
+.view-only .task-del{display:none}
+.view-only .setting-row input,.view-only .setting-row button{display:none}
 
 /* 利息说明 */
 .interest-info{background:#fff8e1;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.8;color:#e65100;margin-top:12px}
@@ -67,10 +83,17 @@ h1{text-align:center;font-size:26px;margin-bottom:4px}
 .task-card .task-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;background:#fff}
 .task-card .task-info{flex:1;min-width:0}
 .task-card .task-name{font-size:15px;font-weight:600;color:#333}
-.task-card .task-desc{font-size:11px;color:#999;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task-card .task-desc{font-size:11px;color:#999;margin-top:2px}
 .task-card .task-amount{font-size:18px;font-weight:800;color:#2e7d32;flex-shrink:0}
 .task-card .task-check{width:28px;height:28px;border-radius:50%;border:3px solid #2e7d32;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:14px;background:transparent;cursor:pointer;transition:all .2s}
 .task-card .task-check:active{background:#2e7d32;transform:scale(.9)}
+.task-card .task-check:disabled{background:#2e7d32;border-color:#2e7d32;opacity:.5}
+.task-del{width:24px;height:24px;border-radius:50%;border:none;background:#ffcdd2;color:#c62828;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
+
+/* 今日打卡 */
+.today-badge{display:inline-block;background:#2e7d32;color:#fff;font-size:11px;padding:2px 8px;border-radius:20px;margin-left:4px}
+.task-today-done{opacity:.5}
+.task-today-done .task-check{background:#2e7d32;border-color:#2e7d32}
 
 /* 奖励明细 */
 .reward-list{max-height:300px;overflow-y:auto}
@@ -81,23 +104,6 @@ h1{text-align:center;font-size:26px;margin-bottom:4px}
 .reward-time{font-size:11px;color:#bbb}
 .reward-amount{font-size:16px;font-weight:bold;color:#2e7d32;flex-shrink:0}
 
-/* 交易记录 */
-.tx-list{max-height:300px;overflow-y:auto}
-.tx-item{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5;gap:10px}
-.tx-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.tx-icon.deposit{background:#e8f5e9}
-.tx-icon.withdraw{background:#ffebee}
-.tx-icon.interest{background:#fff3e0}
-.tx-icon.reward{background:#fce4ec}
-.tx-info{flex:1;min-width:0}
-.tx-title{font-size:14px;font-weight:500}
-.tx-time{font-size:11px;color:#bbb}
-.tx-amount{font-size:16px;font-weight:bold}
-.tx-amount.plus{color:#2e7d32}
-.tx-amount.minus{color:#c62828}
-
-.empty-tip{text-align:center;color:#ccc;padding:24px 0;font-size:14px}
-
 /* 统计卡片 */
 .stat-row{display:flex;gap:8px;margin-bottom:12px}
 .stat-card{flex:1;background:#f5f5f5;border-radius:12px;padding:12px 8px;text-align:center}
@@ -107,99 +113,149 @@ h1{text-align:center;font-size:26px;margin-bottom:4px}
 .stat-card.red .stat-num{color:#c62828}
 .stat-card.orange .stat-num{color:#e65100}
 
-/* 今日打卡 */
-.today-badge{display:inline-block;background:#2e7d32;color:#fff;font-size:11px;padding:2px 8px;border-radius:20px;margin-left:4px}
-.task-today-done{opacity:.5}
-.task-today-done .task-check{background:#2e7d32;border-color:#2e7d32}
+/* 交易记录 */
+.tx-list{max-height:300px;overflow-y:auto}
+.tx-item{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5;gap:10px}
+.tx-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.tx-info{flex:1;min-width:0}
+.tx-title{font-size:14px;font-weight:500}
+.tx-time{font-size:11px;color:#bbb}
+.tx-amount{font-size:16px;font-weight:bold}
+.tx-amount.plus{color:#2e7d32}
+.tx-amount.minus{color:#c62828}
 
-/* 管理任务的小按钮 */
-.task-del{width:24px;height:24px;border-radius:50%;border:none;background:#ffcdd2;color:#c62828;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
+.empty-tip{text-align:center;color:#ccc;padding:24px 0;font-size:14px}
 
 /* 设置 */
 .setting-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5;font-size:14px}
-.setting-row input[type=number],.setting-row input[type=text]{width:100px;padding:6px;border:1px solid #ddd;border-radius:8px;text-align:center;font-size:14px}
+.setting-row input[type=number],.setting-row input[type=text],.setting-row input[type=password]{width:100px;padding:6px;border:1px solid #ddd;border-radius:8px;text-align:center;font-size:14px}
+
+/* 顶部管理员切换 */
+.admin-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f5f5f5;border-radius:12px;margin-bottom:12px;font-size:13px}
+.admin-bar .mode{font-weight:bold;color:#1565c0}
+.admin-bar .switch-btn{color:#1565c0;cursor:pointer;text-decoration:underline}
 </style>
 </head>
 <body>
 
-<h1>🏦 我的小银行</h1>
-<div class="subtitle" id="greeting">好好学习，天天存钱！</div>
-
-<!-- 余额卡片 -->
-<div class="card balance-card">
-  <div class="balance-label">💰 总余额</div>
-  <div class="balance-amount" id="balance">¥0</div>
-  <div class="balance-sub">存款 ¥<span id="savings">0</span> ｜ 可花费 ¥<span id="spendable">0</span> ｜ 奖励收入 ¥<span id="total-reward">0</span></div>
-  <div class="balance-row">
-    <div><div class="num" id="total-deposit">0</div><div class="lbl">总存入</div></div>
-    <div><div class="num" id="total-withdraw">0</div><div class="lbl">总取出</div></div>
-    <div><div class="num" id="total-interest">0</div><div class="lbl">总利息</div></div>
-  </div>
-</div>
-
-<!-- 奖励任务区 -->
-<div class="card">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-    <h3 style="font-size:16px;">🎁 每日任务 <span class="today-badge" id="today-count">今日0项</span></h3>
-    <button style="padding:6px 14px;background:#1565c0;color:#fff;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-weight:bold;" onclick="openModal('addTask')">+ 新任务</button>
-  </div>
-  <div id="task-list"></div>
-  <div class="empty-tip hidden" id="task-empty">还没有任务，点「+ 新任务」添加吧！</div>
-</div>
-
-<!-- 操作区 -->
-<div class="card">
-  <div class="action-grid">
-    <button class="action-btn btn-deposit" onclick="openModal('deposit')">📥 存钱</button>
-    <button class="action-btn btn-withdraw" onclick="openModal('withdraw')">📤 取钱</button>
-    <button class="action-btn btn-interest" onclick="openModal('interest')">💰 领利息</button>
-    <button class="action-btn btn-goal" onclick="openModal('goal')">🎯 设目标</button>
-  </div>
-  <div class="interest-info">
-    💡 <strong>利息规则：</strong>存款利率每月 <strong id="rate-display">5%</strong>，存入的钱每满30天可领一次利息～
-  </div>
-  <div class="goal-section hidden" id="goal-section">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:14px;font-weight:bold;">🎯 储蓄目标</span>
-      <span style="font-size:12px;color:#999;cursor:pointer;" onclick="openModal('goal')">修改</span>
+<!-- 登录界面 -->
+<div class="login-screen" id="loginScreen">
+  <div style="font-size:48px;margin-bottom:16px;">🏦</div>
+  <div class="login-box">
+    <h2>🏦 我的小银行</h2>
+    <input type="password" id="loginPass" placeholder="请输入密码" style="text-align:center;">
+    <button class="login-btn" onclick="doLogin()">进入</button>
+    <div class="login-tip">
+      默认密码：<strong>1234</strong><br>
+      <a href="#" onclick="showSetPass()">修改密码</a>
     </div>
-    <div class="goal-bar-bg"><div class="goal-bar-fill" id="goal-bar" style="width:0%">0%</div></div>
-    <div class="goal-text" id="goal-text"></div>
   </div>
 </div>
 
-<!-- 记录 Tab -->
-<div class="card">
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(this,'tx')">📋 记录</button>
-    <button class="tab-btn" onclick="switchTab(this,'reward')">🎁 奖励明细</button>
-    <button class="tab-btn" onclick="switchTab(this,'settings')">⚙️ 设置</button>
-  </div>
-  <div id="tab-tx">
-    <div class="tx-list" id="tx-list"><div class="empty-tip">还没有交易记录</div></div>
-  </div>
-  <div id="tab-reward" class="hidden">
-    <div class="stat-row">
-      <div class="stat-card green"><div class="stat-num" id="stat-reward-total">¥0</div><div class="stat-label">累计奖励</div></div>
-      <div class="stat-card orange"><div class="stat-num" id="stat-reward-today">¥0</div><div class="stat-label">今日奖励</div></div>
-      <div class="stat-card"><div class="stat-num" id="stat-reward-days">0</div><div class="stat-label">打卡天数</div></div>
+<!-- 修改密码弹窗 -->
+<div class="modal-mask hidden" id="modal-setPass">
+  <div class="modal">
+    <h3>🔐 修改密码</h3>
+    <label>新密码</label>
+    <input type="password" id="newPass1" placeholder="输入新密码">
+    <label>确认密码</label>
+    <input type="password" id="newPass2" placeholder="再次输入">
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="closeModal('setPass')">取消</button>
+      <button class="btn-confirm" style="background:#1565c0;" onclick="savePassword()">保存</button>
     </div>
-    <div class="reward-list" id="reward-list"><div class="empty-tip">还没有奖励记录</div></div>
-  </div>
-  <div id="tab-settings" class="hidden">
-    <div class="setting-row"><span>📊 存款利率（月%）</span><input type="number" id="set-rate" value="5" min="0" max="100" onchange="updateRate()"></div>
-    <div class="setting-row"><span>👦 孩子名字</span><input type="text" id="set-name" value="宝贝" onchange="updateName()"></div>
-    <div class="setting-row"><span>🗑️ 清空所有数据</span><button style="padding:6px 12px;background:#ff5252;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;" onclick="clearAll()">清空</button></div>
-    <div style="margin-top:12px;display:flex;gap:8px;">
-      <button class="btn-cancel" style="flex:1;padding:8px;" onclick="exportData()">📤 导出备份</button>
-      <button class="btn-cancel" style="flex:1;padding:8px;" onclick="document.getElementById('import-file').click()">📥 导入备份</button>
-      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
-    </div>
-    <div style="font-size:11px;color:#999;margin-top:8px;line-height:1.6;">💡 建议每月导出一次备份，保存到微信或手机里。</div>
   </div>
 </div>
 
-<!-- 弹窗：添加任务 -->
+<!-- 主界面 -->
+<div id="mainApp" class="hidden">
+  <h1>🏦 我的小银行</h1>
+  <div class="subtitle" id="greeting">好好学习，天天存钱！</div>
+
+  <!-- 管理员切换 -->
+  <div class="admin-bar">
+    <span class="mode" id="modeDisplay">👤 用户模式</span>
+    <span class="switch-btn" id="switchMode" onclick="switchMode()">切换为管理员</span>
+  </div>
+
+  <!-- 余额卡片 -->
+  <div class="card balance-card">
+    <div class="balance-label">💰 总余额</div>
+    <div class="balance-amount" id="balance">¥0</div>
+    <div class="balance-sub">存款 ¥<span id="savings">0</span> ｜ 可花费 ¥<span id="spendable">0</span> ｜ 奖励收入 ¥<span id="total-reward">0</span></div>
+    <div class="balance-row">
+      <div><div class="num" id="total-deposit">0</div><div class="lbl">总存入</div></div>
+      <div><div class="num" id="total-withdraw">0</div><div class="lbl">总取出</div></div>
+      <div><div class="num" id="total-interest">0</div><div class="lbl">总利息</div></div>
+    </div>
+  </div>
+
+  <!-- 奖励任务区 -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <h3 style="font-size:16px;">🎁 每日任务 <span class="today-badge" id="today-count">今日0项</span></h3>
+      <button style="padding:6px 14px;background:#1565c0;color:#fff;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-weight:bold;display:none;" class="admin-only" onclick="openModal('addTask')">+ 新任务</button>
+    </div>
+    <div id="task-list"></div>
+    <div class="empty-tip hidden" id="task-empty">还没有任务，点「+ 新任务」添加吧！</div>
+  </div>
+
+  <!-- 操作区 -->
+  <div class="card" id="actionCard">
+    <div class="action-grid">
+      <button class="action-btn btn-deposit" onclick="openModal('deposit')">📥 存钱</button>
+      <button class="action-btn btn-withdraw" onclick="openModal('withdraw')">📤 取钱</button>
+      <button class="action-btn btn-interest" onclick="openModal('interest')">💰 领利息</button>
+      <button class="action-btn btn-goal" onclick="openModal('goal')">🎯 设目标</button>
+      <button class="action-btn btn-logout" onclick="logout()">🚪 退出登录</button>
+    </div>
+    <div class="interest-info">
+      💡 <strong>利息规则：</strong>存款利率每月 <strong id="rate-display">5%</strong>，存入的钱每满30天可领一次利息～
+    </div>
+    <div class="goal-section hidden" id="goal-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:14px;font-weight:bold;">🎯 储蓄目标</span>
+        <span style="font-size:12px;color:#999;cursor:pointer;" onclick="openModal('goal')">修改</span>
+      </div>
+      <div class="goal-bar-bg"><div class="goal-bar-fill" id="goal-bar" style="width:0%">0%</div></div>
+      <div class="goal-text" id="goal-text"></div>
+    </div>
+  </div>
+
+  <!-- 记录 Tab -->
+  <div class="card">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'tx')">📋 记录</button>
+      <button class="tab-btn" onclick="switchTab(this,'reward')">🎁 奖励明细</button>
+      <button class="tab-btn" onclick="switchTab(this,'settings')">⚙️ 设置</button>
+    </div>
+    <div id="tab-tx">
+      <div class="tx-list" id="tx-list"><div class="empty-tip">还没有交易记录</div></div>
+    </div>
+    <div id="tab-reward" class="hidden">
+      <div class="stat-row">
+        <div class="stat-card green"><div class="stat-num" id="stat-reward-total">¥0</div><div class="stat-label">累计奖励</div></div>
+        <div class="stat-card orange"><div class="stat-num" id="stat-reward-today">¥0</div><div class="stat-label">今日奖励</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-reward-days">0</div><div class="stat-label">打卡天数</div></div>
+      </div>
+      <div class="reward-list" id="reward-list"><div class="empty-tip">还没有奖励记录</div></div>
+    </div>
+    <div id="tab-settings" class="hidden">
+      <div class="setting-row admin-only"><span>📊 存款利率（月%）</span><input type="number" id="set-rate" value="5" min="0" max="100" onchange="updateRate()"></div>
+      <div class="setting-row"><span>👦 孩子名字</span><input type="text" id="set-name" value="宝贝" onchange="updateName()"></div>
+      <div class="setting-row admin-only"><span>🔐 修改登录密码</span><button style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;" onclick="showSetPass()">修改</button></div>
+      <div class="setting-row admin-only"><span>🗑️ 清空所有数据</span><button style="padding:6px 12px;background:#ff5252;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;" onclick="clearAll()">清空</button></div>
+      <div style="margin-top:12px;display:flex;gap:8px;" class="admin-only">
+        <button class="btn-cancel" style="flex:1;padding:8px;" onclick="exportData()">📤 导出备份</button>
+        <button class="btn-cancel" style="flex:1;padding:8px;" onclick="document.getElementById('import-file').click()">📥 导入备份</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+      <div style="font-size:11px;color:#999;margin-top:8px;line-height:1.6;" class="admin-only">💡 建议每月导出一次备份，保存到微信或手机里。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗们 -->
 <div class="modal-mask hidden" id="modal-addTask">
   <div class="modal">
     <h3>➕ 添加奖励任务</h3>
@@ -216,7 +272,6 @@ h1{text-align:center;font-size:26px;margin-bottom:4px}
   </div>
 </div>
 
-<!-- 弹窗：存钱 -->
 <div class="modal-mask hidden" id="modal-deposit">
   <div class="modal">
     <h3>📥 存钱</h3>
@@ -231,7 +286,6 @@ h1{text-align:center;font-size:26px;margin-bottom:4px}
   </div>
 </div>
 
-<!-- 弹窗：取钱 -->
 <div class="modal-mask hidden" id="modal-withdraw">
   <div class="modal">
     <h3>📤 取钱</h3>
@@ -246,7 +300,6 @@ h1{text-align:center;font-size:26px;margin-bottom:4px}
   </div>
 </div>
 
-<!-- 弹窗：领利息 -->
 <div class="modal-mask hidden" id="modal-interest">
   <div class="modal">
     <h3>💰 领取利息</h3>
@@ -262,7 +315,6 @@ h1{text-align:center;font-size:26px;margin-bottom:4px}
   </div>
 </div>
 
-<!-- 弹窗：设目标 -->
 <div class="modal-mask hidden" id="modal-goal">
   <div class="modal">
     <h3>🎯 设储蓄目标</h3>
@@ -279,14 +331,17 @@ h1{text-align:center;font-size:26px;margin-bottom:4px}
 
 <script>
 const TODAY = new Date().toISOString().slice(0,10);
+const ADMIN_PASS = '1234'; // 默认管理员密码
+let isAdmin = false;
 
 let data = JSON.parse(localStorage.getItem('kids_bank_v2') || 'null') || {
+  password: '1234',
+  isAdminMode: false,
   balance: 0, savings: 0, spendable: 0,
   totalDeposit: 0, totalWithdraw: 0, totalInterest: 0, totalReward: 0,
   rate: 5, childName: '宝贝', goal: null,
   deposits: [], transactions: [], rewards: [],
   lastInterestDate: null,
-  // 新增：任务系统
   tasks: [
     { id: 1, name: '完成作业', amount: 5, icon: '📚' },
     { id: 2, name: '阅读30分钟', amount: 3, icon: '📖' },
@@ -295,18 +350,92 @@ let data = JSON.parse(localStorage.getItem('kids_bank_v2') || 'null') || {
     { id: 5, name: '静坐冥想', amount: 2, icon: '🧘' },
   ],
   nextTaskId: 6,
-  dailyCheck: {},  // { "2026-05-19": { taskId: true, ... } }
+  dailyCheck: {},
 };
 
 function save() { localStorage.setItem('kids_bank_v2', JSON.stringify(data)); }
 function getToday() { return data.dailyCheck[TODAY] || {}; }
 function timeStr() { const n=new Date(); return `${n.getMonth()+1}/${n.getDate()} ${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`; }
 
+// ===== 登录系统 =====
+function doLogin() {
+  const pass = document.getElementById('loginPass').value;
+  if (pass === data.password || pass === ADMIN_PASS) {
+    isAdmin = (pass !== '1234' || data.password === '1234');
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    init();
+  } else {
+    alert('密码错误！');
+  }
+}
+
+function logout() {
+  document.getElementById('mainApp').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginPass').value = '';
+}
+
+function switchMode() {
+  if (isAdmin) {
+    isAdmin = false;
+    document.getElementById('modeDisplay').textContent = '👤 用户模式';
+    document.getElementById('switchMode').textContent = '切换为管理员';
+    document.getElementById('actionCard').classList.add('view-only');
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+  } else {
+    const pass = prompt('请输入管理员密码：');
+    if (pass === data.password || pass === ADMIN_PASS) {
+      isAdmin = true;
+      document.getElementById('modeDisplay').textContent = '🔧 管理员模式';
+      document.getElementById('switchMode').textContent = '切换为用户';
+      document.getElementById('actionCard').classList.remove('view-only');
+      document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    } else {
+      alert('密码错误！');
+    }
+  }
+  render();
+}
+
+function showSetPass() {
+  if (!isAdmin) {
+    const pass = prompt('请先输入管理员密码：');
+    if (pass !== data.password && pass !== ADMIN_PASS) return alert('密码错误！');
+  }
+  openModal('setPass');
+}
+
+function savePassword() {
+  const p1 = document.getElementById('newPass1').value;
+  const p2 = document.getElementById('newPass2').value;
+  if (!p1) return alert('请输入新密码！');
+  if (p1 !== p2) return alert('两次密码不一致！');
+  data.password = p1;
+  save();
+  closeModal('setPass');
+  alert('✅ 密码已修改！');
+}
+
+// ===== 初始化 =====
 function init() {
   document.getElementById('set-rate').value = data.rate;
   document.getElementById('set-name').value = data.childName;
   document.getElementById('rate-display').textContent = data.rate + '%';
   if (data.childName) document.getElementById('greeting').textContent = `${data.childName}，好好学习，天天存钱！`;
+  
+  // 根据模式显示/隐藏
+  if (!isAdmin) {
+    document.getElementById('modeDisplay').textContent = '👤 用户模式';
+    document.getElementById('switchMode').textContent = '切换为管理员';
+    document.getElementById('actionCard').classList.add('view-only');
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+  } else {
+    document.getElementById('modeDisplay').textContent = '🔧 管理员模式';
+    document.getElementById('switchMode').textContent = '切换为用户';
+    document.getElementById('actionCard').classList.remove('view-only');
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+  }
   render();
 }
 
@@ -331,7 +460,6 @@ function renderTasks() {
   const empty = document.getElementById('task-empty');
   const today = getToday();
   const todayCount = Object.keys(today).length;
-
   document.getElementById('today-count').textContent = `今日${todayCount}项`;
 
   if (data.tasks.length === 0) {
@@ -340,7 +468,6 @@ function renderTasks() {
     return;
   }
   empty.classList.add('hidden');
-
   container.innerHTML = data.tasks.map(t => {
     const done = today[t.id];
     return `
@@ -352,7 +479,7 @@ function renderTasks() {
         </div>
         <div class="task-amount">+¥${t.amount}</div>
         <button class="task-check" onclick="claimReward(${t.id})" ${done ? 'disabled' : ''}>✓</button>
-        <button class="task-del" onclick="deleteTask(${t.id})" title="删除">✕</button>
+        ${isAdmin ? `<button class="task-del" onclick="deleteTask(${t.id})" title="删除">✕</button>` : ''}
       </div>
     `;
   }).join('');
@@ -364,7 +491,6 @@ function claimReward(taskId) {
   const task = data.tasks.find(t => t.id === taskId);
   if (!task) return;
 
-  // 领取奖励：加钱+记录
   data.balance += task.amount;
   data.spendable += task.amount;
   data.totalReward += task.amount;
@@ -373,7 +499,6 @@ function claimReward(taskId) {
   data.rewards.push({ amount: task.amount, note: task.name, time, date: TODAY });
   data.transactions.push({ type: 'reward', amount: task.amount, note: task.name, time: time, typeName: '奖励' });
 
-  // 记录今日打卡
   if (!data.dailyCheck[TODAY]) data.dailyCheck[TODAY] = {};
   data.dailyCheck[TODAY][taskId] = true;
 
@@ -382,8 +507,6 @@ function claimReward(taskId) {
 
   save();
   render();
-
-  // 触感反馈
   if (navigator.vibrate) navigator.vibrate(50);
 }
 
@@ -391,7 +514,6 @@ function addTask() {
   const name = document.getElementById('task-name-input').value.trim();
   const amount = parseInt(document.getElementById('task-amount-input').value);
   const icon = document.getElementById('task-icon-input').value.trim() || '🎁';
-
   if (!name) return alert('请输入任务名称！');
   if (!amount || amount <= 0) return alert('请输入正确的金额！');
 
@@ -399,7 +521,6 @@ function addTask() {
   save();
   render();
   closeModal('addTask');
-
   document.getElementById('task-name-input').value = '';
   document.getElementById('task-amount-input').value = '';
   document.getElementById('task-icon-input').value = '';
@@ -415,20 +536,17 @@ function deleteTask(taskId) {
 // ===== 统计 =====
 function renderStats() {
   document.getElementById('stat-reward-total').textContent = '¥' + data.totalReward;
-  // 今日奖励
   const todayRewards = data.rewards.filter(r => r.date === TODAY);
   const todaySum = todayRewards.reduce((s, r) => s + r.amount, 0);
   document.getElementById('stat-reward-today').textContent = '¥' + todaySum;
-  // 打卡天数
-  const days = Object.keys(data.dailyCheck).length;
-  document.getElementById('stat-reward-days').textContent = days;
+  document.getElementById('stat-reward-days').textContent = Object.keys(data.dailyCheck).length;
 }
 
 // ===== 奖励明细 =====
 function renderRewardList() {
   const list = document.getElementById('reward-list');
   if (data.rewards.length === 0) {
-    list.innerHTML = '<div class="empty-tip">还没有奖励记录</div>';
+    list.innerHTML = '<div class="empty-tip">还没有奖���记���</div>';
     return;
   }
   list.innerHTML = data.rewards.slice().reverse().map(r => `
@@ -456,7 +574,7 @@ function renderTxList() {
     const sign = tx.type === 'withdraw' ? '-' : '+';
     return `
       <div class="tx-item">
-        <div class="tx-icon ${tx.type}">${iconMap[tx.type]||'💰'}</div>
+        <div class="tx-icon" style="background:${tx.type==='deposit'?'#e8f5e9':tx.type==='withdraw'?'#ffebee':tx.type==='interest'?'#fff3e0':'#fce4ec'}">${iconMap[tx.type]||'💰'}</div>
         <div class="tx-info">
           <div class="tx-title">${tx.note || tx.typeName || tx.type}</div>
           <div class="tx-time">${tx.time}</div>
@@ -509,7 +627,7 @@ function doWithdraw() {
   save(); render(); closeModal('withdraw');
   document.getElementById('input-withdraw').value = '';
   document.getElementById('note-withdraw').value = '';
-  alert(`✅ 取出 ¥${amt}！余额：¥${data.balance}`);
+  alert(`✅ 取出 ¥${amt}��余��：¥${data.balance}`);
 }
 
 // ===== 利息 =====
@@ -580,6 +698,7 @@ function switchTab(btn, tab) {
 
 // ===== 设置 =====
 function updateRate() {
+  if (!isAdmin) return;
   data.rate = parseInt(document.getElementById('set-rate').value) || 5;
   document.getElementById('rate-display').textContent = data.rate + '%';
   save();
@@ -590,6 +709,7 @@ function updateName() {
   save();
 }
 function clearAll() {
+  if (!isAdmin) return;
   if (!confirm('确定要清空所有数据吗？')) return;
   if (!confirm('真的要确定吗？清空后无法恢复！')) return;
   localStorage.removeItem('kids_bank_v2');
@@ -598,6 +718,7 @@ function clearAll() {
 
 // ===== 导入导出 =====
 function exportData() {
+  if (!isAdmin) return;
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -606,6 +727,7 @@ function exportData() {
   alert('✅ 备份已下载！请保存到微信或手机里。');
 }
 function importData(event) {
+  if (!isAdmin) return;
   const file = event.target.files[0];
   if (!file) return;
   if (!confirm('导入会覆盖当前数据，确定吗？')) return;
@@ -627,8 +749,6 @@ function importData(event) {
 document.querySelectorAll('.modal-mask').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); });
 });
-
-init();
 </script>
 </body>
 </html>
