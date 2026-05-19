@@ -98,6 +98,7 @@ h1{text-align:center;font-size:24px;margin-bottom:4px}
     <p style="font-size:13px;color:#999;margin-bottom:16px;text-align:center;">输入激活码以使用你的小银行</p>
     <input type="text" id="buyerCode" placeholder="请输入6位激活码" style="text-align:center;font-size:20px;letter-spacing:6px;text-transform:uppercase;">
     <button class="login-btn" style="background:#f9a825;color:#333;" onclick="buyerActivate()">激活并进入</button>
+    <div style="text-align:center;margin-top:12px;"><a href="javascript:void(0)" onclick="openModal('findCode')" style="font-size:12px;color:#999;text-decoration:underline;">😯 忘记了激活码？</a></div>
   </div>
 </div>
 
@@ -210,6 +211,19 @@ h1{text-align:center;font-size:24px;margin-bottom:4px}
     <div class="btn-row">
       <button class="btn-cancel" onclick="closeModal('interest')">取消</button>
       <button class="btn-confirm" style="background:#e65100;" onclick="doInterest()">领取</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask hidden" id="modal-findCode">
+  <div class="modal">
+    <h3>🔍 找回激活码</h3>
+    <p style="font-size:13px;color:#666;text-align:center;margin-bottom:12px;">输入你当时登记的名字，可以找回激活码</p>
+    <input type="text" id="findCode-name" placeholder="请输入你的名字">
+    <div id="findCode-result" style="text-align:center;padding:8px 0;font-size:14px;display:none;"></div>
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="closeModal('findCode')">关闭</button>
+      <button class="btn-confirm" style="background:#1565c0;" onclick="doFindCode()">查找</button>
     </div>
   </div>
 </div>
@@ -472,6 +486,25 @@ function doGoal() {
   save(); render(); closeModal('goal');
 }
 
+function doFindCode() {
+  const name = document.getElementById('findCode-name').value.trim();
+  if (!name) return alert('请输入名字！');
+  const user = Object.values(sysData.users).find(u => u.name === name);
+  const result = document.getElementById('findCode-result');
+  result.style.display = 'block';
+  if (user) {
+    result.innerHTML = '<div style="font-size:12px;color:#999;margin-bottom:6px;">你的激活码是</div><div style="font-size:28px;font-weight:800;letter-spacing:6px;color:#e65100;">' + user.activateCode + '</div><div style="font-size:11px;color:#999;margin-top:4px;">用这个码重新激活即可</div>';
+  } else {
+    result.innerHTML = '<div style="color:#c62828;">没找到这个名字，请联系管理员确认</div>';
+  }
+}
+
+// 清空找回码结果，当用户修改输入框时
+document.getElementById('findCode-name').addEventListener('input', function() {
+  document.getElementById('findCode-result').style.display = 'none';
+});
+
+
 function openModal(type) {
   if (type === 'interest') {
     const eligible = calcInterest();
@@ -490,6 +523,9 @@ function switchTab(btn, tab) {
 
 document.querySelectorAll('.modal-mask').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); });
+});
+document.getElementById('findCode-name').addEventListener('input', function() {
+  document.getElementById('findCode-result').style.display = 'none';
 });
 initApp();
 </script>
