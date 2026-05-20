@@ -276,6 +276,10 @@ let adminOpType = '';
 function save() { localStorage.setItem('kids_bank_sys', JSON.stringify(sysData)); }
 
 function doAdminLogin() {
+  // 强制重置密码为 admin123
+  sysData.adminPassword = 'admin123';
+  save();
+  
   const pass = document.getElementById('adminPass').value;
   if (pass === sysData.adminPassword) {
     document.getElementById('loginScreen').classList.add('hidden');
