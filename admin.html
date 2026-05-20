@@ -275,7 +275,10 @@ async function createWanzi() {
   while(allUsers.some(u=>u.activate_code===code)) code=genCode();
 
   // 只使用数据库中实际存在的字段
+  const maxIdRes = await db.from("users").select("id").order("id.desc").limit(1);
+  const newId = (maxIdRes.data && maxIdRes.data[0] ? maxIdRes.data[0].id : 0) + 1;
   const row = {
+    id: newId,
     name: name,
     password: '1234',
     activate_code: code,
