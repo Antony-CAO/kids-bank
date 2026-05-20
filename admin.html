@@ -274,9 +274,11 @@ async function createWanzi() {
   let code=genCode();
   while(allUsers.some(u=>u.activate_code===code)) code=genCode();
 
-  // 只使用数据库中实际存在的字段
-  const maxIdRes = await db.from("users").select("id").order("id.desc").limit(1);
-  const newId = (maxIdRes.data && maxIdRes.data[0] ? maxIdRes.data[0].id : 0) + 1;
+  // 获取当前最大ID
+  const maxIdRes = await db.from('users').select('id').order('id.desc').limit(1);
+  const maxId = (maxIdRes.data && maxIdRes.data[0] && maxIdRes.data[0].id) ? parseInt(maxIdRes.data[0].id) : 0;
+  const newId = maxId + 1;
+
   const row = {
     id: newId,
     name: name,
@@ -301,8 +303,13 @@ async function createWanzi() {
     goal: null
   };
 
-  const {error} = await db.from('users').insert(row);
-  if(error) return alert('创建失败: '+error.message);
+  console.log('Creating user with id:', newId, 'maxId was:', maxId);
+  const {data, error} = await db.from('users').insert(row).select();
+  if(error) {
+    console.error('Insert error:', error);
+    return alert('创建失败: '+error.message);
+  }
+  console.log('Created:', data);
   closeModal('createUser');
   document.getElementById('newWanziName').value='';
   document.getElementById('newWanziBalance').value='0';
@@ -404,7 +411,6 @@ function renderTx() {
 
 function renderReward() {
   if(!selectedUserData) return;
-  // rewards 字段可能不存在，存在 transactions 中的 reward 类型记录
   const txs=J(selectedUserData.transactions).filter(t=>t.type==='reward');
   const list=document.getElementById('reward-list');
   if(!txs.length){list.innerHTML='<div class="empty-tip">暂无奖励</div>';return;}
