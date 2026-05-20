@@ -283,7 +283,7 @@ async function initApp() {
       .eq('id', myId)
       .single();
     
-    if (data && data.activated) {
+    if (data) {
       currentUserId = data.id;
       currentUserData = data;
       document.getElementById('loginScreen').classList.add('hidden');
@@ -308,13 +308,7 @@ async function buyerActivate() {
   
   if (error || !data) return alert('激活码无效！请检查后重试。');
   
-  if (!data.activated) {
-    await supabaseClient
-      .from('users')
-      .update({ activated: true })
-      .eq('id', data.id);
-    data.activated = true;
-  }
+  // 不再检查 activated 字段（表中无此字段）
   
   currentUserId = data.id;
   currentUserData = data;
