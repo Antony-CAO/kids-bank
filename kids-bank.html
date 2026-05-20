@@ -264,9 +264,16 @@ function initSupabase() {
 
 async function save() {
   if (!currentUserId || !currentUserData || !supabaseClient) return;
+  // 构建只包含数据库已有字段的更新对象
+  const updates = {};
+  const allowedFields = ['name','password','activate_code','balance','savings','spendable','total_deposit','total_withdraw','total_interest','rate','tasks','transactions','deposits','daily_check','goal','last_interest_date'];
+  for (const k of allowedFields) {
+    if (currentUserData[k] !== undefined) updates[k] = currentUserData[k];
+  }
+  // rewards/total_reward/next_task_id 存到 tasks 和 transactions 里
   const { error } = await supabaseClient
     .from('users')
-    .update(currentUserData)
+    .update(updates)
     .eq('id', currentUserId);
   if (error) console.error('Save failed:', error);
 }
@@ -329,7 +336,12 @@ function userLogout() {
   document.getElementById('buyerCode').value = '';
 }
 
-function getUser() { return currentUserData; }
+function getUser() {
+  // 确保缺失字段有默认值
+  if (!currentUserData.rewards) currentUserData.rewards = [];
+  if (!currentUserData.total_reward) currentUserData.total_reward = 0;
+  return currentUserData;
+}
 function timeStr() { const n=new Date(); return n.getMonth()+1 + '/' + n.getDate() + ' ' + n.getHours() + ':' + String(n.getMinutes()).padStart(2,'0'); }
 function getToday() { return currentUserData.daily_check ? (currentUserData.daily_check[TODAY] || {}) : {}; }
 
@@ -423,7 +435,8 @@ async function addTask() {
   if (!name) return alert('请输入任务名称！');
   if (amount === 0 || isNaN(amount)) return alert('请输入金额（正数奖励，负数扣钱）！');
   const u = getUser();
-  u.tasks.push({ id: u.next_task_id++, name, amount, icon });
+  const maxId = u.tasks.length > 0 ? Math.max(...u.tasks.map(t => t.id)) : 0;
+  u.tasks.push({ id: maxId + 1, name, amount, icon });
   await save(); render(); closeModal('addTask');
   document.getElementById('task-name-input').value = '';
   document.getElementById('task-amount-input').value = '';
