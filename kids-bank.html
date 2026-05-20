@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>🏦 我的小银行</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:linear-gradient(135deg,#e0f7fa 0%,#fff9c4 100%);min-height:100vh;padding:12px;max-width:480px;margin:0 auto}
@@ -135,7 +136,7 @@ h1{text-align:center;font-size:24px;margin-bottom:4px}
       <button class="action-btn btn-goal" onclick="openModal('goal')">🎯 设目标</button>
       <button class="action-btn btn-logout" onclick="userLogout()">🚪 退出登录</button>
     </div>
-    <div class="interest-info">💡 利息规则：月利率 <strong id="rate-display">5%</strong>，满30天可领～</div>
+    <div class="interest-info">💡 利息规则：月利率 <strong id="rate-display">3%</strong>，满30天可领～</div>
     <div class="goal-section hidden" id="goal-section">
       <div class="goal-bar-bg"><div class="goal-bar-fill" id="goal-bar">0%</div></div>
       <div class="goal-text" id="goal-text"></div>
@@ -241,57 +242,105 @@ h1{text-align:center;font-size:24px;margin-bottom:4px}
 </div>
 
 <script>
+const SUPABASE_URL = 'https://hmkvyxutgrahicfrgxec.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhta3Z5eHV0Z3JhaGljZnJneGVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDUwMTMsImV4cCI6MjA5NDc4MTAxM30.fTjhNprvTkKf7vsvnyY6lYBNffUHSoKzcOu7J1Wq5IE';
+
+let supabaseClient = null;
 const TODAY = new Date().toISOString().slice(0,10);
-let sysData = JSON.parse(localStorage.getItem('kids_bank_sys') || 'null') || {
-  adminPassword: 'admin123',
-  defaultReward: 5,
-  users: {}
-};
+let currentUserData = null;
 let currentUserId = null;
 const MY_ID_KEY = 'kids_bank_myid';
-function save() { localStorage.setItem('kids_bank_sys', JSON.stringify(sysData)); }
 
-// 初始化：检查是否已激活过（localStorage 记住身份）
-function initApp() {
-  const myId = localStorage.getItem(MY_ID_KEY);
-  if (myId && sysData.users[myId] && sysData.users[myId].activated) {
-    currentUserId = myId;
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('mainApp').classList.remove('hidden');
-    initUser();
+// 初始化 Supabase
+function initSupabase() {
+  if (typeof window.supabase !== 'undefined') {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    initApp();
+  } else {
+    console.error('Supabase JS not loaded');
+    setTimeout(initSupabase, 500);
   }
-  // 否则停留在激活码页面
 }
 
-function buyerActivate() {
+async function save() {
+  if (!currentUserId || !currentUserData || !supabaseClient) return;
+  const { error } = await supabaseClient
+    .from('users')
+    .update(currentUserData)
+    .eq('id', currentUserId);
+  if (error) console.error('Save failed:', error);
+}
+
+// 初始化：检查是否已激活过（localStorage 记住身份）
+async function initApp() {
+  if (!supabaseClient) return;
+  
+  const myId = localStorage.getItem(MY_ID_KEY);
+  if (myId) {
+    const { data, error } = await supabaseClient
+      .from('users')
+      .select('*')
+      .eq('id', myId)
+      .single();
+    
+    if (data && data.activated) {
+      currentUserId = data.id;
+      currentUserData = data;
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+      initUser();
+      return;
+    }
+  }
+}
+
+async function buyerActivate() {
+  if (!supabaseClient) return alert('系统初始化失败，请刷新页面重试');
+  
   const code = document.getElementById('buyerCode').value.trim().toUpperCase();
   if (!code) return alert('请输入激活码！');
-  const user = Object.values(sysData.users).find(u => u.activateCode === code);
-  if (!user) return alert('激活码无效！请检查后重试。');
-  user.activated = true;
-  save();
-  currentUserId = user.id;
-  localStorage.setItem(MY_ID_KEY, user.id);
+  
+  const { data, error } = await supabaseClient
+    .from('users')
+    .select('*')
+    .eq('activate_code', code)
+    .single();
+  
+  if (error || !data) return alert('激活码无效！请检查后重试。');
+  
+  if (!data.activated) {
+    await supabaseClient
+      .from('users')
+      .update({ activated: true })
+      .eq('id', data.id);
+    data.activated = true;
+  }
+  
+  currentUserId = data.id;
+  currentUserData = data;
+  localStorage.setItem(MY_ID_KEY, data.id);
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
   document.getElementById('buyerCode').value = '';
   initUser();
-  alert('🎉 激活成功！' + user.name + '，欢迎来到小银行！');
+  alert('🎉 激活成功！' + data.name + '，欢迎来到小银行！');
 }
 
 function userLogout() {
   document.getElementById('mainApp').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
   currentUserId = null;
+  currentUserData = null;
   localStorage.removeItem(MY_ID_KEY);
   document.getElementById('buyerCode').value = '';
 }
 
-function getUser() { return sysData.users[currentUserId]; }
+function getUser() { return currentUserData; }
 function timeStr() { const n=new Date(); return n.getMonth()+1 + '/' + n.getDate() + ' ' + n.getHours() + ':' + String(n.getMinutes()).padStart(2,'0'); }
-function getToday() { return getUser().dailyCheck[TODAY] || {}; }
+function getToday() { return currentUserData.daily_check ? (currentUserData.daily_check[TODAY] || {}) : {}; }
 
 function initUser() {
+  if (!currentUserData) return;
   const u = getUser();
   document.getElementById('userTitle').textContent = '🏦 ' + u.name + '的小银行';
   document.getElementById('greeting').textContent = u.name + '，好好学习，天天存钱！';
@@ -299,19 +348,21 @@ function initUser() {
   render();
 }
 
-function render() {
+async function render() {
+  if (!currentUserData) return;
   const u = getUser();
   document.getElementById('balance').textContent = '¥' + u.balance;
   document.getElementById('savings').textContent = u.savings;
   document.getElementById('spendable').textContent = u.spendable;
-  document.getElementById('total-deposit').textContent = u.totalDeposit;
-  document.getElementById('total-withdraw').textContent = u.totalWithdraw;
-  document.getElementById('total-interest').textContent = u.totalInterest;
-  document.getElementById('total-reward').textContent = u.totalReward;
+  document.getElementById('total-deposit').textContent = u.total_deposit;
+  document.getElementById('total-withdraw').textContent = u.total_withdraw;
+  document.getElementById('total-interest').textContent = u.total_interest;
+  document.getElementById('total-reward').textContent = u.total_reward;
   renderTasks(); renderTx(); renderReward(); renderGoal();
 }
 
 function renderTasks() {
+  if (!currentUserData) return;
   const u = getUser();
   const container = document.getElementById('task-list');
   const empty = document.getElementById('task-empty');
@@ -336,53 +387,57 @@ function renderTasks() {
   }).join('');
 }
 
-function toggleReward(taskId) {
+async function toggleReward(taskId) {
+  if (!currentUserData) return;
   const u = getUser();
   const today = getToday();
   const task = u.tasks.find(t => t.id === taskId);
   if (!task) return;
   if (today[taskId]) {
-    u.balance -= task.amount; u.spendable -= task.amount; u.totalReward -= task.amount;
-    delete u.dailyCheck[TODAY][taskId];
+    u.balance -= task.amount; u.spendable -= task.amount; u.total_reward -= task.amount;
+    delete u.daily_check[TODAY][taskId];
     const idx = u.rewards.findLastIndex(r => r.note === task.name && r.amount === task.amount && r.date === TODAY);
     if (idx >= 0) u.rewards.splice(idx, 1);
     const tidx = u.transactions.findLastIndex(t => t.type === 'reward' && t.note === task.name && t.amount === task.amount);
     if (tidx >= 0) u.transactions.splice(tidx, 1);
-    save(); render();
+    await save(); render();
   } else {
-    u.balance += task.amount; u.spendable += task.amount; u.totalReward += task.amount;
+    u.balance += task.amount; u.spendable += task.amount; u.total_reward += task.amount;
     const time = timeStr();
     u.rewards.push({ amount: task.amount, note: task.name, time, date: TODAY });
     u.transactions.push({ type: 'reward', amount: task.amount, note: task.name, time, typeName: '奖励' });
-    if (!u.dailyCheck[TODAY]) u.dailyCheck[TODAY] = {};
-    u.dailyCheck[TODAY][taskId] = true;
-    save(); render();
+    if (!u.daily_check[TODAY]) u.daily_check[TODAY] = {};
+    u.daily_check[TODAY][taskId] = true;
+    await save(); render();
     if (navigator.vibrate) navigator.vibrate(50);
   }
 }
 
-function deleteTask(taskId) {
+async function deleteTask(taskId) {
+  if (!currentUserData) return;
   if (!confirm('确定删除这个任务吗？')) return;
   const u = getUser();
   u.tasks = u.tasks.filter(t => t.id !== taskId);
-  save(); render();
+  await save(); render();
 }
 
-function addTask() {
+async function addTask() {
+  if (!currentUserData) return;
   const name = document.getElementById('task-name-input').value.trim();
   const amount = parseInt(document.getElementById('task-amount-input').value);
   const icon = document.getElementById('task-icon-input').value.trim() || '🎁';
   if (!name) return alert('请输入任务名称！');
   if (amount === 0 || isNaN(amount)) return alert('请输入金额（正数奖励，负数扣钱）！');
   const u = getUser();
-  u.tasks.push({ id: u.nextTaskId++, name, amount, icon });
-  save(); render(); closeModal('addTask');
+  u.tasks.push({ id: u.next_task_id++, name, amount, icon });
+  await save(); render(); closeModal('addTask');
   document.getElementById('task-name-input').value = '';
   document.getElementById('task-amount-input').value = '';
   document.getElementById('task-icon-input').value = '';
 }
 
 function renderTx() {
+  if (!currentUserData) return;
   const u = getUser();
   const list = document.getElementById('tx-list');
   if (u.transactions.length === 0) { list.innerHTML = '<div class="empty-tip">暂无记录</div>'; return; }
@@ -401,12 +456,13 @@ function renderTx() {
 }
 
 function renderReward() {
+  if (!currentUserData) return;
   const u = getUser();
   const list = document.getElementById('reward-list');
-  document.getElementById('stat-total').textContent = '¥' + u.totalReward;
+  document.getElementById('stat-total').textContent = '¥' + u.total_reward;
   const todayR = u.rewards.filter(r => r.date === TODAY).reduce((s,r)=>s+r.amount,0);
   document.getElementById('stat-today').textContent = '¥' + todayR;
-  document.getElementById('stat-days').textContent = Object.keys(u.dailyCheck).length;
+  document.getElementById('stat-days').textContent = Object.keys(u.daily_check).length;
   if (u.rewards.length === 0) { list.innerHTML = '<div class="empty-tip">暂无奖励</div>'; return; }
   list.innerHTML = u.rewards.slice().reverse().map(r => `
     <div class="reward-item">
@@ -418,6 +474,7 @@ function renderReward() {
 }
 
 function renderGoal() {
+  if (!currentUserData) return;
   const u = getUser();
   const sec = document.getElementById('goal-section');
   if (!u.goal) { sec.classList.add('hidden'); return; }
@@ -431,9 +488,10 @@ function renderGoal() {
 }
 
 function calcInterest() {
+  if (!currentUserData) return 0;
   const u = getUser();
   const now = new Date();
-  const last = u.lastInterestDate ? new Date(u.lastInterestDate) : null;
+  const last = u.last_interest_date ? new Date(u.last_interest_date) : null;
   let eligible = 0;
   u.deposits.forEach(d => {
     const months = Math.floor((now - new Date(d.date)) / (86400000 * 30));
@@ -445,65 +503,79 @@ function calcInterest() {
   return eligible;
 }
 
-function doDeposit() {
+async function doDeposit() {
+  if (!currentUserData) return;
   const amt = parseInt(document.getElementById('input-deposit').value);
   if (!amt || amt <= 0) return alert('请输入金额！');
   const u = getUser();
   const note = document.getElementById('note-deposit').value || '存钱';
-  u.balance += amt; u.spendable += amt; u.totalDeposit += amt; u.savings += amt;
+  u.balance += amt; u.spendable += amt; u.total_deposit += amt; u.savings += amt;
   u.deposits.push({ amount: amt, date: new Date().toISOString() });
   u.transactions.push({ type: 'deposit', amount: amt, note, time: timeStr(), typeName: '存钱' });
-  save(); render(); closeModal('deposit');
+  await save(); render(); closeModal('deposit');
   document.getElementById('input-deposit').value = '';
   document.getElementById('note-deposit').value = '';
 }
-function doWithdraw() {
+
+async function doWithdraw() {
+  if (!currentUserData) return;
   const amt = parseInt(document.getElementById('input-withdraw').value);
   const u = getUser();
   if (!amt || amt <= 0) return alert('请输入金额！');
   if (amt > u.spendable) return alert('余额不足！');
   const note = document.getElementById('note-withdraw').value || '取钱';
-  u.balance -= amt; u.spendable -= amt; u.totalWithdraw += amt;
+  u.balance -= amt; u.spendable -= amt; u.total_withdraw += amt;
   u.transactions.push({ type: 'withdraw', amount: amt, note, time: timeStr(), typeName: '取钱' });
-  save(); render(); closeModal('withdraw');
+  await save(); render(); closeModal('withdraw');
   document.getElementById('input-withdraw').value = '';
   document.getElementById('note-withdraw').value = '';
 }
-function doInterest() {
+
+async function doInterest() {
+  if (!currentUserData) return;
   const eligible = calcInterest();
   if (eligible <= 0) return closeModal('interest');
   const u = getUser();
-  u.balance += eligible; u.spendable += eligible; u.totalInterest += eligible;
-  u.lastInterestDate = new Date().toISOString();
+  u.balance += eligible; u.spendable += eligible; u.total_interest += eligible;
+  u.last_interest_date = new Date().toISOString();
   u.transactions.push({ type: 'interest', amount: eligible, note: '利息', time: timeStr(), typeName: '利息' });
-  save(); render(); closeModal('interest');
+  await save(); render(); closeModal('interest');
 }
-function doGoal() {
+
+async function doGoal() {
+  if (!currentUserData) return;
   const name = document.getElementById('goal-name').value.trim();
   const amount = parseInt(document.getElementById('goal-amount').value);
   if (!name || !amount) return alert('请输入完整！');
   getUser().goal = { name, amount };
-  save(); render(); closeModal('goal');
+  await save(); render(); closeModal('goal');
 }
 
-function doFindCode() {
+async function doFindCode() {
+  if (!supabaseClient) return alert('系统初始化失败');
+  
   const name = document.getElementById('findCode-name').value.trim();
   if (!name) return alert('请输入名字！');
-  const user = Object.values(sysData.users).find(u => u.name === name);
+  
+  const { data, error } = await supabaseClient
+    .from('users')
+    .select('activate_code')
+    .eq('name', name)
+    .single();
+  
   const result = document.getElementById('findCode-result');
   result.style.display = 'block';
-  if (user) {
-    result.innerHTML = '<div style="font-size:12px;color:#999;margin-bottom:6px;">你的激活码是</div><div style="font-size:28px;font-weight:800;letter-spacing:6px;color:#e65100;">' + user.activateCode + '</div><div style="font-size:11px;color:#999;margin-top:4px;">用这个码重新激活即可</div>';
+  
+  if (data) {
+    result.innerHTML = '<div style="font-size:12px;color:#999;margin-bottom:6px;">你的激活码是</div><div style="font-size:28px;font-weight:800;letter-spacing:6px;color:#e65100;">' + data.activate_code + '</div><div style="font-size:11px;color:#999;margin-top:4px;">用这个码重新激活即可</div>';
   } else {
     result.innerHTML = '<div style="color:#c62828;">没找到这个名字，请联系管理员确认</div>';
   }
 }
 
-// 清空找回码结果，当用户修改输入框时
 document.getElementById('findCode-name').addEventListener('input', function() {
   document.getElementById('findCode-result').style.display = 'none';
 });
-
 
 function openModal(type) {
   if (type === 'interest') {
@@ -524,10 +596,8 @@ function switchTab(btn, tab) {
 document.querySelectorAll('.modal-mask').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); });
 });
-document.getElementById('findCode-name').addEventListener('input', function() {
-  document.getElementById('findCode-result').style.display = 'none';
-});
-initApp();
+
+initSupabase();
 </script>
 </body>
 </html>
