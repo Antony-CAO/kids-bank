@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>🔧 小银行管理后台</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:linear-gradient(135deg,#e8eaf6 0%,#fce4ec 100%);min-height:100vh;padding:12px;max-width:480px;margin:0 auto}
@@ -28,16 +29,15 @@ h1{text-align:center;font-size:22px;margin-bottom:4px}
 .modal .btn-cancel{flex:1;padding:10px;border:2px solid #ddd;background:#fff;border-radius:10px;font-size:14px;cursor:pointer}
 .modal .btn-confirm{flex:1;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:bold;color:#fff;cursor:pointer}
 .hidden{display:none!important}
-.setting-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px}
-.setting-row input,.setting-row button{width:80px;padding:4px;border:1px solid #ddd;border-radius:6px;text-align:center;font-size:13px}
 .stat-row{display:flex;gap:6px;margin-bottom:10px}
 .stat-card{flex:1;background:#f5f5f5;border-radius:10px;padding:10px 6px;text-align:center}
 .stat-card .stat-num{font-size:18px;font-weight:800;color:#333}
 .stat-card .stat-label{font-size:10px;color:#999}
 .stat-card.green .stat-num{color:#2e7d32}
 .wanzi-list{max-height:400px;overflow-y:auto}
-.wanzi-item{display:flex;align-items:center;padding:10px;border-radius:10px;background:#f5f5f5;margin-bottom:6px;gap:8px}
-.wanzi-item .avatar{width:40px;height:40px;border-radius:50%;background:#e3f2fd;display:flex;align-items:center;justify-content:center;font-size:20px}
+.wanzi-item{display:flex;align-items:center;padding:10px;border-radius:10px;background:#f5f5f5;margin-bottom:6px;gap:8px;cursor:pointer}
+.wanzi-item:active{background:#e0e0e0}
+.wanzi-item .avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;background:#fff}
 .wanzi-item .info{flex:1}
 .wanzi-item .name{font-size:14px;font-weight:600}
 .wanzi-item .status{font-size:11px;color:#999}
@@ -46,7 +46,6 @@ h1{text-align:center;font-size:22px;margin-bottom:4px}
 .wanzi-item button{padding:4px 8px;border:none;border-radius:6px;font-size:11px;cursor:pointer;color:#fff}
 .btn-copy{background:#f9a825;color:#333!important}
 .btn-del{background:#c62828}
-.btn-edit{background:#1565c0}
 .code-box{background:#fff8e1;border:2px dashed #f9a825;border-radius:12px;padding:12px;text-align:center;margin:10px 0}
 .code-box .code{font-size:28px;font-weight:800;letter-spacing:6px;color:#e65100}
 .code-box .label{font-size:11px;color:#999;margin-bottom:4px}
@@ -59,29 +58,14 @@ h1{text-align:center;font-size:22px;margin-bottom:4px}
 .balance-label{font-size:14px;opacity:.85}
 .balance-amount{font-size:36px;font-weight:800;margin:6px 0}
 .balance-sub{font-size:11px;opacity:.75}
-.balance-row{display:flex;justify-content:center;gap:16px;margin-top:10px}
-.balance-row div{text-align:center}
-.balance-row .num{font-size:16px;font-weight:bold}
-.balance-row .lbl{font-size:10px;opacity:.75}
-.interest-info{background:#fff8e1;border-radius:10px;padding:10px;font-size:12px;color:#e65100;margin-top:10px}
-.interest-info strong{color:#e65100}
-.goal-section{margin-top:10px}
-.goal-bar-bg{background:#eee;border-radius:8px;height:14px;overflow:hidden;margin:6px 0}
-.goal-bar-fill{background:linear-gradient(90deg,#66bb6a,#fdd835);height:100%;border-radius:8px;transition:width .5s;text-align:right;padding-right:4px;font-size:10px;color:#fff;line-height:14px;font-weight:bold}
-.goal-text{font-size:12px;color:#666}
 .tabs{display:flex;gap:4px;margin-bottom:10px}
 .tab-btn{flex:1;padding:8px;text-align:center;background:#fff;border-radius:8px;font-size:13px;cursor:pointer;color:#999;border:none}
 .tab-btn.active{background:#1565c0;color:#fff}
 .task-card{display:flex;align-items:center;padding:10px;border-radius:10px;background:#f9fbe7;margin-bottom:6px;gap:8px}
 .task-card .task-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;background:#fff}
-.task-card .task-info{flex:1}
 .task-card .task-name{font-size:14px;font-weight:600}
-.task-card .task-desc{font-size:10px;color:#999}
 .task-card .task-amount{font-size:16px;font-weight:800;color:#2e7d32}
-.task-card .task-check{width:26px;height:26px;border-radius:50%;border:2px solid #2e7d32;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;background:transparent;cursor:pointer}
-.today-badge{display:inline-block;background:#2e7d32;color:#fff;font-size:10px;padding:2px 6px;border-radius:20px;margin-left:4px}
 .task-today-done{opacity:.5}
-.task-today-done .task-check{background:#2e7d32;border-color:#2e7d32}
 .tx-list{max-height:250px;overflow-y:auto}
 .tx-item{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;gap:8px}
 .tx-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
@@ -98,50 +82,50 @@ h1{text-align:center;font-size:22px;margin-bottom:4px}
 .reward-title{font-size:13px;font-weight:500}
 .reward-time{font-size:10px;color:#bbb}
 .reward-amount{font-size:14px;font-weight:bold;color:#2e7d32}
+.loading{text-align:center;padding:40px;color:#999;}
 </style>
 </head>
 <body>
 
-<!-- 管理员登录 -->
 <div class="login-screen" id="loginScreen">
   <div style="font-size:42px;margin-bottom:12px;">🔧</div>
   <div class="login-box">
     <h2>🔧 管理后台</h2>
-    <input type="password" id="adminPass" placeholder="管理员密码">
+    <input type="password" id="adminPass" placeholder="管理员密码" onkeypress="if(event.key==='Enter')doAdminLogin()">
     <button class="login-btn" onclick="doAdminLogin()">登录</button>
+    <p style="font-size:11px;color:#999;margin-top:10px;text-align:center;">默认密码：admin123</p>
   </div>
 </div>
 
-<!-- 管理员界面 -->
 <div id="adminApp" class="hidden">
   <h1>🔧 管理后台</h1>
-  <div class="subtitle">管理所有丸子</div>
+  <div class="subtitle">☁️ Supabase 云端管理</div>
 
-  <!-- 统计 -->
   <div class="stat-row" style="margin-bottom:12px;">
     <div class="stat-card green"><div class="stat-num" id="totalWanzi">0</div><div class="stat-label">丸子数</div></div>
-    <div class="stat-card"><div class="stat-num" id="totalActivated">0</div><div class="stat-label">已激活</div></div>
     <div class="stat-card"><div class="stat-num" id="totalBalance">¥0</div><div class="stat-label">总余额</div></div>
   </div>
 
-  <!-- 丸子列表 -->
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
       <h3 style="font-size:15px;">🎱 丸子列表</h3>
       <button style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;" onclick="openModal('createUser')">+ 新建丸子</button>
     </div>
-    <div class="wanzi-list" id="wanziList"></div>
+    <div id="wanziList"><div class="loading">加载中...</div></div>
   </div>
 
-  <!-- 设置 -->
   <div class="card">
     <h3 style="font-size:15px;margin-bottom:10px;">⚙️ 系统设置</h3>
-    <div class="setting-row"><span>管理员密码</span><button style="padding:4px 10px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;" onclick="openModal('changeAdminPass')">修改</button></div>
-    <div class="setting-row"><span>默认任务奖金</span><input type="number" id="setDefaultReward" value="5" style="width:60px;" onchange="updateDefaultReward()"></div>
-    <div class="setting-row"><span>数据管理</span><button style="padding:4px 10px;background:#78909c;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;" onclick="openModal('dataManage')">管理</button></div>
+    <div class="stat-row">
+      <div class="stat-card" style="flex:2"><div class="stat-num">☁️</div><div class="stat-label">Supabase 云端</div></div>
+      <div class="stat-card" style="flex:3"><div class="stat-num" id="setDefaultReward2">¥5</div><div class="stat-label">默认奖金</div></div>
+    </div>
+    <div style="margin-top:8px;">
+      <label style="font-size:12px;color:#999;">修改默认奖金：</label>
+      <input type="number" id="setDefaultReward" value="5" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:13px;" onchange="updateDefaultReward()">
+    </div>
   </div>
 
-  <!-- 管理员也可操作某个丸子 -->
   <div id="userOps" class="hidden">
     <div class="card">
       <h3 style="font-size:15px;margin-bottom:4px;" id="opsTitle">操作丸子</h3>
@@ -178,14 +162,13 @@ h1{text-align:center;font-size:22px;margin-bottom:4px}
   <button class="action-btn btn-logout" style="margin-top:12px;width:100%;" onclick="adminLogout()">🚪 退出管理员</button>
 </div>
 
-<!-- 弹窗 -->
 <div class="modal-mask hidden" id="modal-createUser">
   <div class="modal">
     <h3>➕ 新建丸子</h3>
     <label>丸子昵称</label>
     <input type="text" id="newWanziName" placeholder="例如：小明">
-    <label>激活价格（元）</label>
-    <input type="number" id="newWanziPrice" placeholder="99" value="99">
+    <label>初始余额（元，选填）</label>
+    <input type="number" id="newWanziBalance" placeholder="0" value="0">
     <div class="btn-row">
       <button class="btn-cancel" onclick="closeModal('createUser')">取消</button>
       <button class="btn-confirm" style="background:#1565c0;" onclick="createWanzi()">创建</button>
@@ -203,18 +186,6 @@ h1{text-align:center;font-size:22px;margin-bottom:4px}
     <div class="btn-row">
       <button class="btn-cancel" onclick="closeModal('showCode')">关闭</button>
       <button class="btn-confirm" style="background:#f9a825;color:#333;" onclick="copyCode()">📋 复制</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-mask hidden" id="modal-changeAdminPass">
-  <div class="modal">
-    <h3>🔐 修改管理员密码</h3>
-    <input type="password" id="newAdminPass1" placeholder="新密码">
-    <input type="password" id="newAdminPass2" placeholder="确认新密码">
-    <div class="btn-row">
-      <button class="btn-cancel" onclick="closeModal('changeAdminPass')">取消</button>
-      <button class="btn-confirm" style="background:#1565c0;" onclick="saveAdminPass()">保存</button>
     </div>
   </div>
 </div>
@@ -249,39 +220,42 @@ h1{text-align:center;font-size:22px;margin-bottom:4px}
   </div>
 </div>
 
-<div class="modal-mask hidden" id="modal-dataManage">
-  <div class="modal">
-    <h3>📦 数据管理</h3>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-      <button class="login-btn" style="background:#2e7d32;" onclick="exportData()">📤 导出备份</button>
-      <button class="login-btn" style="background:#1565c0;" onclick="importData()">📥 导入恢复</button>
-      <button class="login-btn" style="background:#c62828;" onclick="clearAllData()">🗑️ 清空所有数据</button>
-    </div>
-    <div class="btn-row" style="margin-top:12px;">
-      <button class="btn-cancel" onclick="closeModal('dataManage')">关闭</button>
-    </div>
-  </div>
-</div>
-
-<input type="file" id="importFile" accept=".json" style="display:none" onchange="doImport(event)">
-
 <script>
-let sysData = JSON.parse(localStorage.getItem('kids_bank_sys') || 'null') || {
-  adminPassword: 'admin123',
-  defaultReward: 5,
-  users: {}
-};
+const SUPABASE_URL = 'https://hmkvyxutgrahicfrgxec.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhta3Z5eHV0Z3JhaGljZnJneGVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDUwMTMsImV4cCI6MjA5NDc4MTAxM30.fTjhNprvTkKf7vsvnyY6lYBNffUHSoKzcOu7J1Wq5IE';
+
+let supabaseClient = null;
+let defaultReward = 5;
+let allUsers = [];
 let selectedUserId = null;
+let selectedUserData = null;
 let adminOpType = '';
-function save() { localStorage.setItem('kids_bank_sys', JSON.stringify(sysData)); }
+
+function timeStr() { const n=new Date(); return n.getMonth()+1+'/'+n.getDate()+' '+n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
+
+async function initSupabase() {
+  try {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { error } = await supabaseClient.from('users').select('id').limit(1);
+    if (error) throw error;
+    console.log('✅ Supabase 连接成功');
+    return true;
+  } catch (e) {
+    console.error('❌ Supabase 连接失败:', e.message);
+    alert('❌ Supabase 连接失败，请刷新重试');
+    return false;
+  }
+}
+
+async function loadAllUsers() {
+  const { data, error } = await supabaseClient.from('users').select('*');
+  if (error) { console.error('加载用户失败:', error); return []; }
+  return data || [];
+}
 
 function doAdminLogin() {
-  // 强制重置密码为 admin123
-  sysData.adminPassword = 'admin123';
-  save();
-  
   const pass = document.getElementById('adminPass').value;
-  if (pass === sysData.adminPassword) {
+  if (pass === 'admin123') {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('adminApp').classList.remove('hidden');
     renderAdmin();
@@ -289,185 +263,221 @@ function doAdminLogin() {
     alert('密码错误！');
   }
 }
+
+async function renderAdmin() {
+  allUsers = await loadAllUsers();
+  let totalBal = 0;
+  const list = document.getElementById('wanziList');
+  if (allUsers.length === 0) {
+    list.innerHTML = '<div class="empty-tip">还没有丸子，点击上方新建</div>';
+  } else {
+    list.innerHTML = allUsers.map(u => {
+      totalBal += u.balance || 0;
+      return '<div class="wanzi-item" onclick="selectWanzi(\''+u.id+'\')">'+
+        '<div class="avatar">🧒</div>'+
+        '<div class="info"><div class="name">'+u.name+'</div><div class="status">🎫 '+(u.activate_code||'无')+'</div></div>'+
+        '<div class="balance">¥'+(u.balance||0)+'</div>'+
+        '<div class="actions">'+
+          '<button class="btn-copy" onclick="event.stopPropagation();showCode(\''+u.id+'\')">🎫</button>'+
+          '<button class="btn-del" onclick="event.stopPropagation();deleteWanzi(\''+u.id+'\')">🗑</button>'+
+        '</div></div>';
+    }).join('');
+  }
+  document.getElementById('totalWanzi').textContent = allUsers.length;
+  document.getElementById('totalBalance').textContent = '¥' + totalBal;
+}
+
 function adminLogout() {
   document.getElementById('adminApp').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('adminPass').value = '';
   selectedUserId = null;
+  selectedUserData = null;
   document.getElementById('userOps').classList.add('hidden');
 }
 
-function renderAdmin() {
-  const users = Object.values(sysData.users);
-  let totalBal = 0;
-  let activated = 0;
-  const list = document.getElementById('wanziList');
-  list.innerHTML = users.map(u => {
-    totalBal += u.balance;
-    if (u.activated) activated++;
-    return `
-      <div class="wanzi-item">
-        <div class="avatar">🧒</div>
-        <div class="info">
-          <div class="name">${u.name}</div>
-          <div class="status">${u.activated ? '✅ 已激活' : '❌ 未激活'} | 🎫 ${u.activateCode}</div>
-        </div>
-        <div class="balance">¥${u.balance}</div>
-        <div class="actions">
-          <button class="btn-copy" onclick="showCode('${u.id}')">🎫</button>
-          <button class="btn-edit" onclick="selectWanzi('${u.id}')">📋</button>
-          <button class="btn-del" onclick="deleteWanzi('${u.id}')">🗑</button>
-        </div>
-      </div>
-    `;
-  }).join('') || '<div class="empty-tip">还没有丸子，点击上方新建</div>';
-  document.getElementById('totalWanzi').textContent = users.length;
-  document.getElementById('totalActivated').textContent = activated;
-  document.getElementById('totalBalance').textContent = '¥' + totalBal;
-  document.getElementById('setDefaultReward').value = sysData.defaultReward;
-  if (selectedUserId && sysData.users[selectedUserId]) renderUserOps();
+function genCode() {
+  let c = '';
+  for(let i=0;i<6;i++) c += String.fromCharCode(65+Math.floor(Math.random()*26));
+  return c;
 }
 
-function createWanzi() {
+async function createWanzi() {
   const name = document.getElementById('newWanziName').value.trim();
-  const price = parseInt(document.getElementById('newWanziPrice').value) || 99;
+  const initBalance = parseInt(document.getElementById('newWanziBalance').value) || 0;
   if (!name) return alert('请输入丸子昵称！');
-  const id = 'u' + Date.now();
-  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-  sysData.users[id] = {
-    id, name, price,
-    balance: 0, savings: 0, spendable: 0,
-    totalDeposit: 0, totalWithdraw: 0, totalInterest: 0, totalReward: 0,
-    rate: 5, goal: null, deposits: [], transactions: [], rewards: [],
-    lastInterestDate: null, activated: false, activateCode: code,
-    tasks: [
-      { id: 1, name: '完成作业', amount: sysData.defaultReward, icon: '📚' },
-      { id: 2, name: '阅读30分钟', amount: 3, icon: '📖' },
-      { id: 3, name: '做家务', amount: 2, icon: '🧹' },
-      { id: 4, name: '练习计算', amount: 3, icon: '🔢' },
-    ],
-    nextTaskId: 5, dailyCheck: {}
+  
+  let code = genCode();
+  while (allUsers.some(u => u.activate_code === code)) code = genCode();
+  
+  const tasks = [
+    { id: 1, name: '完成作业', amount: defaultReward, icon: '📚' },
+    { id: 2, name: '阅读30分钟', amount: 3, icon: '📖' },
+    { id: 3, name: '做家务', amount: 2, icon: '🧹' },
+    { id: 4, name: '练习计算', amount: 3, icon: '🔢' },
+  ];
+  
+  const newUser = {
+    name,
+    password: '1234',
+    activate_code: code,
+    balance: initBalance,
+    savings: initBalance,
+    spendable: initBalance,
+    total_deposit: initBalance,
+    total_withdraw: 0,
+    total_interest: 0,
+    total_reward: 0,
+    rate: 5,
+    tasks: JSON.stringify(tasks),
+    next_task_id: 5,
+    deposits: JSON.stringify(initBalance > 0 ? [{ amount: initBalance, date: new Date().toISOString() }] : []),
+    transactions: JSON.stringify(initBalance > 0 ? [{ type: 'deposit', amount: initBalance, note: '初始化', time: timeStr(), typeName: '存钱' }] : []),
+    rewards: JSON.stringify([]),
+    daily_check: JSON.stringify({}),
+    goal: null
   };
-  save(); closeModal('createUser');
+  
+  const { error } = await supabaseClient.from('users').insert(newUser);
+  if (error) return alert('创建失败: ' + error.message);
+  
+  closeModal('createUser');
   document.getElementById('newWanziName').value = '';
-  renderAdmin();
-  // 自动展示激活码
-  showCode(id);
+  document.getElementById('newWanziBalance').value = '0';
+  
+  await renderAdmin();
+  const u = allUsers.find(x => x.activate_code === code);
+  if (u) showCode(u.id);
 }
 
 function showCode(id) {
-  document.getElementById('showCode').textContent = sysData.users[id].activateCode;
+  const u = allUsers.find(x => x.id === id);
+  if (!u) return;
+  document.getElementById('showCode').textContent = u.activate_code;
   openModal('showCode');
 }
+
 function copyCode() {
   const code = document.getElementById('showCode').textContent;
-  navigator.clipboard.writeText(code).then(() => alert('✅ 已复制：' + code));
+  navigator.clipboard.writeText(code).then(() => alert('✅ 已复制：' + code)).catch(() => alert('✅ 已复制：' + code));
 }
 
-function deleteWanzi(id) {
-  if (!confirm('确定删除「' + sysData.users[id].name + '」？所有数据将丢失！')) return;
-  delete sysData.users[id];
+async function deleteWanzi(id) {
+  const u = allUsers.find(x => x.id === id);
+  if (!u) return;
+  if (!confirm('确定删除「' + u.name + '」？')) return;
+  
+  const { error } = await supabaseClient.from('users').delete().eq('id', id);
+  if (error) return alert('删除失败: ' + error.message);
+  
   if (selectedUserId === id) {
     selectedUserId = null;
+    selectedUserData = null;
     document.getElementById('userOps').classList.add('hidden');
   }
-  save(); renderAdmin();
+  
+  await renderAdmin();
 }
 
 function selectWanzi(id) {
   selectedUserId = id;
+  selectedUserData = allUsers.find(x => x.id === id);
+  if (!selectedUserData) return;
   document.getElementById('userOps').classList.remove('hidden');
   renderUserOps();
-  // 滚动到操作区
   document.getElementById('userOps').scrollIntoView({ behavior: 'smooth' });
 }
 
+function getJson(val) {
+  if (!val) return [];
+  if (typeof val === 'object') return val;
+  try { return JSON.parse(val); } catch { return []; }
+}
+
 function renderUserOps() {
-  const u = sysData.users[selectedUserId];
+  if (!selectedUserData) return;
+  const u = selectedUserData;
   document.getElementById('opsTitle').textContent = '📋 ' + u.name;
-  document.getElementById('opsSubtitle').textContent = u.activated ? '✅ 已激活' : '❌ 未激活 | 激活码: ' + u.activateCode;
-  document.getElementById('ops-balance').textContent = '¥' + u.balance;
-  document.getElementById('ops-savings').textContent = u.savings;
-  document.getElementById('ops-spendable').textContent = u.spendable;
+  document.getElementById('opsSubtitle').textContent = '🎫 ' + (u.activate_code || '无');
+  document.getElementById('ops-balance').textContent = '¥' + (u.balance || 0);
+  document.getElementById('ops-savings').textContent = u.savings || 0;
+  document.getElementById('ops-spendable').textContent = u.spendable || 0;
   renderTasks(); renderTx(); renderReward();
 }
 
 function renderTasks() {
-  if (!selectedUserId) return;
-  const u = sysData.users[selectedUserId];
+  if (!selectedUserData) return;
+  const tasks = getJson(selectedUserData.tasks);
   const container = document.getElementById('task-list');
-  const TODAY = new Date().toISOString().slice(0,10);
-  const today = (u.dailyCheck[TODAY] || {});
-  container.innerHTML = u.tasks.map(t => {
-    const done = today[t.id];
-    return `
-      <div class="task-card ${done ? 'task-today-done' : ''}">
-        <div class="task-icon">${t.icon || '🎁'}</div>
-        <div class="task-info">
-          <div class="task-name">${t.name}${done ? ' <span class="today-badge">已完成</span>' : ''}</div>
-        </div>
-        <div class="task-amount">+¥${t.amount}</div>
-        <button style="width:22px;height:22px;border-radius:50%;border:none;background:#ffcdd2;color:#c62828;font-size:12px;cursor:pointer;padding:0;flex-shrink:0;" onclick="adminDeleteTask(${t.id})">✕</button>
-      </div>
-    `;
-  }).join('') || '<div class="empty-tip">暂无任务</div>';
+  container.innerHTML = tasks.map(t => 
+    '<div class="task-card">'+
+      '<div class="task-icon">'+(t.icon||'🎁')+'</div>'+
+      '<div class="task-name">'+t.name+'</div>'+
+      '<div class="task-amount">+¥'+t.amount+'</div>'+
+      '<button style="width:22px;height:22px;border-radius:50%;border:none;background:#ffcdd2;color:#c62828;font-size:12px;cursor:pointer;padding:0;flex-shrink:0;" onclick="adminDeleteTask('+t.id+')">✕</button>'+
+    '</div>'
+  ).join('') || '<div class="empty-tip">暂无任务</div>';
 }
 
-function adminDeleteTask(taskId) {
-  const u = sysData.users[selectedUserId];
-  u.tasks = u.tasks.filter(t => t.id !== taskId);
-  save(); renderAdmin();
+async function adminDeleteTask(taskId) {
+  if (!selectedUserData) return;
+  let tasks = getJson(selectedUserData.tasks);
+  tasks = tasks.filter(t => t.id !== taskId);
+  const { error } = await supabaseClient.from('users').update({ tasks: JSON.stringify(tasks) }).eq('id', selectedUserId);
+  if (error) return alert('删除失败: ' + error.message);
+  selectedUserData.tasks = tasks;
+  renderTasks();
 }
 
-function addTask() {
+async function addTask() {
+  if (!selectedUserData) return alert('请先选择一个丸子');
   const name = document.getElementById('task-name-input').value.trim();
   const amount = parseInt(document.getElementById('task-amount-input').value);
   const icon = document.getElementById('task-icon-input').value.trim() || '🎁';
   if (!name) return alert('请输入任务名称！');
   if (!amount || amount <= 0) return alert('请输入正确的金额！');
-  if (!selectedUserId) return;
-  const u = sysData.users[selectedUserId];
-  u.tasks.push({ id: u.nextTaskId++, name, amount, icon });
-  save(); renderAdmin(); closeModal('addTask');
+  
+  let tasks = getJson(selectedUserData.tasks);
+  const nextId = selectedUserData.next_task_id || (tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1);
+  tasks.push({ id: nextId, name, amount, icon });
+  
+  const { error } = await supabaseClient.from('users').update({ tasks: JSON.stringify(tasks), next_task_id: nextId + 1 }).eq('id', selectedUserId);
+  if (error) return alert('添加失败: ' + error.message);
+  
+  selectedUserData.tasks = tasks;
+  selectedUserData.next_task_id = nextId + 1;
+  closeModal('addTask');
   document.getElementById('task-name-input').value = '';
   document.getElementById('task-amount-input').value = '';
   document.getElementById('task-icon-input').value = '';
+  renderTasks();
 }
 
 function renderTx() {
-  if (!selectedUserId) return;
-  const u = sysData.users[selectedUserId];
+  if (!selectedUserData) return;
+  const transactions = getJson(selectedUserData.transactions);
   const list = document.getElementById('tx-list');
-  if (u.transactions.length === 0) { list.innerHTML = '<div class="empty-tip">暂无记录</div>'; return; }
+  if (transactions.length === 0) { list.innerHTML = '<div class="empty-tip">暂无记录</div>'; return; }
   const map = { deposit:'📥', withdraw:'📤', interest:'💰', reward:'🎁' };
-  list.innerHTML = u.transactions.slice().reverse().slice(0,20).map(tx => {
+  list.innerHTML = transactions.slice().reverse().slice(0,20).map(tx => {
     const cls = tx.type === 'withdraw' ? 'minus' : 'plus';
     const sign = tx.type === 'withdraw' ? '-' : '+';
-    return `
-      <div class="tx-item">
-        <div class="tx-icon" style="background:${tx.type==='deposit'?'#e8f5e9':tx.type==='withdraw'?'#ffebee':tx.type==='interest'?'#fff3e0':'#fce4ec'}">${map[tx.type]||'💰'}</div>
-        <div class="tx-info"><div class="tx-title">${tx.note || tx.typeName}</div><div class="tx-time">${tx.time}</div></div>
-        <div class="tx-amount ${cls}">${sign}¥${tx.amount}</div>
-      </div>
-    `;
+    return '<div class="tx-item">'+
+      '<div class="tx-icon" style="background:'+(tx.type==='deposit'?'#e8f5e9':tx.type==='withdraw'?'#ffebee':tx.type==='interest'?'#fff3e0':'#fce4ec')+'">'+(map[tx.type]||'💰')+'</div>'+
+      '<div class="tx-info"><div class="tx-title">'+(tx.note || tx.typeName)+'</div><div class="tx-time">'+tx.time+'</div></div>'+
+      '<div class="tx-amount '+cls+'">'+sign+'¥'+tx.amount+'</div></div>';
   }).join('');
 }
 
 function renderReward() {
-  if (!selectedUserId) return;
-  const u = sysData.users[selectedUserId];
+  if (!selectedUserData) return;
+  const rewards = getJson(selectedUserData.rewards);
   const list = document.getElementById('reward-list');
-  if (u.rewards.length === 0) { list.innerHTML = '<div class="empty-tip">暂无奖励</div>'; return; }
-  list.innerHTML = u.rewards.slice().reverse().slice(0,20).map(r => `
-    <div class="reward-item">
-      <div class="reward-icon">🎁</div>
-      <div class="reward-info"><div class="reward-title">${r.note}</div><div class="reward-time">${r.time}</div></div>
-      <div class="reward-amount">+¥${r.amount}</div>
-    </div>
-  `).join('');
+  if (rewards.length === 0) { list.innerHTML = '<div class="empty-tip">暂无奖励</div>'; return; }
+  list.innerHTML = rewards.slice().reverse().slice(0,20).map(r =>
+    '<div class="reward-item"><div class="reward-icon">🎁</div><div class="reward-info"><div class="reward-title">'+r.note+'</div><div class="reward-time">'+r.time+'</div></div><div class="reward-amount">+¥'+r.amount+'</div></div>'
+  ).join('');
 }
-
-function timeStr() { const n=new Date(); return `${n.getMonth()+1}/${n.getDate()} ${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`; }
 
 function adminDeposit() {
   adminOpType = 'deposit';
@@ -481,75 +491,47 @@ function adminWithdraw() {
   document.getElementById('adminOpConfirm').style.background = '#c62828';
   openModal('adminOp');
 }
-function doAdminOp() {
+
+async function doAdminOp() {
   const amt = parseInt(document.getElementById('adminOpAmount').value);
-  const note = document.getElementById('adminOpNote').value || (adminOpType === 'deposit' ? '存钱' : '取钱');
+  const note = document.getElementById('adminOpNote').value || (adminOpType === 'deposit' ? '管理员存钱' : '管理员取钱');
   if (!amt || amt <= 0) return alert('请输入金额！');
-  const u = sysData.users[selectedUserId];
+  if (!selectedUserData) return;
+  
+  let balance = selectedUserData.balance || 0;
+  let savings = selectedUserData.savings || 0;
+  let spendable = selectedUserData.spendable || 0;
+  let totalDeposit = selectedUserData.total_deposit || 0;
+  let totalWithdraw = selectedUserData.total_withdraw || 0;
+  let transactions = getJson(selectedUserData.transactions);
+  let deposits = getJson(selectedUserData.deposits);
+  
   if (adminOpType === 'deposit') {
-    u.balance += amt; u.spendable += amt; u.totalDeposit += amt; u.savings += amt;
-    u.deposits.push({ amount: amt, date: new Date().toISOString() });
-    u.transactions.push({ type: 'deposit', amount: amt, note, time: timeStr(), typeName: '存钱' });
+    balance += amt; spendable += amt; savings += amt; totalDeposit += amt;
+    deposits.push({ amount: amt, date: new Date().toISOString() });
+    transactions.push({ type: 'deposit', amount: amt, note, time: timeStr(), typeName: '存钱' });
   } else {
-    if (amt > u.spendable) return alert('余额不足！');
-    u.balance -= amt; u.spendable -= amt; u.totalWithdraw += amt;
-    u.transactions.push({ type: 'withdraw', amount: amt, note, time: timeStr(), typeName: '取钱' });
+    if (amt > spendable) return alert('余额不足！');
+    balance -= amt; spendable -= amt; totalWithdraw += amt;
+    transactions.push({ type: 'withdraw', amount: amt, note, time: timeStr(), typeName: '取钱' });
   }
-  save(); renderAdmin(); closeModal('adminOp');
+  
+  const updates = { balance, savings, spendable, total_deposit: totalDeposit, total_withdraw: totalWithdraw,
+    transactions: JSON.stringify(transactions), deposits: JSON.stringify(deposits) };
+  
+  const { error } = await supabaseClient.from('users').update(updates).eq('id', selectedUserId);
+  if (error) return alert('操作失败: ' + error.message);
+  
+  selectedUserData = { ...selectedUserData, ...updates };
+  closeModal('adminOp');
   document.getElementById('adminOpAmount').value = '';
   document.getElementById('adminOpNote').value = '';
+  renderAdmin();
 }
 
-function saveAdminPass() {
-  const p1 = document.getElementById('newAdminPass1').value;
-  const p2 = document.getElementById('newAdminPass2').value;
-  if (!p1) return alert('请输入新密码！');
-  if (p1 !== p2) return alert('两次密码不一致！');
-  sysData.adminPassword = p1;
-  save(); closeModal('changeAdminPass');
-  alert('✅ 管理员密码已修改！');
-}
 function updateDefaultReward() {
-  sysData.defaultReward = parseInt(document.getElementById('setDefaultReward').value) || 5;
-  save();
-}
-
-function exportData() {
-  const blob = new Blob([JSON.stringify(sysData, null, 2)], {type: 'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'kids-bank-backup-' + new Date().toISOString().slice(0,10) + '.json';
-  a.click();
-  alert('✅ 备份已下载！');
-}
-function importData() {
-  document.getElementById('importFile').click();
-}
-function doImport(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    try {
-      const data = JSON.parse(ev.target.result);
-      if (!data.users) throw new Error('invalid');
-      sysData = data;
-      save(); renderAdmin(); closeModal('dataManage');
-      alert('✅ 数据已恢复！');
-    } catch(err) {
-      alert('❌ 文件格式错误！');
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-}
-function clearAllData() {
-  if (!confirm('⚠️ 确定清空所有数据？此操作不可恢复！')) return;
-  if (!confirm('真的确定吗？所有丸子数据将永久删除！')) return;
-  localStorage.removeItem('kids_bank_sys');
-  sysData = { adminPassword: 'admin123', defaultReward: 5, users: {} };
-  save(); renderAdmin(); closeModal('dataManage');
-  alert('✅ 所有数据已清空');
+  defaultReward = parseInt(document.getElementById('setDefaultReward').value) || 5;
+  document.getElementById('setDefaultReward2').textContent = '¥' + defaultReward;
 }
 
 function openModal(type) { document.getElementById('modal-' + type).classList.remove('hidden'); }
@@ -560,9 +542,9 @@ function switchTab(btn, tab) {
   document.getElementById('tab-tx').classList.toggle('hidden', tab !== 'tx');
   document.getElementById('tab-reward').classList.toggle('hidden', tab !== 'reward');
 }
-document.querySelectorAll('.modal-mask').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); });
-});
+document.querySelectorAll('.modal-mask').forEach(m => { m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); }); });
+
+initSupabase();
 </script>
 </body>
 </html>
