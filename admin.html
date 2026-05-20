@@ -274,10 +274,10 @@ async function createWanzi() {
   let code=genCode();
   while(allUsers.some(u=>u.activate_code===code)) code=genCode();
 
-  // 获取当前最大ID
+  // 获取当前最大ID（id是字符串类型，需要转数字计算）
   const maxIdRes = await db.from('users').select('id').order('id.desc').limit(1);
   const maxId = (maxIdRes.data && maxIdRes.data[0] && maxIdRes.data[0].id) ? parseInt(maxIdRes.data[0].id) : 0;
-  const newId = maxId + 1;
+  const newId = String(maxId + 1);  // 转回字符串，因为数据库id是text类型
 
   const row = {
     id: newId,
