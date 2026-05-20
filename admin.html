@@ -330,7 +330,7 @@ async function createWanzi() {
     total_reward: 0,
     rate: 5,
     tasks: JSON.stringify(tasks),
-    next_task_id: 5,
+    
     deposits: JSON.stringify(initBalance > 0 ? [{ amount: initBalance, date: new Date().toISOString() }] : []),
     transactions: JSON.stringify(initBalance > 0 ? [{ type: 'deposit', amount: initBalance, note: '初始化', time: timeStr(), typeName: '存钱' }] : []),
     rewards: JSON.stringify([]),
@@ -438,14 +438,14 @@ async function addTask() {
   if (!amount || amount <= 0) return alert('请输入正确的金额！');
   
   let tasks = getJson(selectedUserData.tasks);
-  const nextId = selectedUserData.next_task_id || (tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1);
+  const nextId = (tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1);
   tasks.push({ id: nextId, name, amount, icon });
   
-  const { error } = await supabaseClient.from('users').update({ tasks: JSON.stringify(tasks), next_task_id: nextId + 1 }).eq('id', selectedUserId);
+  const { error } = await supabaseClient.from('users').update({ tasks: JSON.stringify(tasks) }).eq('id', selectedUserId);
   if (error) return alert('添加失败: ' + error.message);
   
   selectedUserData.tasks = tasks;
-  selectedUserData.next_task_id = nextId + 1;
+  
   closeModal('addTask');
   document.getElementById('task-name-input').value = '';
   document.getElementById('task-amount-input').value = '';
