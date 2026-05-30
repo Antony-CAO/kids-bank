@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>喜福便利店 - 现金交接</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
+        
+        /* 登录页 */
+        .login-page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: linear-gradient(135deg, #ff6b35 0%, #ff8f5e 100%); }
+        .login-page .logo { font-size: 32px; font-weight: bold; color: white; margin-bottom: 8px; }
+        .login-page .sub { color: rgba(255,255,255,0.8); margin-bottom: 30px; }
+        .login-box { background: white; border-radius: 16px; padding: 30px 24px; width: 100%; max-width: 360px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); }
+        .login-box h3 { font-size: 18px; margin-bottom: 20px; text-align: center; color: #333; }
+        .role-tabs { display: flex; margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 2px solid #ff6b35; }
+        .role-tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s; }
+        .role-tab.active { background: #ff6b35; color: white; }
+        .role-tab:not(.active) { background: white; color: #ff6b35; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; transition: border 0.3s; }
+        .form-group input:focus, .form-group select:focus { border-color: #ff6b35; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-primary { background: #ff6b35; color: white; }
+        .btn-primary:active { background: #e55a2b; }
+
+        /* 主页面 */
+        .app-page { display: none; min-height: 100vh; padding-bottom: 80px; }
+        .app-page.show { display: block; }
+        
+        /* 顶部栏 */
+        .top-bar { background: linear-gradient(135deg, #ff6b35 0%, #ff8f5e 100%); padding: 16px 20px; color: white; position: sticky; top: 0; z-index: 100; }
+        .top-bar h2 { font-size: 18px; }
+        .top-bar .user-info { font-size: 12px; opacity: 0.9; margin-top: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .top-bar .logout-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; cursor: pointer; }
+
+        /* 交接录入 */
+        .record-section { padding: 16px; }
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .card h3 { font-size: 16px; margin-bottom: 16px; color: #333; display: flex; align-items: center; gap: 8px; }
+        .card h3 .icon { font-size: 20px; }
+        .shift-btns { display: flex; gap: 10px; margin-bottom: 16px; }
+        .shift-btn { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s; background: white; }
+        .shift-btn.active { border-color: #ff6b35; background: #fff5f0; }
+        .shift-btn .icon { font-size: 24px; }
+        .shift-btn .text { font-size: 13px; margin-top: 4px; color: #666; }
+        .shift-btn.active .text { color: #ff6b35; font-weight: 600; }
+        .amount-input { position: relative; margin-bottom: 16px; }
+        .amount-input .prefix { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 24px; font-weight: bold; color: #ff6b35; }
+        .amount-input input { width: 100%; padding: 16px 16px 16px 40px; border: 2px solid #eee; border-radius: 10px; font-size: 28px; font-weight: bold; text-align: right; outline: none; transition: border 0.3s; }
+        .amount-input input:focus { border-color: #ff6b35; }
+        .remark-input textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; resize: none; height: 60px; outline: none; }
+        .remark-input textarea:focus { border-color: #ff6b35; }
+        .submit-btn { background: #ff6b35; color: white; border: none; width: 100%; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .submit-btn:active { background: #e55a2b; }
+
+        /* 记录列表 */
+        .record-list { padding: 0 16px; }
+        .date-divider { font-size: 13px; color: #999; padding: 12px 0 8px; font-weight: 600; }
+        .record-item { background: white; border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .record-item .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .record-item .name { font-weight: 600; font-size: 15px; }
+        .record-item .shift-tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+        .shift-tag.on { background: #e8f5e9; color: #2e7d32; }
+        .shift-tag.off { background: #fff3e0; color: #e65100; }
+        .record-item .amount { font-size: 22px; font-weight: bold; color: #ff6b35; }
+        .record-item .meta { display: flex; justify-content: space-between; font-size: 12px; color: #999; }
+        .record-item .remark { font-size: 12px; color: #666; margin-top: 6px; padding-top: 6px; border-top: 1px solid #f0f0f0; }
+
+        /* 老板端 */
+        .summary-cards { display: flex; gap: 10px; padding: 16px; }
+        .summary-card { flex: 1; background: white; border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .summary-card .value { font-size: 24px; font-weight: bold; color: #ff6b35; }
+        .summary-card .label { font-size: 12px; color: #999; margin-top: 4px; }
+        .filter-bar { display: flex; gap: 8px; padding: 0 16px; margin-bottom: 12px; }
+        .filter-btn { padding: 6px 14px; border-radius: 16px; border: 1px solid #ddd; background: white; font-size: 13px; cursor: pointer; }
+        .filter-btn.active { background: #ff6b35; color: white; border-color: #ff6b35; }
+
+        /* 底部导航 */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; border-top: 1px solid #eee; z-index: 100; }
+        .nav-item { flex: 1; padding: 8px 0; text-align: center; cursor: pointer; transition: color 0.3s; }
+        .nav-item .icon { font-size: 22px; }
+        .nav-item .text { font-size: 11px; margin-top: 2px; color: #999; }
+        .nav-item.active .text { color: #ff6b35; font-weight: 600; }
+
+        /* 弹窗 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-end; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: white; border-radius: 16px 16px 0 0; padding: 24px; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .modal h3 { margin-bottom: 16px; font-size: 18px; }
+        .modal .close-btn { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; }
+
+        /* 提示 */
+        .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.75); color: white; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .toast.show { opacity: 1; }
+
+        /* 空状态 */
+        .empty { text-align: center; padding: 40px 20px; color: #999; }
+        .empty .icon { font-size: 48px; margin-bottom: 12px; }
+        .empty .text { font-size: 14px; }
+
+        /* 员工管理 */
+        .staff-list { padding: 16px; }
+        .staff-item { background: white; border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .staff-item .name { font-weight: 600; }
+        .staff-item .delete-btn { background: #fee; color: #c00; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+        .add-staff { display: flex; gap: 8px; margin-top: 12px; }
+        .add-staff input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; }
+        .add-staff button { background: #ff6b35; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<!-- 登录页 -->
+<div class="login-page" id="loginPage">
+    <div class="logo">🏪 喜福便利店</div>
+    <div class="sub">现金交接记录系统</div>
+    <div class="login-box">
+        <h3>登录</h3>
+        <div class="role-tabs">
+            <div class="role-tab active" onclick="switchRole('staff')">店员</div>
+            <div class="role-tab" onclick="switchRole('boss')">老板</div>
+        </div>
+        <div id="staffLogin">
+            <div class="form-group">
+                <label>选择姓名</label>
+                <select id="staffSelect"><option value="">请选择</option></select>
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="staffPwd" placeholder="输入密码">
+            </div>
+            <button class="btn btn-primary" onclick="doLogin('staff')">登录</button>
+        </div>
+        <div id="bossLogin" style="display:none">
+            <div class="form-group">
+                <label>老板密码</label>
+                <input type="password" id="bossPwd" placeholder="输入管理密码">
+            </div>
+            <button class="btn btn-primary" onclick="doLogin('boss')">登录</button>
+        </div>
+    </div>
+</div>
+
+<!-- 店员主页 -->
+<div class="app-page" id="staffPage">
+    <div class="top-bar">
+        <h2>🏪 喜福便利店</h2>
+        <div class="user-info">
+            <span id="staffName"></span>
+            <button class="logout-btn" onclick="doLogout()">退出</button>
+        </div>
+    </div>
+    
+    <!-- 交接录入 -->
+    <div class="record-section">
+        <div class="card">
+            <h3><span class="icon">💰</span> 现金交接</h3>
+            <div class="shift-btns">
+                <div class="shift-btn active" onclick="selectShift('on', this)">
+                    <div class="icon">🔵</div>
+                    <div class="text">上班清点</div>
+                </div>
+                <div class="shift-btn" onclick="selectShift('off', this)">
+                    <div class="icon">🟠</div>
+                    <div class="text">下班清点</div>
+                </div>
+            </div>
+            <div class="amount-input">
+                <span class="prefix">¥</span>
+                <input type="number" id="cashAmount" placeholder="0.00" step="0.01">
+            </div>
+            <div class="form-group remark-input">
+                <textarea id="remark" placeholder="备注（可选）"></textarea>
+            </div>
+            <button class="submit-btn" onclick="submitRecord()">提交记录</button>
+        </div>
+    </div>
+
+    <!-- 我的记录 -->
+    <div id="myRecords"></div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active"><div class="icon">📝</div><div class="text">交接</div></div>
+        <div class="nav-item" onclick="loadMyRecords()"><div class="icon">📋</div><div class="text">我的记录</div></div>
+    </div>
+</div>
+
+<!-- 老板主页 -->
+<div class="app-page" id="bossPage">
+    <div class="top-bar">
+        <h2>🏪 喜福便利店</h2>
+        <div class="user-info">
+            <span>老板管理端</span>
+            <button class="logout-btn" onclick="doLogout()">退出</button>
+        </div>
+    </div>
+    
+    <div class="summary-cards" id="summaryCards">
+        <div class="summary-card"><div class="value" id="todayCount">0</div><div class="label">今日记录</div></div>
+        <div class="summary-card"><div class="value" id="todayCash">¥0</div><div class="label">最新现金</div></div>
+        <div class="summary-card"><div class="value" id="staffCount">0</div><div class="label">员工数</div></div>
+    </div>
+
+    <div class="filter-bar">
+        <div class="filter-btn active" onclick="filterRecords('all', this)">全部</div>
+        <div class="filter-btn" onclick="filterRecords('on', this)">上班</div>
+        <div class="filter-btn" onclick="filterRecords('off', this)">下班</div>
+    </div>
+
+    <div id="allRecords"></div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active"><div class="icon">📊</div><div class="text">记录</div></div>
+        <div class="nav-item" onclick="showStaffManage()"><div class="icon">👥</div><div class="text">员工</div></div>
+    </div>
+</div>
+
+<!-- 员工管理弹窗 -->
+<div class="modal-overlay" id="staffModal">
+    <div class="modal">
+        <h3>👥 员工管理</h3>
+        <div id="staffListArea"></div>
+        <div class="add-staff">
+            <input type="text" id="newStaffName" placeholder="员工姓名">
+            <input type="password" id="newStaffPwd" placeholder="密码" style="width:80px">
+            <button onclick="addStaff()">添加</button>
+        </div>
+        <div style="margin-top:16px;text-align:center">
+            <button class="btn btn-primary" onclick="closeStaffModal()" style="width:auto;padding:10px 30px">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 提示 -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://eqpkevtplhwwzkukvyso.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxcGtldnRwbGh3d3prdWt2eXNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2NTY0NzEsImV4cCI6MjA2MzIzMjQ3MX0.ZxZQhKXZ3qN0lJGVPK_njA1wVqkYG1R1oqGz7BmFE7w';
+
+let currentUser = null;
+let currentRole = null;
+let currentShift = 'on';
+let currentFilter = 'all';
+
+// ===== Supabase API =====
+async function sbQuery(table, method='GET', body=null, query='') {
+    const opts = {
+        method,
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': method === 'POST' ? 'return=representation' : 'return=representation'
+        }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const url = `${SUPABASE_URL}/rest/v1/${table}${query}`;
+    const res = await fetch(url, opts);
+    if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+    if (res.status === 204) return null;
+    return res.json();
+}
+
+// ===== 初始化 =====
+async function init() {
+    // 检查本地登录状态
+    const saved = localStorage.getItem('xifu_user');
+    if (saved) {
+        const {role, name, id} = JSON.parse(saved);
+        currentUser = {role, name, id};
+        currentRole = role;
+        showApp();
+        return;
+    }
+    // 加载员工列表
+    await loadStaffList();
+}
+
+async function loadStaffList() {
+    try {
+        const staff = await sbQuery('staff');
+        const sel = document.getElementById('staffSelect');
+        sel.innerHTML = '<option value="">请选择</option>';
+        staff.forEach(s => {
+            sel.innerHTML += `<option value="${s.id}" data-name="${s.name}">${s.name}</option>`;
+        });
+        // 如果没有员工，创建默认
+        if (staff.length === 0) {
+            await sbQuery('staff', 'POST', {name: '店员1', password: '1234'});
+            await sbQuery('staff', 'POST', {name: '店员2', password: '1234'});
+            await sbQuery('staff', 'POST', {name: '店员3', password: '1234'});
+            await sbQuery('staff', 'POST', {name: '店员4', password: '1234'});
+            await loadStaffList();
+        }
+    } catch(e) {
+        console.error('加载员工失败', e);
+        showToast('数据库连接失败，请检查网络');
+    }
+}
+
+// ===== 登录 =====
+function switchRole(role) {
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('staffLogin').style.display = role === 'staff' ? 'block' : 'none';
+    document.getElementById('bossLogin').style.display = role === 'boss' ? 'block' : 'none';
+}
+
+async function doLogin(role) {
+    if (role === 'staff') {
+        const sel = document.getElementById('staffSelect');
+        const id = sel.value;
+        const name = sel.options[sel.selectedIndex]?.dataset.name;
+        const pwd = document.getElementById('staffPwd').value;
+        if (!id) return showToast('请选择姓名');
+        if (!pwd) return showToast('请输入密码');
+        try {
+            const staff = await sbQuery('staff', 'GET', null, `?id=eq.${id}&password=eq.${pwd}`);
+            if (staff.length === 0) return showToast('密码错误');
+            currentUser = {role: 'staff', name, id};
+        } catch(e) {
+            return showToast('登录失败');
+        }
+    } else {
+        const pwd = document.getElementById('bossPwd').value;
+        if (pwd !== 'boss888') return showToast('密码错误');
+        currentUser = {role: 'boss', name: '老板', id: 'boss'};
+    }
+    currentRole = currentUser.role;
+    localStorage.setItem('xifu_user', JSON.stringify(currentUser));
+    showApp();
+}
+
+function doLogout() {
+    localStorage.removeItem('xifu_user');
+    currentUser = null;
+    currentRole = null;
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('staffPage').classList.remove('show');
+    document.getElementById('bossPage').classList.remove('show');
+}
+
+function showApp() {
+    document.getElementById('loginPage').style.display = 'none';
+    if (currentRole === 'staff') {
+        document.getElementById('staffPage').classList.add('show');
+        document.getElementById('staffName').textContent = currentUser.name;
+        loadMyRecords();
+    } else {
+        document.getElementById('bossPage').classList.add('show');
+        loadBossData();
+    }
+}
+
+// ===== 店员：提交记录 =====
+function selectShift(shift, el) {
+    currentShift = shift;
+    document.querySelectorAll('.shift-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+}
+
+async function submitRecord() {
+    const amount = parseFloat(document.getElementById('cashAmount').value);
+    if (isNaN(amount) || amount < 0) return showToast('请输入正确金额');
+    
+    const remark = document.getElementById('remark').value.trim();
+    try {
+        await sbQuery('cash_records', 'POST', {
+            staff_id: currentUser.id,
+            staff_name: currentUser.name,
+            shift_type: currentShift,
+            amount: amount,
+            remark: remark,
+            created_at: new Date().toISOString()
+        });
+        showToast('✅ 提交成功！');
+        document.getElementById('cashAmount').value = '';
+        document.getElementById('remark').value = '';
+        loadMyRecords();
+    } catch(e) {
+        showToast('提交失败：' + e.message);
+    }
+}
+
+async function loadMyRecords() {
+    try {
+        const records = await sbQuery('cash_records', 'GET', null, 
+            `?staff_id=eq.${currentUser.id}&order=created_at.desc&limit=30`);
+        renderRecords(records, 'myRecords', false);
+    } catch(e) {
+        document.getElementById('myRecords').innerHTML = '<div class="empty"><div class="icon">😕</div><div class="text">加载失败</div></div>';
+    }
+}
+
+// ===== 老板端 =====
+async function loadBossData() {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const records = await sbQuery('cash_records', 'GET', null, 
+            `?order=created_at.desc&limit=100`);
+        const staff = await sbQuery('staff');
+        
+        // 统计
+        const todayRecords = records.filter(r => r.created_at && r.created_at.startsWith(today));
+        document.getElementById('todayCount').textContent = todayRecords.length;
+        document.getElementById('staffCount').textContent = staff.length;
+        
+        // 最新现金
+        const latestOff = records.find(r => r.shift_type === 'off');
+        document.getElementById('todayCash').textContent = latestOff ? `¥${latestOff.amount}` : '¥0';
+        
+        renderRecords(records, 'allRecords', true);
+    } catch(e) {
+        document.getElementById('allRecords').innerHTML = '<div class="empty"><div class="icon">😕</div><div class="text">加载失败</div></div>';
+    }
+}
+
+function filterRecords(filter, el) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    loadBossData();
+}
+
+// ===== 渲染记录 =====
+function renderRecords(records, containerId, showName) {
+    const container = document.getElementById(containerId);
+    if (!records || records.length === 0) {
+        container.innerHTML = '<div class="empty"><div class="icon">📝</div><div class="text">暂无记录</div></div>';
+        return;
+    }
+    
+    let filtered = records;
+    if (currentFilter !== 'all' && currentRole === 'boss') {
+        filtered = records.filter(r => r.shift_type === currentFilter);
+    }
+    
+    let html = '<div class="record-list">';
+    let lastDate = '';
+    filtered.forEach(r => {
+        const date = r.created_at ? new Date(r.created_at) : new Date();
+        const dateStr = `${date.getMonth()+1}月${date.getDate()}日`;
+        const timeStr = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+        
+        if (dateStr !== lastDate) {
+            html += `<div class="date-divider">${dateStr}</div>`;
+            lastDate = dateStr;
+        }
+        
+        html += `<div class="record-item">
+            <div class="header">
+                <span class="name">${showName ? r.staff_name : ''}</span>
+                <span class="shift-tag ${r.shift_type}">${r.shift_type === 'on' ? '🔵 上班' : '🟠 下班'}</span>
+            </div>
+            <div class="amount">¥${r.amount.toFixed(2)}</div>
+            <div class="meta">
+                <span>${timeStr}</span>
+            </div>
+            ${r.remark ? `<div class="remark">💬 ${r.remark}</div>` : ''}
+        </div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// ===== 员工管理 =====
+async function showStaffManage() {
+    document.getElementById('staffModal').classList.add('show');
+    await renderStaffList();
+}
+
+function closeStaffModal() {
+    document.getElementById('staffModal').classList.remove('show');
+}
+
+async function renderStaffList() {
+    try {
+        const staff = await sbQuery('staff');
+        let html = '';
+        staff.forEach(s => {
+            html += `<div class="staff-item">
+                <span class="name">${s.name}</span>
+                <button class="delete-btn" onclick="deleteStaff('${s.id}')">删除</button>
+            </div>`;
+        });
+        document.getElementById('staffListArea').innerHTML = html || '<div style="color:#999;text-align:center;padding:20px">暂无员工</div>';
+    } catch(e) {
+        document.getElementById('staffListArea').innerHTML = '<div style="color:red">加载失败</div>';
+    }
+}
+
+async function addStaff() {
+    const name = document.getElementById('newStaffName').value.trim();
+    const pwd = document.getElementById('newStaffPwd').value.trim() || '1234';
+    if (!name) return showToast('请输入姓名');
+    try {
+        await sbQuery('staff', 'POST', {name, password: pwd});
+        document.getElementById('newStaffName').value = '';
+        document.getElementById('newStaffPwd').value = '';
+        showToast('✅ 添加成功');
+        renderStaffList();
+        loadStaffList();
+    } catch(e) {
+        showToast('添加失败');
+    }
+}
+
+async function deleteStaff(id) {
+    if (!confirm('确定删除该员工？')) return;
+    try {
+        await sbQuery('staff', 'DELETE', null, `?id=eq.${id}`);
+        showToast('已删除');
+        renderStaffList();
+        loadStaffList();
+    } catch(e) {
+        showToast('删除失败');
+    }
+}
+
+// ===== 工具 =====
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// 启动
+init();
+</script>
+</body>
+</html>
