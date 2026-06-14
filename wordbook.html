@@ -7,49 +7,33 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
-    
     .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; text-align: center; }
     .header h1 { font-size: 20px; margin-bottom: 4px; }
     .header p { font-size: 13px; opacity: 0.85; }
-    
-    .tabs { display: flex; background: white; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 10; }
-    .tab { flex: 1; padding: 12px 8px; text-align: center; font-size: 14px; cursor: pointer; color: #888; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tabs { display: flex; background: white; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 10; overflow-x: auto; }
+    .tab { flex: 1; min-width: 60px; padding: 12px 8px; text-align: center; font-size: 13px; cursor: pointer; color: #888; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
     .tab.active { color: #667eea; border-bottom-color: #667eea; font-weight: 600; }
-    
     .container { max-width: 600px; margin: 0 auto; padding: 16px; }
-    
     .section { display: none; }
     .section.active { display: block; }
-    
-    /* 查词区 */
     .search-box { display: flex; gap: 8px; margin-bottom: 16px; }
-    .search-box input { flex: 1; padding: 12px 16px; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; outline: none; transition: border 0.2s; }
-    .search-box input:focus { border-color: #667eea; }
-    .search-box button { padding: 12px 20px; background: #667eea; color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-    
+    .search-box input { flex: 1; padding: 12px 16px; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; outline: none; }
+    .search-box button { padding: 12px 20px; background: #667eea; color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
     .word-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
     .word-card .word { font-size: 28px; font-weight: 700; color: #333; margin-bottom: 6px; }
     .word-card .phonetic { font-size: 16px; color: #888; margin-bottom: 12px; }
     .word-card .meaning { font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 12px; padding-left: 12px; border-left: 3px solid #667eea; }
-    .word-card .example { font-size: 14px; color: #666; background: #f8f8ff; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-style: italic; }
     .word-card .actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .word-card .btn { padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 500; }
     .word-card .btn-save { background: #e8e5fd; color: #667eea; }
     .word-card .btn-speak { background: #f0f0f0; color: #555; }
-    
     .loading { text-align: center; padding: 40px; color: #888; }
     .error { text-align: center; padding: 20px; color: #e74c3c; background: #fdf2f2; border-radius: 12px; font-size: 14px; }
-    .empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
-    
-    /* 记录区 */
     .add-form { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
     .add-form h3 { font-size: 15px; margin-bottom: 12px; color: #667eea; }
     .add-form input, .add-form textarea { width: 100%; padding: 12px 14px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 15px; margin-bottom: 10px; outline: none; resize: none; font-family: inherit; }
-    .add-form input:focus, .add-form textarea:focus { border-color: #667eea; }
     .add-form textarea { height: 80px; }
     .add-form .btn-add { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
-    
-    /* 单词列表 */
     .word-item { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); display: flex; align-items: flex-start; gap: 10px; }
     .word-item .num { width: 24px; height: 24px; background: #e8e5fd; color: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
     .word-item .content { flex: 1; }
@@ -58,76 +42,80 @@
     .word-item .mastered { display: inline-block; background: #27ae60; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 600; }
     .word-item .actions { display: flex; gap: 4px; flex-shrink: 0; }
     .word-item .btn-icon { width: 28px; height: 28px; border-radius: 6px; border: none; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .word-item .btn-del { background: #fde8e8; color: #e74c3c; }
-    .word-item .btn-done { background: #e8fdf0; color: #27ae60; }
-    
-    /* 统计 */
     .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
     .stat { background: white; border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
     .stat .num { font-size: 24px; font-weight: 700; color: #667eea; }
     .stat .label { font-size: 11px; color: #aaa; margin-top: 2px; }
-    
     .filter-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
     .filter-bar .filter { padding: 6px 12px; border-radius: 20px; font-size: 12px; border: 1px solid #ddd; background: white; color: #888; cursor: pointer; }
     .filter-bar .filter.active { background: #667eea; color: white; border-color: #667eea; }
-    
-    /* 句子查询 */
     .sent-form { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
     .sent-form textarea { width: 100%; padding: 12px 14px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 15px; margin-bottom: 10px; outline: none; resize: none; font-family: inherit; height: 60px; }
     .sent-form .btn-send { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
-    
     .sent-result { background: white; border-radius: 14px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .sent-result .sent { font-size: 15px; color: #333; line-height: 1.6; }
-    .sent-result .sent-cn { font-size: 13px; color: #888; margin-top: 6px; }
-    
-    /* Toast */
+    .browser-tip { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #856404; margin-bottom: 12px; }
+    .mode-switch { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+    .mode-switch .mode-btn { padding: 8px 16px; border-radius: 20px; font-size: 13px; border: 1px solid #ddd; background: white; color: #888; cursor: pointer; }
+    .mode-switch .mode-btn.active { background: #667eea; color: white; border-color: #667eea; }
+    .practice-card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); text-align: center; }
+    .practice-card .target-word { font-size: 32px; font-weight: 700; color: #333; margin-bottom: 8px; }
+    .practice-card .target-phonetic { font-size: 16px; color: #888; margin-bottom: 16px; }
+    .practice-card .target-meaning { font-size: 14px; color: #666; background: #f8f8ff; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; display: inline-block; }
+    .sentence-practice { font-size: 18px; color: #333; line-height: 1.6; margin-bottom: 12px; padding: 16px; background: #f8f8ff; border-radius: 12px; }
+    .practice-controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+    .practice-controls .btn-practice { padding: 12px 24px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-demo { background: #e8e5fd; color: #667eea; }
+    .btn-record { background: #ff6b6b; color: white; }
+    .btn-record.recording { background: #e74c3c; animation: pulse-rec 1s infinite; }
+    @keyframes pulse-rec { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    .btn-next { background: #f0f0f0; color: #555; }
+    .practice-result { margin-top: 16px; padding: 16px; border-radius: 12px; display: none; }
+    .practice-result.show { display: block; animation: fadeUp 0.3s; }
+    .practice-result.good { background: #e8fdf0; border: 1px solid #27ae60; }
+    .practice-result.ok { background: #fff8e1; border: 1px solid #f39c12; }
+    .practice-result.bad { background: #fdf2f2; border: 1px solid #e74c3c; }
+    .score-display { font-size: 48px; font-weight: 700; margin: 10px 0; }
+    .score-display.good { color: #27ae60; }
+    .score-display.ok { color: #f39c12; }
+    .score-display.bad { color: #e74c3c; }
+    .recognized-text { font-size: 16px; color: #555; margin: 8px 0; padding: 10px; background: rgba(255,255,255,0.8); border-radius: 8px; }
     .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 999; animation: fadeUp 0.3s; }
     @keyframes fadeUp { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-    
-    /* 在线状态指示 */
     .online-dot { width: 8px; height: 8px; border-radius: 50%; background: #27ae60; display: inline-block; margin-right: 4px; animation: pulse 2s infinite; }
     .offline-dot { background: #e74c3c; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
   </style>
 </head>
 <body>
-
 <div class="header">
   <h1>📒 曹栋单词本</h1>
   <p><span class="online-dot" id="onlineDot"></span><span id="statusText">连接中...</span></p>
 </div>
-
 <div class="tabs">
   <div class="tab active" data-tab="lookup">查词</div>
   <div class="tab" data-tab="add">记单词</div>
   <div class="tab" data-tab="list">单词本</div>
-  <div class="tab" data-tab="sent">查句子</div>
+  <div class="tab" data-tab="sent">翻译</div>
+  <div class="tab" data-tab="practice">跟读练习</div>
 </div>
-
 <div class="container">
-
-  <!-- 查词 -->
   <div class="section active" id="sec-lookup">
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="输入单词查意思..." autocomplete="off" onkeypress="if(event.key==='Enter')lookup()">
+      <input type="text" id="searchInput" placeholder="输入英文单词..." onkeypress="if(event.key==='Enter')lookup()">
       <button onclick="lookup()">查询</button>
     </div>
     <div id="lookupResult"></div>
   </div>
-
-  <!-- 记单词 -->
   <div class="section" id="sec-add">
     <div class="add-form">
       <h3>✏️ 记录生词</h3>
-      <input type="text" id="addWord" placeholder="单词">
-      <input type="text" id="addPhonetic" placeholder="音标（选填），如 /əˈbɪstrækt/">
-      <input type="text" id="addMeaning" placeholder="释义（选填）">
-      <textarea id="addExample" placeholder="例句（选填）"></textarea>
-      <button class="btn-add" onclick="addWord()">保存到单词本</button>
+      <input type="text" id="addWord" placeholder="单词（英文）">
+      <input type="text" id="addPhonetic" placeholder="音标（选填）">
+      <input type="text" id="addMeaning" placeholder="中文释义（选填）">
+      <textarea id="addExample" placeholder="英文例句（选填）"></textarea>
+      <button class="btn-add" onclick="addWord()">保存</button>
     </div>
   </div>
-
-  <!-- 单词本列表 -->
   <div class="section" id="sec-list">
     <div class="stats">
       <div class="stat"><div class="num" id="statTotal">0</div><div class="label">总记录</div></div>
@@ -141,39 +129,73 @@
     </div>
     <div id="wordList"></div>
   </div>
-
-  <!-- 查句子 -->
   <div class="section" id="sec-sent">
     <div class="sent-form">
-      <textarea id="sentInput" placeholder="输入中文或英文，查找对应句子..."></textarea>
-      <button class="btn-send" onclick="lookupSentence()">🔍 查找例句</button>
+      <textarea id="sentInput" placeholder="输入英文查中文，或输入中文查英文..."></textarea>
+      <button class="btn-send" onclick="lookupSentence()">🔍 翻译</button>
     </div>
     <div id="sentResult"></div>
-    <div style="font-size:12px;color:#ccc;text-align:center;padding:20px;">提示：输入中文查英文例句，输入英文查中文翻译</div>
   </div>
-
+  <div class="section" id="sec-practice">
+    <div class="browser-tip">⚠️ 跟读功能需在 Chrome/Safari 中使用</div>
+    <div class="mode-switch">
+      <div class="mode-btn active" data-mode="word" onclick="switchMode('word')">📝 单词</div>
+      <div class="mode-btn" data-mode="sentence" onclick="switchMode('sentence')">📄 句子</div>
+    </div>
+    <div id="wordPractice">
+      <div class="practice-card">
+        <div class="target-word" id="practiceWord">加载中...</div>
+        <div class="target-phonetic" id="practicePhonetic"></div>
+        <div class="target-meaning" id="practiceMeaning"></div>
+        <div class="practice-controls">
+          <button class="btn-practice btn-demo" onclick="demoWord()">🔊 示范</button>
+          <button class="btn-practice btn-record" id="recordBtn" onclick="toggleRecord()">🎤 跟读</button>
+          <button class="btn-practice btn-next" onclick="nextWord()">⏭️ 下一个</button>
+        </div>
+      </div>
+      <div class="practice-result" id="practiceResult">
+        <div class="score-display" id="scoreDisplay"></div>
+        <div class="recognized-text" id="recognizedText"></div>
+        <div id="feedbackText"></div>
+      </div>
+    </div>
+    <div id="sentencePractice" style="display:none;">
+      <div class="practice-card">
+        <div class="sentence-practice" id="practiceSentence">加载中...</div>
+        <div class="practice-controls">
+          <button class="btn-practice btn-demo" onclick="demoSentence()">🔊 示范</button>
+          <button class="btn-practice btn-record" id="recordSentenceBtn" onclick="toggleSentenceRecord()">🎤 跟读</button>
+          <button class="btn-practice btn-next" onclick="nextSentence()">⏭️ 下一个</button>
+        </div>
+      </div>
+      <div class="practice-result" id="sentenceResult">
+        <div class="score-display" id="sentenceScoreDisplay"></div>
+        <div class="recognized-text" id="sentenceRecognizedText"></div>
+        <div id="sentenceFeedbackText"></div>
+      </div>
+    </div>
+  </div>
 </div>
-
 <script>
 const SUPABASE_URL = 'https://pikgowxalrkjrijykoe.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_0jOHX7hrPXFV6A2lv9HgPA_9LxT04Xx';
 const USER_ID = 'caodong_wordbook';
+let currentFilter = 'all', myWords = [], practiceIndex = 0, currentMode = 'word';
+let recognition = null, isRecording = false;
+const sentenceList = ["Hello, nice to meet you.","I love learning English.","Practice makes perfect.","Where is the nearest station?","Could you help me?","I want to improve pronunciation.","She is reading a book.","We are going to the park.","The weather is nice today.","Can you speak slowly?"];
+let sentenceIndex = 0;
 
-let currentFilter = 'all';
-let myWords = [];
-
-// Tab 切换
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById('sec-' + tab.dataset.tab).classList.add('active');
-    if (tab.dataset.tab === 'list') loadWords();
+    if(tab.dataset.tab === 'list') loadWords();
+    if(tab.dataset.tab === 'practice') initPractice();
   });
 });
 
-// Filter 切换
 document.querySelectorAll('.filter').forEach(f => {
   f.addEventListener('click', () => {
     document.querySelectorAll('.filter').forEach(x => x.classList.remove('active'));
@@ -183,258 +205,354 @@ document.querySelectorAll('.filter').forEach(f => {
   });
 });
 
-// 查词
 async function lookup() {
   const word = document.getElementById('searchInput').value.trim();
-  if (!word) return;
+  if(!word) return;
   document.getElementById('lookupResult').innerHTML = '<div class="loading">查询中...</div>';
-  
   try {
-    // 用 Free Dictionary API
     const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
-    if (!res.ok) throw new Error('未找到该单词');
-    const data = await res.json();
-    const entry = data[0];
-    
+    if(!res.ok) throw Error();
+    const entry = (await res.json())[0];
     const wordText = entry.word;
-    const phonetic = entry.phonetic || (entry.phonetics.find(p => p.text)?.text) || '';
-    let meaningsHTML = '';
-    
+    const phonetic = entry.phonetic || entry.phonetics?.find(p=>p.text)?.text || '';
+    let mHTML = '';
     entry.meanings.forEach(m => {
-      m.definitions.slice(0, 2).forEach(def => {
-        meaningsHTML += `<div class="meaning">${m.partOfSpeech} · ${def.definition}</div>`;
-        if (def.example) {
-          meaningsHTML += `<div class="example">"${def.example}"</div>`;
-        }
+      m.definitions.slice(0,2).forEach(def => {
+        mHTML += `<div class="meaning">${m.partOfSpeech} · ${def.definition}</div>`;
+        if(def.example) mHTML += `<div class="example">"${def.example}"</div>`;
       });
     });
-    
-    document.getElementById('lookupResult').innerHTML = `
-      <div class="word-card">
-        <div class="word">${wordText}</div>
-        <div class="phonetic">${phonetic}</div>
-        ${meaningsHTML}
-        <div class="actions">
-          <button class="btn btn-save" onclick="saveToBook('${wordText}', '${phonetic.replace(/'/g,"\\'")}', this.closest('.word-card'))">⭐ 保存</button>
-          <button class="btn btn-speak" onclick="speakWord('${wordText}')">🔊 发音</button>
-        </div>
-      </div>
-    `;
-  } catch (e) {
-    document.getElementById('lookupResult').innerHTML = `<div class="error">❌ 未找到"${word}"，请检查拼写</div>`;
+    document.getElementById('lookupResult').innerHTML = `<div class="word-card"><div class="word">${wordText}</div><div class="phonetic">${phonetic}</div>${mHTML}<div class="actions"><button class="btn btn-save" onclick="saveToBook('${wordText}','${phonetic.replace(/'/g,"\\'")}')">⭐ 保存</button><button class="btn btn-speak" onclick="speakWord('${wordText}')">🔊 发音</button></div></div>`;
+  } catch(e) {
+    document.getElementById('lookupResult').innerHTML = '<div class="error">❌ 未找到</div>';
   }
 }
 
-// 保存到单词本
+async function saveToBook(word, phonetic) {
+  try {
+    const exist = await fetch(`${SUPABASE_URL}/rest/v1/words?user_id=eq.${USER_ID}&word=eq.${word.toLowerCase()}`, {
+      headers: {'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`}
+    }).then(r=>r.json());
+    if(exist.length>0) { showToast('⚠️ 已记录'); return; }
+    await fetch(`${SUPABASE_URL}/rest/v1/words`, {
+      method:'POST', headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},
+      body: JSON.stringify({user_id:USER_ID, word:word.toLowerCase(), phonetic, meaning:'', example:'', is_mastered:false, created_at:new Date().toISOString()})
+    });
+    showToast('✅ 已保存');
+  } catch(e) { showToast('失败'); }
+}
+
 async function addWord() {
   const word = document.getElementById('addWord').value.trim();
   const phonetic = document.getElementById('addPhonetic').value.trim();
   const meaning = document.getElementById('addMeaning').value.trim();
   const example = document.getElementById('addExample').value.trim();
-  
-  if (!word) { showToast('请输入单词'); return; }
-  
-  const payload = {
-    user_id: USER_ID,
-    word: word.toLowerCase(),
-    phonetic: phonetic,
-    meaning: meaning,
-    example: example,
-    is_mastered: false,
-    created_at: new Date().toISOString()
-  };
-  
+  if(!word) { showToast('请输入单词'); return; }
   try {
-    // 先查重
     const exist = await fetch(`${SUPABASE_URL}/rest/v1/words?user_id=eq.${USER_ID}&word=eq.${word.toLowerCase()}`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    }).then(r => r.json());
-    
-    if (exist.length > 0) {
-      showToast('⚠️ 这个单词已记录过');
-      return;
-    }
-    
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/words`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify(payload)
+      headers: {'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`}
+    }).then(r=>r.json());
+    if(exist.length>0) { showToast('⚠️ 已记录'); return; }
+    await fetch(`${SUPABASE_URL}/rest/v1/words`, {
+      method:'POST', headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},
+      body: JSON.stringify({user_id:USER_ID, word:word.toLowerCase(), phonetic, meaning, example, is_mastered:false, created_at:new Date().toISOString()})
     });
-    
-    if (res.ok) {
-      showToast('✅ 已保存到单词本');
-      document.getElementById('addWord').value = '';
-      document.getElementById('addPhonetic').value = '';
-      document.getElementById('addMeaning').value = '';
-      document.getElementById('addExample').value = '';
-    } else {
-      showToast('保存失败');
-    }
-  } catch (e) {
-    // 离线时用localStorage
-    const offlineWords = JSON.parse(localStorage.getItem('wordbook_offline') || '[]');
-    offlineWords.push({ ...payload, id: 'offline_' + Date.now() });
-    localStorage.setItem('wordbook_offline', JSON.stringify(offlineWords));
-    showToast('📴 已存入本地（联网后同步）');
+    showToast('✅ 已保存');
     document.getElementById('addWord').value = '';
-  }
+    document.getElementById('addPhonetic').value = '';
+    document.getElementById('addMeaning').value = '';
+    document.getElementById('addExample').value = '';
+  } catch(e) { showToast('失败'); }
 }
 
-// 加载单词列表
 async function loadWords() {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/words?user_id=eq.${USER_ID}&order=created_at.desc`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      headers: {apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`}
     });
     myWords = res.ok ? await res.json() : [];
-  } catch (e) {
-    myWords = JSON.parse(localStorage.getItem('wordbook_offline') || '[]');
-  }
+  } catch(e) { myWords = []; }
   renderWordList();
   updateStats();
 }
 
-// 渲染列表
 function renderWordList() {
-  const filtered = currentFilter === 'all' ? myWords : myWords.filter(w => w.is_mastered == currentFilter);
-  
-  if (filtered.length === 0) {
-    document.getElementById('wordList').innerHTML = '<div class="empty">📭 还没有记录过单词<br><br>去「查词」或「记单词」开始吧</div>';
-    return;
-  }
-  
+  const filtered = currentFilter==='all' ? myWords : myWords.filter(w=>w.is_mastered==currentFilter);
+  if(filtered.length===0) { document.getElementById('wordList').innerHTML = '<div class="empty">暂无单词</div>'; return; }
   let html = '';
-  filtered.forEach((w, i) => {
-    html += `
-      <div class="word-item">
-        <div class="num">${i + 1}</div>
-        <div class="content">
-          <div class="word">${w.word}${w.is_mastered ? '<span class="mastered">已掌握</span>' : ''}</div>
-          <div class="meaning">${w.phonetic ? w.phonetic + ' · ' : ''}${w.meaning || '（无释义）'}</div>
-          ${w.example ? `<div class="meaning" style="font-style:italic;font-size:12px;">${w.example}</div>` : ''}
-        </div>
-        <div class="actions">
-          <button class="btn-icon" onclick="speakWord('${w.word}')" title="发音" style="background:#e8e5fd;color:#667eea;">🔊</button>
-          ${!w.is_mastered ? `<button class="btn-icon btn-done" onclick="toggleMastered('${w.id}', true)" title="标记已掌握">✓</button>` : ''}
-          <button class="btn-icon btn-del" onclick="deleteWord('${w.id}')" title="删除">✕</button>
-        </div>
-      </div>
-    `;
+  filtered.forEach((w,i) => {
+    html += `<div class="word-item"><div class="num">${i+1}</div><div class="content"><div class="word">${w.word}${w.is_mastered?'<span class="mastered">已掌握</span>':''}</div><div class="meaning">${w.phonetic?w.phonetic+' · ':''}${w.meaning||''}</div></div><div class="actions"><button class="btn-icon" onclick="speakWord('${w.word}')" style="background:#e8e5fd;color:#667eea;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;">🔊</button>${!w.is_mastered?`<button class="btn-icon" onclick="toggleMastered('${w.id}',true)" style="background:#e8fdf0;color:#27ae60;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;">✓</button>`:''}<button class="btn-icon" onclick="deleteWord('${w.id}')" style="background:#fde8e8;color:#e74c3c;border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;">✕</button></div></div>`;
   });
   document.getElementById('wordList').innerHTML = html;
 }
 
-// 更新统计
 function updateStats() {
   document.getElementById('statTotal').textContent = myWords.length;
-  document.getElementById('statMastered').textContent = myWords.filter(w => w.is_mastered).length;
-  document.getElementById('statUnlearned').textContent = myWords.filter(w => !w.is_mastered).length;
+  document.getElementById('statMastered').textContent = myWords.filter(w=>w.is_mastered).length;
+  document.getElementById('statUnlearned').textContent = myWords.filter(w=>!w.is_mastered).length;
 }
 
-// 标记已掌握
 async function toggleMastered(id, mastered) {
   try {
     await fetch(`${SUPABASE_URL}/rest/v1/words?id=eq.${id}`, {
-      method: 'PATCH',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_mastered: mastered })
+      method:'PATCH', headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'},
+      body: JSON.stringify({is_mastered:mastered})
     });
     loadWords();
-  } catch (e) {
-    showToast('操作失败');
-  }
+  } catch(e) { showToast('失败'); }
 }
 
-// 删除
 async function deleteWord(id) {
-  if (!confirm('确定删除？')) return;
+  if(!confirm('确定删除？')) return;
   try {
     await fetch(`${SUPABASE_URL}/rest/v1/words?id=eq.${id}`, {
-      method: 'DELETE',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+      method:'DELETE', headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}
     });
     loadWords();
     showToast('🗑️ 已删除');
-  } catch (e) {
-    showToast('删除失败');
-  }
-}
-
-// 发音
-function speak(word) {
-  speakWord(word);
+  } catch(e) { showToast('失败'); }
 }
 
 function speakWord(word) {
-  if (!word) return;
+  if(!word) return;
   window.speechSynthesis.cancel();
   const ut = new SpeechSynthesisUtterance(word);
   ut.lang = 'en-US';
   ut.rate = 0.85;
-  ut.volume = 1;
   speechSynthesis.speak(ut);
-  showToast('🔊 ' + word);
 }
 
-// 查句子（用 MyMemory 翻译 API）
 async function lookupSentence() {
   const text = document.getElementById('sentInput').value.trim();
-  if (!text) return;
-  document.getElementById('sentResult').innerHTML = '<div class="loading">查找中...</div>';
-  
+  if(!text) return;
+  document.getElementById('sentResult').innerHTML = '<div class="loading">翻译中...</div>';
   try {
     const isChinese = /[\u4e00-\u9fa5]/.test(text);
-    const langpair = isChinese ? 'zh-CN.en' : 'en.zh-CN';
+    const langpair = isChinese ? 'zh-CN|en' : 'en|zh-CN';
     const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langpair}`);
     const data = await res.json();
-    
-    if (data.responseStatus === 200 && data.responseData.translatedText) {
-      document.getElementById('sentResult').innerHTML = `
-        <div class="sent-result">
-          <div class="sent">${isChinese ? '🇬🇧 ' : '🇨🇳 '}${data.responseData.translatedText}</div>
-          <div class="sent-cn">${isChinese ? '英文' : '中文'}</div>
-        </div>
-      `;
-    } else {
-      throw new Error();
-    }
-  } catch (e) {
-    document.getElementById('sentResult').innerHTML = `<div class="error">❌ 未找到对应翻译</div>`;
+    if(data.responseStatus===200) {
+      document.getElementById('sentResult').innerHTML = `<div class="sent-result"><div class="sent">${data.responseData.translatedText}</div></div>`;
+    } else throw Error();
+  } catch(e) {
+    document.getElementById('sentResult').innerHTML = '<div class="error">❌ 失败</div>';
   }
 }
 
-// Toast 提示
+function initPractice() {
+  if(currentMode==='word') {
+    if(myWords.length===0) loadWords().then(()=>showPracticeWord());
+    else showPracticeWord();
+  } else {
+    showPracticeSentence();
+  }
+}
+
+function switchMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+  document.getElementById('wordPractice').style.display = mode==='word'?'block':'none';
+  document.getElementById('sentencePractice').style.display = mode==='sentence'?'block':'none';
+  if(mode==='word') showPracticeWord();
+  else showPracticeSentence();
+}
+
+function showPracticeWord() {
+  if(myWords.length===0) {
+    document.getElementById('practiceWord').textContent = '暂无单词';
+    document.getElementById('practicePhonetic').textContent = '';
+    document.getElementById('practiceMeaning').textContent = '请先添加';
+    return;
+  }
+  const w = myWords[practiceIndex % myWords.length];
+  document.getElementById('practiceWord').textContent = w.word;
+  document.getElementById('practicePhonetic').textContent = w.phonetic || '';
+  document.getElementById('practiceMeaning').textContent = w.meaning || '';
+  document.getElementById('practiceResult').classList.remove('show');
+}
+
+function demoWord() {
+  const word = document.getElementById('practiceWord').textContent;
+  if(word && word!=='暂无单词') speakWord(word);
+}
+
+function toggleRecord() {
+  if(isRecording) stopRecording();
+  else startRecording();
+}
+
+function startRecording() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) { showToast('❌ 不支持'); return; }
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.continuous = false;
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById('recordBtn').classList.add('recording');
+    document.getElementById('recordBtn').textContent = '⏹️ 停止';
+    showToast('🎤 请跟读...');
+  };
+  recognition.onresult = (e) => {
+    const rec = e.results[0][0].transcript.trim();
+    const target = document.getElementById('practiceWord').textContent;
+    const score = calcScore(target.toLowerCase(), rec.toLowerCase());
+    showResult(score, rec, 'practiceResult', 'scoreDisplay', 'recognizedText', 'feedbackText');
+  };
+  recognition.onerror = (e) => {
+    isRecording = false;
+    document.getElementById('recordBtn').classList.remove('recording');
+    document.getElementById('recordBtn').textContent = '🎤 跟读';
+    if(e.error==='not-allowed') showToast('❌ 请允许麦克风');
+    else if(e.error==='no-speech') showToast('❌ 未检测到语音');
+    else showToast('❌ 失败');
+  };
+  recognition.onend = () => {
+    isRecording = false;
+    document.getElementById('recordBtn').classList.remove('recording');
+    document.getElementById('recordBtn').textContent = '🎤 跟读';
+  };
+  try { recognition.start(); } catch(e) { showToast('❌ 启动失败'); }
+}
+
+function stopRecording() {
+  if(recognition) recognition.stop();
+}
+
+function calcScore(target, recognized) {
+  if(target===recognized) return 100;
+  const len = Math.max(target.length, recognized.length);
+  if(len===0) return 100;
+  return Math.max(0, Math.round((1-levenshtein(target,recognized)/len)*100));
+}
+
+function levenshtein(a,b) {
+  const m = Array(b.length+1).fill(null).map(()=>Array(a.length+1).fill(0));
+  for(let i=0;i<=a.length;i++) m[0][i]=i;
+  for(let j=0;j<=b.length;j++) m[j][0]=j;
+  for(let j=1;j<=b.length;j++)
+    for(let i=1;i<=a.length;i++)
+      m[j][i] = b[j-1]===a[i-1] ? m[j-1][i-1] : Math.min(m[j-1][i-1]+1,m[j][i-1]+1,m[j-1][i]+1);
+  return m[b.length][a.length];
+}
+
+function showResult(score, recognized, resultId, scoreId, textId, feedbackId) {
+  const rd = document.getElementById(resultId);
+  const sd = document.getElementById(scoreId);
+  const td = document.getElementById(textId);
+  const fd = document.getElementById(feedbackId);
+  let cls='bad',fb='';
+  if(score>=80){cls='good';fb='🎉 太棒了！';}
+  else if(score>=60){cls='ok';fb='👍 不错！';}
+  else{cls='bad';fb='💪 继续练习！';}
+  sd.className=`score-display ${cls}`;
+  sd.textContent=score+'分';
+  td.textContent='识别：'+recognized;
+  fd.textContent=fb;
+  rd.className=`practice-result show ${cls}`;
+}
+
+function nextWord() {
+  practiceIndex++;
+  if(practiceIndex>=myWords.length) practiceIndex=0;
+  showPracticeWord();
+}
+
+function showPracticeSentence() {
+  const s = sentenceList[sentenceIndex % sentenceList.length];
+  document.getElementById('practiceSentence').textContent = s;
+  document.getElementById('sentenceResult').classList.remove('show');
+}
+
+function demoSentence() {
+  const s = document.getElementById('practiceSentence').textContent;
+  if(s) { window.speechSynthesis.cancel(); const ut=new SpeechSynthesisUtterance(s); ut.lang='en-US'; ut.rate=0.85; speechSynthesis.speak(ut); }
+}
+
+function toggleSentenceRecord() {
+  if(isRecording) stopSentenceRecording();
+  else startSentenceRecording();
+}
+
+function startSentenceRecording() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) { showToast('❌ 不支持'); return; }
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.continuous = false;
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById('recordSentenceBtn').classList.add('recording');
+    document.getElementById('recordSentenceBtn').textContent = '⏹️ 停止';
+    showToast('🎤 请跟读...');
+  };
+  recognition.onresult = (e) => {
+    const rec = e.results[0][0].transcript.trim();
+    const target = document.getElementById('practiceSentence').textContent;
+    const score = calcSentenceScore(target.toLowerCase(), rec.toLowerCase());
+    showResult(score, rec, 'sentenceResult', 'sentenceScoreDisplay', 'sentenceRecognizedText', 'sentenceFeedbackText');
+  };
+  recognition.onerror = (e) => {
+    isRecording = false;
+    document.getElementById('recordSentenceBtn').classList.remove('recording');
+    document.getElementById('recordSentenceBtn').textContent = '🎤 跟读';
+    if(e.error==='not-allowed') showToast('❌ 请允许麦克风');
+    else if(e.error==='no-speech') showToast('❌ 未检测到语音');
+    else showToast('❌ 失败');
+  };
+  recognition.onend = () => {
+    isRecording = false;
+    document.getElementById('recordSentenceBtn').classList.remove('recording');
+    document.getElementById('recordSentenceBtn').textContent = '🎤 跟读';
+  };
+  try { recognition.start(); } catch(e) { showToast('❌ 启动失败'); }
+}
+
+function stopSentenceRecording() {
+  if(recognition) recognition.stop();
+}
+
+function calcSentenceScore(target, recognized) {
+  const tw = target.split(/\s+/);
+  const rw = recognized.split(/\s+/);
+  const ts = new Set(tw);
+  const rs = new Set(rw);
+  let common=0;
+  ts.forEach(w=>{if(rs.has(w))common++;});
+  const wordScore = tw.length>0 ? common/tw.length : 0;
+  const len = Math.max(target.length, recognized.length);
+  const dist = len>0 ? levenshtein(target, recognized) : 0;
+  const sim = 1-dist/len;
+  return Math.max(0, Math.round((wordScore*0.6+sim*0.4)*100));
+}
+
+function nextSentence() {
+  sentenceIndex++;
+  if(sentenceIndex>=sentenceList.length) sentenceIndex=0;
+  showPracticeSentence();
+}
+
 function showToast(msg) {
   const t = document.createElement('div');
   t.className = 'toast';
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 2000);
+  setTimeout(()=>t.remove(), 2000);
 }
 
-// 在线状态
 function updateOnlineStatus() {
   const dot = document.getElementById('onlineDot');
   const txt = document.getElementById('statusText');
-  if (navigator.onLine) {
-    dot.className = 'online-dot';
-    txt.textContent = '已连接云端';
-  } else {
-    dot.className = 'offline-dot';
-    txt.textContent = '离线模式';
-  }
+  if(navigator.onLine) { dot.className='online-dot'; txt.textContent='已连接'; }
+  else { dot.className='offline-dot'; txt.textContent='离线'; }
 }
 
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 updateOnlineStatus();
-
-// 初始化
 document.getElementById('searchInput').focus();
 </script>
 </body>
