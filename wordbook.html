@@ -216,7 +216,7 @@ async function lookup() {
         ${meaningsHTML}
         <div class="actions">
           <button class="btn btn-save" onclick="saveToBook('${wordText}', '${phonetic.replace(/'/g,"\\'")}', this.closest('.word-card'))">⭐ 保存</button>
-          <button class="btn btn-speak" onclick="speak('${wordText}')">🔊 发音</button>
+          <button class="btn btn-speak" onclick="speakWord('${wordText}')">🔊 发音</button>
         </div>
       </div>
     `;
@@ -319,6 +319,7 @@ function renderWordList() {
           ${w.example ? `<div class="meaning" style="font-style:italic;font-size:12px;">${w.example}</div>` : ''}
         </div>
         <div class="actions">
+          <button class="btn-icon" onclick="speakWord('${w.word}')" title="发音" style="background:#e8e5fd;color:#667eea;">🔊</button>
           ${!w.is_mastered ? `<button class="btn-icon btn-done" onclick="toggleMastered('${w.id}', true)" title="标记已掌握">✓</button>` : ''}
           <button class="btn-icon btn-del" onclick="deleteWord('${w.id}')" title="删除">✕</button>
         </div>
@@ -366,10 +367,18 @@ async function deleteWord(id) {
 
 // 发音
 function speak(word) {
+  speakWord(word);
+}
+
+function speakWord(word) {
+  if (!word) return;
+  window.speechSynthesis.cancel();
   const ut = new SpeechSynthesisUtterance(word);
   ut.lang = 'en-US';
-  ut.rate = 0.8;
+  ut.rate = 0.85;
+  ut.volume = 1;
   speechSynthesis.speak(ut);
+  showToast('🔊 ' + word);
 }
 
 // 查句子（用 MyMemory 翻译 API）
