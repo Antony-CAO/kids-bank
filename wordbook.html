@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>曹栋单词本</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
+    
+    .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; text-align: center; }
+    .header h1 { font-size: 20px; margin-bottom: 4px; }
+    .header p { font-size: 13px; opacity: 0.85; }
+    
+    .tabs { display: flex; background: white; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 10; }
+    .tab { flex: 1; padding: 12px 8px; text-align: center; font-size: 14px; cursor: pointer; color: #888; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab.active { color: #667eea; border-bottom-color: #667eea; font-weight: 600; }
+    
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+    
+    .section { display: none; }
+    .section.active { display: block; }
+    
+    /* 查词区 */
+    .search-box { display: flex; gap: 8px; margin-bottom: 16px; }
+    .search-box input { flex: 1; padding: 12px 16px; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; outline: none; transition: border 0.2s; }
+    .search-box input:focus { border-color: #667eea; }
+    .search-box button { padding: 12px 20px; background: #667eea; color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    
+    .word-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .word-card .word { font-size: 28px; font-weight: 700; color: #333; margin-bottom: 6px; }
+    .word-card .phonetic { font-size: 16px; color: #888; margin-bottom: 12px; }
+    .word-card .meaning { font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 12px; padding-left: 12px; border-left: 3px solid #667eea; }
+    .word-card .example { font-size: 14px; color: #666; background: #f8f8ff; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-style: italic; }
+    .word-card .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .word-card .btn { padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 500; }
+    .word-card .btn-save { background: #e8e5fd; color: #667eea; }
+    .word-card .btn-speak { background: #f0f0f0; color: #555; }
+    
+    .loading { text-align: center; padding: 40px; color: #888; }
+    .error { text-align: center; padding: 20px; color: #e74c3c; background: #fdf2f2; border-radius: 12px; font-size: 14px; }
+    .empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+    
+    /* 记录区 */
+    .add-form { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .add-form h3 { font-size: 15px; margin-bottom: 12px; color: #667eea; }
+    .add-form input, .add-form textarea { width: 100%; padding: 12px 14px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 15px; margin-bottom: 10px; outline: none; resize: none; font-family: inherit; }
+    .add-form input:focus, .add-form textarea:focus { border-color: #667eea; }
+    .add-form textarea { height: 80px; }
+    .add-form .btn-add { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    
+    /* 单词列表 */
+    .word-item { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); display: flex; align-items: flex-start; gap: 10px; }
+    .word-item .num { width: 24px; height: 24px; background: #e8e5fd; color: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+    .word-item .content { flex: 1; }
+    .word-item .word { font-size: 17px; font-weight: 700; color: #333; }
+    .word-item .meaning { font-size: 13px; color: #888; margin-top: 2px; }
+    .word-item .mastered { display: inline-block; background: #27ae60; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 600; }
+    .word-item .actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .word-item .btn-icon { width: 28px; height: 28px; border-radius: 6px; border: none; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .word-item .btn-del { background: #fde8e8; color: #e74c3c; }
+    .word-item .btn-done { background: #e8fdf0; color: #27ae60; }
+    
+    /* 统计 */
+    .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .stat { background: white; border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
+    .stat .num { font-size: 24px; font-weight: 700; color: #667eea; }
+    .stat .label { font-size: 11px; color: #aaa; margin-top: 2px; }
+    
+    .filter-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .filter-bar .filter { padding: 6px 12px; border-radius: 20px; font-size: 12px; border: 1px solid #ddd; background: white; color: #888; cursor: pointer; }
+    .filter-bar .filter.active { background: #667eea; color: white; border-color: #667eea; }
+    
+    /* 句子查询 */
+    .sent-form { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .sent-form textarea { width: 100%; padding: 12px 14px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 15px; margin-bottom: 10px; outline: none; resize: none; font-family: inherit; height: 60px; }
+    .sent-form .btn-send { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    
+    .sent-result { background: white; border-radius: 14px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .sent-result .sent { font-size: 15px; color: #333; line-height: 1.6; }
+    .sent-result .sent-cn { font-size: 13px; color: #888; margin-top: 6px; }
+    
+    /* Toast */
+    .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 999; animation: fadeUp 0.3s; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    
+    /* 在线状态指示 */
+    .online-dot { width: 8px; height: 8px; border-radius: 50%; background: #27ae60; display: inline-block; margin-right: 4px; animation: pulse 2s infinite; }
+    .offline-dot { background: #e74c3c; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📒 曹栋单词本</h1>
+  <p><span class="online-dot" id="onlineDot"></span><span id="statusText">连接中...</span></p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="lookup">查词</div>
+  <div class="tab" data-tab="add">记单词</div>
+  <div class="tab" data-tab="list">单词本</div>
+  <div class="tab" data-tab="sent">查句子</div>
+</div>
+
+<div class="container">
+
+  <!-- 查词 -->
+  <div class="section active" id="sec-lookup">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="输入单词查意思..." autocomplete="off" onkeypress="if(event.key==='Enter')lookup()">
+      <button onclick="lookup()">查询</button>
+    </div>
+    <div id="lookupResult"></div>
+  </div>
+
+  <!-- 记单词 -->
+  <div class="section" id="sec-add">
+    <div class="add-form">
+      <h3>✏️ 记录生词</h3>
+      <input type="text" id="addWord" placeholder="单词">
+      <input type="text" id="addPhonetic" placeholder="音标（选填），如 /əˈbɪstrækt/">
+      <input type="text" id="addMeaning" placeholder="释义（选填）">
+      <textarea id="addExample" placeholder="例句（选填）"></textarea>
+      <button class="btn-add" onclick="addWord()">保存到单词本</button>
+    </div>
+  </div>
+
+  <!-- 单词本列表 -->
+  <div class="section" id="sec-list">
+    <div class="stats">
+      <div class="stat"><div class="num" id="statTotal">0</div><div class="label">总记录</div></div>
+      <div class="stat"><div class="num" id="statUnlearned">0</div><div class="label">待掌握</div></div>
+      <div class="stat"><div class="num" id="statMastered">0</div><div class="label">已掌握</div></div>
+    </div>
+    <div class="filter-bar">
+      <div class="filter active" data-filter="all">全部</div>
+      <div class="filter" data-filter="0">待掌握</div>
+      <div class="filter" data-filter="1">已掌握</div>
+    </div>
+    <div id="wordList"></div>
+  </div>
+
+  <!-- 查句子 -->
+  <div class="section" id="sec-sent">
+    <div class="sent-form">
+      <textarea id="sentInput" placeholder="输入中文或英文，查找对应句子..."></textarea>
+      <button class="btn-send" onclick="lookupSentence()">🔍 查找例句</button>
+    </div>
+    <div id="sentResult"></div>
+    <div style="font-size:12px;color:#ccc;text-align:center;padding:20px;">提示：输入中文查英文例句，输入英文查中文翻译</div>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://pikgowxalrkjrijykoe.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_0jOHX7hrPXFV6A2lv9HgPA_9LxT04Xx';
+const USER_ID = 'caodong_wordbook';
+
+let currentFilter = 'all';
+let myWords = [];
+
+// Tab 切换
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('sec-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'list') loadWords();
+  });
+});
+
+// Filter 切换
+document.querySelectorAll('.filter').forEach(f => {
+  f.addEventListener('click', () => {
+    document.querySelectorAll('.filter').forEach(x => x.classList.remove('active'));
+    f.classList.add('active');
+    currentFilter = f.dataset.filter;
+    renderWordList();
+  });
+});
+
+// 查词
+async function lookup() {
+  const word = document.getElementById('searchInput').value.trim();
+  if (!word) return;
+  document.getElementById('lookupResult').innerHTML = '<div class="loading">查询中...</div>';
+  
+  try {
+    // 用 Free Dictionary API
+    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+    if (!res.ok) throw new Error('未找到该单词');
+    const data = await res.json();
+    const entry = data[0];
+    
+    const wordText = entry.word;
+    const phonetic = entry.phonetic || (entry.phonetics.find(p => p.text)?.text) || '';
+    let meaningsHTML = '';
+    
+    entry.meanings.forEach(m => {
+      m.definitions.slice(0, 2).forEach(def => {
+        meaningsHTML += `<div class="meaning">${m.partOfSpeech} · ${def.definition}</div>`;
+        if (def.example) {
+          meaningsHTML += `<div class="example">"${def.example}"</div>`;
+        }
+      });
+    });
+    
+    document.getElementById('lookupResult').innerHTML = `
+      <div class="word-card">
+        <div class="word">${wordText}</div>
+        <div class="phonetic">${phonetic}</div>
+        ${meaningsHTML}
+        <div class="actions">
+          <button class="btn btn-save" onclick="saveToBook('${wordText}', '${phonetic.replace(/'/g,"\\'")}', this.closest('.word-card'))">⭐ 保存</button>
+          <button class="btn btn-speak" onclick="speak('${wordText}')">🔊 发音</button>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    document.getElementById('lookupResult').innerHTML = `<div class="error">❌ 未找到"${word}"，请检查拼写</div>`;
+  }
+}
+
+// 保存到单词本
+async function addWord() {
+  const word = document.getElementById('addWord').value.trim();
+  const phonetic = document.getElementById('addPhonetic').value.trim();
+  const meaning = document.getElementById('addMeaning').value.trim();
+  const example = document.getElementById('addExample').value.trim();
+  
+  if (!word) { showToast('请输入单词'); return; }
+  
+  const payload = {
+    user_id: USER_ID,
+    word: word.toLowerCase(),
+    phonetic: phonetic,
+    meaning: meaning,
+    example: example,
+    is_mastered: false,
+    created_at: new Date().toISOString()
+  };
+  
+  try {
+    // 先查重
+    const exist = await fetch(`${SUPABASE_URL}/rest/v1/words?user_id=eq.${USER_ID}&word=eq.${word.toLowerCase()}`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    }).then(r => r.json());
+    
+    if (exist.length > 0) {
+      showToast('⚠️ 这个单词已记录过');
+      return;
+    }
+    
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/words`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (res.ok) {
+      showToast('✅ 已保存到单词本');
+      document.getElementById('addWord').value = '';
+      document.getElementById('addPhonetic').value = '';
+      document.getElementById('addMeaning').value = '';
+      document.getElementById('addExample').value = '';
+    } else {
+      showToast('保存失败');
+    }
+  } catch (e) {
+    // 离线时用localStorage
+    const offlineWords = JSON.parse(localStorage.getItem('wordbook_offline') || '[]');
+    offlineWords.push({ ...payload, id: 'offline_' + Date.now() });
+    localStorage.setItem('wordbook_offline', JSON.stringify(offlineWords));
+    showToast('📴 已存入本地（联网后同步）');
+    document.getElementById('addWord').value = '';
+  }
+}
+
+// 加载单词列表
+async function loadWords() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/words?user_id=eq.${USER_ID}&order=created_at.desc`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    myWords = res.ok ? await res.json() : [];
+  } catch (e) {
+    myWords = JSON.parse(localStorage.getItem('wordbook_offline') || '[]');
+  }
+  renderWordList();
+  updateStats();
+}
+
+// 渲染列表
+function renderWordList() {
+  const filtered = currentFilter === 'all' ? myWords : myWords.filter(w => w.is_mastered == currentFilter);
+  
+  if (filtered.length === 0) {
+    document.getElementById('wordList').innerHTML = '<div class="empty">📭 还没有记录过单词<br><br>去「查词」或「记单词」开始吧</div>';
+    return;
+  }
+  
+  let html = '';
+  filtered.forEach((w, i) => {
+    html += `
+      <div class="word-item">
+        <div class="num">${i + 1}</div>
+        <div class="content">
+          <div class="word">${w.word}${w.is_mastered ? '<span class="mastered">已掌握</span>' : ''}</div>
+          <div class="meaning">${w.phonetic ? w.phonetic + ' · ' : ''}${w.meaning || '（无释义）'}</div>
+          ${w.example ? `<div class="meaning" style="font-style:italic;font-size:12px;">${w.example}</div>` : ''}
+        </div>
+        <div class="actions">
+          ${!w.is_mastered ? `<button class="btn-icon btn-done" onclick="toggleMastered('${w.id}', true)" title="标记已掌握">✓</button>` : ''}
+          <button class="btn-icon btn-del" onclick="deleteWord('${w.id}')" title="删除">✕</button>
+        </div>
+      </div>
+    `;
+  });
+  document.getElementById('wordList').innerHTML = html;
+}
+
+// 更新统计
+function updateStats() {
+  document.getElementById('statTotal').textContent = myWords.length;
+  document.getElementById('statMastered').textContent = myWords.filter(w => w.is_mastered).length;
+  document.getElementById('statUnlearned').textContent = myWords.filter(w => !w.is_mastered).length;
+}
+
+// 标记已掌握
+async function toggleMastered(id, mastered) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/words?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_mastered: mastered })
+    });
+    loadWords();
+  } catch (e) {
+    showToast('操作失败');
+  }
+}
+
+// 删除
+async function deleteWord(id) {
+  if (!confirm('确定删除？')) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/words?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    loadWords();
+    showToast('🗑️ 已删除');
+  } catch (e) {
+    showToast('删除失败');
+  }
+}
+
+// 发音
+function speak(word) {
+  const ut = new SpeechSynthesisUtterance(word);
+  ut.lang = 'en-US';
+  ut.rate = 0.8;
+  speechSynthesis.speak(ut);
+}
+
+// 查句子（用 MyMemory 翻译 API）
+async function lookupSentence() {
+  const text = document.getElementById('sentInput').value.trim();
+  if (!text) return;
+  document.getElementById('sentResult').innerHTML = '<div class="loading">查找中...</div>';
+  
+  try {
+    const isChinese = /[\u4e00-\u9fa5]/.test(text);
+    const langpair = isChinese ? 'zh-CN.en' : 'en.zh-CN';
+    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langpair}`);
+    const data = await res.json();
+    
+    if (data.responseStatus === 200 && data.responseData.translatedText) {
+      document.getElementById('sentResult').innerHTML = `
+        <div class="sent-result">
+          <div class="sent">${isChinese ? '🇬🇧 ' : '🇨🇳 '}${data.responseData.translatedText}</div>
+          <div class="sent-cn">${isChinese ? '英文' : '中文'}</div>
+        </div>
+      `;
+    } else {
+      throw new Error();
+    }
+  } catch (e) {
+    document.getElementById('sentResult').innerHTML = `<div class="error">❌ 未找到对应翻译</div>`;
+  }
+}
+
+// Toast 提示
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+
+// 在线状态
+function updateOnlineStatus() {
+  const dot = document.getElementById('onlineDot');
+  const txt = document.getElementById('statusText');
+  if (navigator.onLine) {
+    dot.className = 'online-dot';
+    txt.textContent = '已连接云端';
+  } else {
+    dot.className = 'offline-dot';
+    txt.textContent = '离线模式';
+  }
+}
+
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// 初始化
+document.getElementById('searchInput').focus();
+</script>
+</body>
+</html>
