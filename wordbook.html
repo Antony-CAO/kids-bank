@@ -25,7 +25,7 @@
     .speak-btn{background:#e8e5fd;color:#667eea;border:none;border-radius:50%;width:36px;height:36px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .meaning{font-size:15px;color:#555;line-height:1.8;margin-bottom:8px;padding-left:12px;border-left:3px solid #667eea}
     .pos-tag{display:inline-block;background:#e8e5fd;color:#667eea;font-size:12px;padding:2px 8px;border-radius:4px;font-weight:600;margin-right:6px}
-    .cn-meaning{font-size:17px;color:#333;font-weight:600;margin-bottom:10px;padding:10px 12px;background:#f0fff0;border-radius:8px;border-left:3px solid #27ae60}
+    .cn-meaning{font-size:17px;color:#222;font-weight:600;margin-bottom:10px;padding:10px 12px;background:#f0fff0;border-radius:8px;border-left:3px solid #27ae60;line-height:1.6}
     .examples-section{margin-top:12px}
     .examples-section h4{font-size:14px;color:#667eea;margin-bottom:8px}
     .example-item{background:#f8f8ff;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:background .2s}
@@ -36,7 +36,9 @@
     .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
     .btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500}
     .btn-save{background:#e8e5fd;color:#667eea}
-    .loading{text-align:center;padding:40px;color:#888}
+    .loading{text-align:center;padding:40px 20px;color:#888;font-size:14px}
+    .loading .spinner{display:inline-block;width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:#667eea;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px}
+    @keyframes spin{to{transform:rotate(360deg)}}
     .error{text-align:center;padding:20px;color:#e74c3c;background:#fdf2f2;border-radius:12px;font-size:14px}
     .add-form{background:white;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
     .add-form h3{font-size:15px;margin-bottom:12px;color:#667eea}
@@ -88,13 +90,15 @@
     .online-dot{width:8px;height:8px;border-radius:50%;background:#27ae60;display:inline-block;margin-right:4px;animation:pulse 2s infinite}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
     .empty{text-align:center;padding:40px;color:#aaa}
+    .offline-banner{background:#e74c3c;color:white;padding:8px 16px;text-align:center;font-size:13px;margin-bottom:12px;border-radius:8px}
   </style>
 </head>
 <body>
 <div class="header">
   <h1>📒 曹栋单词本</h1>
-  <p><span class="online-dot"></span>已连接</p>
+  <p><span class="online-dot"></span><span id="connStatus">已连接</span></p>
 </div>
+<div id="offlineBanner" class="offline-banner" style="display:none">⚠️ 网络不稳定，部分功能可能受限</div>
 <div class="tabs">
   <div class="tab active" data-tab="lookup">查词</div>
   <div class="tab" data-tab="add">记单词</div>
@@ -107,7 +111,12 @@
       <input type="text" id="searchInput" placeholder="输入中文或英文查词..." onkeypress="if(event.key==='Enter')lookup()">
       <button onclick="lookup()">查询</button>
     </div>
-    <div id="lookupResult"></div>
+    <div id="lookupResult">
+      <div class="word-card" style="text-align:center;color:#aaa;padding:40px">
+        <div style="font-size:40px;margin-bottom:10px">🔍</div>
+        <div>输入单词即可查询<br><span style="font-size:13px">中文或英文都可以</span></div>
+      </div>
+    </div>
   </div>
   <div class="section" id="sec-add">
     <div class="add-form">
@@ -133,7 +142,7 @@
     <div id="wordList"></div>
   </div>
   <div class="section" id="sec-practice">
-    <div class="browser-tip">⚠️ 跟读功能需用 Chrome 浏览器打开，微信内不支持</div>
+    <div class="browser-tip">⚠️ 跟读功能需用 Chrome 浏览器打开，微信内不支持语音识别</div>
     <div class="mode-switch">
       <div class="mode-btn active" data-mode="word" onclick="switchMode('word')">📝 单词</div>
       <div class="mode-btn" data-mode="sentence" onclick="switchMode('sentence')">📄 句子</div>
@@ -144,7 +153,7 @@
         <div class="target-phonetic" id="practicePhonetic"></div>
         <div class="target-meaning" id="practiceMeaning"></div>
         <div class="practice-controls">
-          <button class="btn-practice btn-demo" onclick="speakText(document.getElementById('practiceWord').textContent,'en-US')">🔊 示范</button>
+          <button class="btn-practice btn-demo" onclick="speakTextSafe('practiceWord','en-US')">🔊 示范</button>
           <button class="btn-practice btn-record" id="recordBtn" onclick="toggleRecord()">🎤 跟读</button>
           <button class="btn-practice btn-next" onclick="nextWord()">⏭️ 下一个</button>
         </div>
@@ -157,10 +166,10 @@
     </div>
     <div id="sentencePractice" style="display:none">
       <div class="practice-card">
-        <div class="sentence-practice" id="practiceSentence" onclick="speakText(this.textContent,'en-US')">加载中...</div>
+        <div class="sentence-practice" id="practiceSentence" onclick="speakTextSafe('practiceSentence','en-US')">加载中...</div>
         <div class="sentence-zh" id="practiceSentenceZh"></div>
         <div class="practice-controls">
-          <button class="btn-practice btn-demo" onclick="speakText(document.getElementById('practiceSentence').textContent,'en-US')">🔊 示范</button>
+          <button class="btn-practice btn-demo" onclick="speakTextSafe('practiceSentence','en-US')">🔊 示范</button>
           <button class="btn-practice btn-record" id="recordSentenceBtn" onclick="toggleSentenceRecord()">🎤 跟读</button>
           <button class="btn-practice btn-next" onclick="nextSentence()">⏭️ 下一个</button>
         </div>
@@ -179,6 +188,20 @@ var SUPABASE_KEY='sb_publishable_0jOHX7hrPXFV6A2lv9HgPA_9LxT04Xx';
 var USER_ID='caodong_wordbook';
 var currentFilter='all',myWords=[],practiceIndex=0,currentMode='word';
 var recognition=null,isRecording=false;
+var supabaseOK=true;
+
+// 网络状态监听
+window.addEventListener('online',function(){
+  supabaseOK=true;
+  document.getElementById('connStatus').textContent='已连接';
+  document.getElementById('offlineBanner').style.display='none';
+});
+window.addEventListener('offline',function(){
+  supabaseOK=false;
+  document.getElementById('connStatus').textContent='离线';
+  document.getElementById('offlineBanner').style.display='block';
+});
+
 var sentenceList=[
   {en:"Hello, nice to meet you.",zh:"你好，很高兴认识你。"},
   {en:"I love learning English.",zh:"我喜欢学英语。"},
@@ -193,51 +216,64 @@ var sentenceList=[
 ];
 var sentenceIndex=0;
 
-// TTS
-function getVoices(){return new Promise(function(resolve){var v=speechSynthesis.getVoices();if(v.length)return resolve(v);speechSynthesis.onvoiceschanged=function(){resolve(speechSynthesis.getVoices())};setTimeout(function(){resolve(speechSynthesis.getVoices())},1500)})}
+// ===== TTS: 可靠发音 =====
+var voicesReady=false;
+function getVoices(){return new Promise(function(resolve){var v=speechSynthesis.getVoices();if(v.length){voicesReady=true;return resolve(v)}speechSynthesis.onvoiceschanged=function(){voicesReady=true;resolve(speechSynthesis.getVoices())};setTimeout(function(){voicesReady=true;resolve(speechSynthesis.getVoices())},1500)})}
 getVoices();
+
+// 安全发音：自动等待 voice 加载
+function speakTextSafe(elId,lang){
+  var el=typeof elId==='string'?document.getElementById(elId):null;
+  var text=el?el.textContent:elId;
+  speakText(text,lang);
+}
 
 function speakText(text,lang){
   if(!text||text==='加载中...'||text==='暂无单词')return;
-  speechSynthesis.cancel();
-  var ut=new SpeechSynthesisUtterance(text);
-  ut.lang=lang||'en-US';ut.rate=0.85;ut.volume=1;
-  var voices=speechSynthesis.getVoices();
-  var enVoice=voices.find(function(v){return v.lang.startsWith('en')&&v.localService})||voices.find(function(v){return v.lang.startsWith('en')});
-  if(enVoice)ut.voice=enVoice;
-  speechSynthesis.speak(ut);
+  function doSpeak(){
+    speechSynthesis.cancel();
+    var ut=new SpeechSynthesisUtterance(text);
+    ut.lang=lang||'en-US';ut.rate=0.85;ut.volume=1;
+    var voices=speechSynthesis.getVoices();
+    var enVoice=voices.find(function(v){return v.lang.startsWith('en')&&v.localService})||voices.find(function(v){return v.lang.startsWith('en')});
+    if(enVoice)ut.voice=enVoice;
+    speechSynthesis.speak(ut);
+  }
+  if(!voicesReady){getVoices().then(doSpeak)}else{doSpeak()}
 }
 
-// 查词
+// ===== 翻译 =====
+function translateToChinese(text){
+  return fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair=en|zh-CN')
+    .then(function(res){return res.json()})
+    .then(function(data){return(data.responseStatus===200&&data.responseData)?data.responseData.translatedText:''})
+    .catch(function(){return''});
+}
+
+// ===== 查词 =====
 async function lookup(){
   var input=document.getElementById('searchInput').value.trim();
   if(!input)return;
-  document.getElementById('lookupResult').innerHTML='<div class="loading">🔍 查询中...</div>';
+  document.getElementById('lookupResult').innerHTML='<div class="loading"><div class="spinner"></div><div>查询中...</div></div>';
   var isChinese=/[\u4e00-\u9fa5]/.test(input);
-  if(isChinese){await lookupChinese(input)}
-  else{await lookupEnglish(input)}
+  if(isChinese){
+    await lookupChinese(input);
+  }else{
+    await lookupEnglish(input);
+  }
 }
 
 async function lookupChinese(chinese){
   try{
     var res=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(chinese)+'&langpair=zh-CN|en');
     var data=await res.json();
-    if(data.responseStatus!==200||!data.responseData)throw new Error();
+    if(data.responseStatus!==200||!data.responseData)throw new Error('翻译失败');
     var english=data.responseData.translatedText;
-    if(!english||english==='NO QUERY SPECIFIED')throw new Error();
+    if(!english||english==='NO QUERY SPECIFIED')throw new Error('翻译失败');
     await lookupEnglish(english,chinese);
   }catch(e){
-    document.getElementById('lookupResult').innerHTML='<div class="error">❌ 查询失败，请重试</div>';
+    document.getElementById('lookupResult').innerHTML='<div class="error">❌ 查询失败，请检查网络后重试</div>';
   }
-}
-
-async function translateToChinese(text){
-  try{
-    var res=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair=en|zh-CN');
-    var data=await res.json();
-    if(data.responseStatus===200&&data.responseData)return data.responseData.translatedText;
-  }catch(e){}
-  return '';
 }
 
 async function lookupEnglish(word,originalChinese){
@@ -247,80 +283,94 @@ async function lookupEnglish(word,originalChinese){
     var entries=await dictRes.json();
     var entry=entries[0];
     var wordText=entry.word;
-    var phonetic=entry.phonetic||(entry.phonetics&&entry.phonetics.find(function(p){return p.text}))?entry.phonetics.find(function(p){return p.text}).text:''||'';
+    var phonetic=entry.phonetic||'';
+    // 找第一个有 text 的音标
+    if(!phonetic&&entry.phonetics){
+      for(var pi=0;pi<entry.phonetics.length;pi++){
+        if(entry.phonetics[pi].text){phonetic=entry.phonetics[pi].text;break}
+      }
+    }
 
+    // 构建英文释义
     var meaningsHTML='';
     var allExamples=[];
     entry.meanings.forEach(function(m){
-      var pos=m.partOfSpeech;
-      m.definitions.slice(0,3).forEach(function(def){
-        meaningsHTML+='<div class="meaning"><span class="pos-tag">'+pos+'</span>'+def.definition+'</div>';
-        if(def.example)allExamples.push({en:def.example,zh:''});
+      m.definitions.slice(0,2).forEach(function(def){
+        meaningsHTML+='<div class="meaning"><span class="pos-tag">'+escHtml(m.partOfSpeech)+'</span>'+escHtml(def.definition)+'</div>';
+        if(def.example)allExamples.push(def.example);
       });
     });
 
-    // 中文释义
+    // 中文释义（并行翻译，不阻塞渲染）
     var chineseMeaning=await translateToChinese(wordText);
 
-    // 翻译例句
-    var examplesToShow=allExamples.slice(0,3);
-    for(var i=0;i<examplesToShow.length;i++){
-      examplesToShow[i].zh=await translateToChinese(examplesToShow[i].en);
+    // 翻译例句（最多3句）
+    var examplesToShow=[];
+    var exCount=Math.min(allExamples.length,3);
+    if(exCount>0){
+      var exPromises=allExamples.slice(0,exCount).map(function(ex){return translateToChinese(ex)});
+      var exTranslations=await Promise.all(exPromises);
+      for(var i=0;i<exCount;i++){
+        examplesToShow.push({en:allExamples[i],zh:exTranslations[i]});
+      }
     }
 
-    // 没有例句则自动生成
+    // 如果没有例句，生成简单例句
     if(examplesToShow.length===0){
-      var autoExamples=[
-        {en:'I learned the word "'+wordText+'" today.',zh:''},
-        {en:'Can you use "'+wordText+'" in a sentence?',zh:''},
-        {en:'The word "'+wordText+'" is very useful.',zh:''}
+      var autoEn=[
+        'The word "'+wordText+'" is new to me.',
+        'I use the word "'+wordText+'" every day.',
+        'Can you spell "'+wordText+'"?'
       ];
-      for(var i=0;i<autoExamples.length;i++){
-        autoExamples[i].zh=await translateToChinese(autoExamples[i].en);
-        examplesToShow.push(autoExamples[i]);
+      var autoPromises=autoEn.map(function(e){return translateToChinese(e)});
+      var autoTranslations=await Promise.all(autoPromises);
+      for(var i=0;i<autoEn.length;i++){
+        examplesToShow.push({en:autoEn[i],zh:autoTranslations[i]});
       }
     }
 
     // 渲染
     var html='<div class="word-card">';
     html+='<div class="word-row">';
-    html+='<span class="word">'+wordText+'</span>';
-    if(phonetic)html+='<span class="phonetic">'+phonetic+'</span>';
-    html+='<button class="speak-btn" onclick="speakText(\''+wordText.replace(/'/g,"\\'")+"','en-US')\">🔊</button>";
+    html+='<span class="word">'+escHtml(wordText)+'</span>';
+    if(phonetic)html+='<span class="phonetic">'+escHtml(phonetic)+'</span>';
+    html+='<button class="speak-btn" onclick="speakText(\''+escJs(wordText)+'\',\'en-US\')">🔊</button>';
     html+='</div>';
     if(chineseMeaning){
-      html+='<div class="cn-meaning">📖 '+chineseMeaning+'</div>';
+      html+='<div class="cn-meaning">📖 '+escHtml(chineseMeaning)+'</div>';
     }
     html+=meaningsHTML;
     if(examplesToShow.length>0){
       html+='<div class="examples-section"><h4>📝 例句</h4>';
       examplesToShow.forEach(function(ex){
-        var enEsc=ex.en.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        html+='<div class="example-item" onclick="speakText(\''+enEsc+"','en-US')\">";
-        html+='<div class="en">'+ex.en+'</div>';
-        if(ex.zh)html+='<div class="zh">📖 '+ex.zh+'</div>';
-        html+='<div class="play-hint">👆 点击播放读音</div>';
+        html+='<div class="example-item" onclick="speakText(\''+escJs(ex.en)+'\',\'en-US\')">';
+        html+='<div class="en">'+escHtml(ex.en)+'</div>';
+        if(ex.zh)html+='<div class="zh">📖 '+escHtml(ex.zh)+'</div>';
+        html+='<div class="play-hint">👆 点击播放</div>';
         html+='</div>';
       });
       html+='</div>';
     }
     html+='<div class="actions">';
-    html+='<button class="btn btn-save" onclick="saveToBook(\''+wordText.replace(/'/g,"\\'")+"','"+phonetic.replace(/'/g,"\\'")+"','"+chineseMeaning.replace(/'/g,"\\'")+"')\">⭐ 保存到单词本</button>";
+    html+='<button class="btn btn-save" onclick="saveToBook(\''+escJs(wordText)+'\',\''+escJs(phonetic)+'\',\''+escJs(chineseMeaning)+'\')">⭐ 保存到单词本</button>';
     html+='</div></div>';
     document.getElementById('lookupResult').innerHTML=html;
   }catch(e){
-    document.getElementById('lookupResult').innerHTML='<div class="error">❌ 未找到该词，请检查拼写或换个词</div>';
+    document.getElementById('lookupResult').innerHTML='<div class="error">❌ 未找到该词，请检查拼写或换个词试试</div>';
   }
 }
 
-// 保存单词
+function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function escJs(s){if(!s)return'';return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/\r/g,'')}
+
+// ===== 保存单词 =====
 async function saveToBook(word,phonetic,meaning){
   try{
-    var exist=await fetch(SUPABASE_URL+'/rest/v1/words?user_id=eq.'+USER_ID+'&word=eq.'+word.toLowerCase(),{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}}).then(function(r){return r.json()});
-    if(exist.length>0){showToast('⚠️ 已记录过');return}
-    await fetch(SUPABASE_URL+'/rest/v1/words',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({user_id:USER_ID,word:word.toLowerCase(),phonetic:phonetic,meaning:meaning,example:'',is_mastered:false,created_at:new Date().toISOString()})});
+    var exist=await fetch(SUPABASE_URL+'/rest/v1/words?user_id=eq.'+USER_ID+'&word=eq.'+word.toLowerCase(),{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}}).then(function(r){return r.json()}).catch(function(){return[]});
+    if(exist&&exist.length>0){showToast('⚠️ 已记录过');return}
+    await fetch(SUPABASE_URL+'/rest/v1/words',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({user_id:USER_ID,word:word.toLowerCase(),phonetic:phonetic,meaning:meaning,example:'',is_mastered:false,created_at:new Date().toISOString()})}).catch(function(e){throw e});
     showToast('✅ 已保存到单词本');
-  }catch(e){showToast('❌ 保存失败')}
+  }catch(e){showToast('❌ 保存失败，请检查网络')}
 }
 
 async function addWord(){
@@ -330,32 +380,33 @@ async function addWord(){
   var example=document.getElementById('addExample').value.trim();
   if(!word){showToast('请输入单词');return}
   try{
-    var exist=await fetch(SUPABASE_URL+'/rest/v1/words?user_id=eq.'+USER_ID+'&word=eq.'+word.toLowerCase(),{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}}).then(function(r){return r.json()});
-    if(exist.length>0){showToast('⚠️ 已记录过');return}
-    await fetch(SUPABASE_URL+'/rest/v1/words',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({user_id:USER_ID,word:word.toLowerCase(),phonetic:phonetic,meaning:meaning,example:example,is_mastered:false,created_at:new Date().toISOString()})});
+    var exist=await fetch(SUPABASE_URL+'/rest/v1/words?user_id=eq.'+USER_ID+'&word=eq.'+word.toLowerCase(),{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}}).then(function(r){return r.json()}).catch(function(){return[]});
+    if(exist&&exist.length>0){showToast('⚠️ 已记录过');return}
+    await fetch(SUPABASE_URL+'/rest/v1/words',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({user_id:USER_ID,word:word.toLowerCase(),phonetic:phonetic,meaning:meaning,example:example,is_mastered:false,created_at:new Date().toISOString()})}).catch(function(e){throw e});
     showToast('✅ 已保存');
     document.getElementById('addWord').value='';
     document.getElementById('addPhonetic').value='';
     document.getElementById('addMeaning').value='';
     document.getElementById('addExample').value='';
-  }catch(e){showToast('❌ 保存失败')}
+  }catch(e){showToast('❌ 保存失败，请检查网络')}
 }
 
-// 单词本
+// ===== 单词本 =====
 async function loadWords(){
   try{
     var res=await fetch(SUPABASE_URL+'/rest/v1/words?user_id=eq.'+USER_ID+'&order=created_at.desc',{headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY}});
     myWords=res.ok?await res.json():[];
-  }catch(e){myWords=[]}
+  }catch(e){myWords=[];showToast('⚠️ 无法连接云端，使用本地模式')}
   renderWordList();updateStats();
 }
 
 function renderWordList(){
   var filtered=currentFilter==='all'?myWords:myWords.filter(function(w){return w.is_mastered==currentFilter});
-  if(filtered.length===0){document.getElementById('wordList').innerHTML='<div class="empty">暂无单词</div>';return}
+  if(filtered.length===0){document.getElementById('wordList').innerHTML='<div class="empty">暂无单词，去查词添加吧！</div>';return}
   var html='';
   filtered.forEach(function(w,i){
-    html+='<div class="word-item"><div class="num">'+(i+1)+'</div><div class="content"><div class="word">'+w.word+(w.is_mastered?'<span class="mastered">已掌握</span>':'')+'</div><div class="meaning">'+(w.phonetic?w.phonetic+' · ':'')+(w.meaning||'')+'</div></div><div class="actions"><button class="btn-icon" onclick="speakText(\''+w.word+"','en-US')\" style=\"background:#e8e5fd;color:#667eea\">🔊</button>"+(!w.is_mastered?'<button class="btn-icon" onclick="toggleMastered(\''+w.id+"',true)\" style=\"background:#e8fdf0;color:#27ae60\">✓</button>":'')+'<button class="btn-icon" onclick="deleteWord(\''+w.id+"')\" style=\"background:#fde8e8;color:#e74c3c\">✕</button></div></div>';
+    var meaningStr=(w.phonetic?w.phonetic+' · ':'')+(w.meaning||'');
+    html+='<div class="word-item"><div class="num">'+(i+1)+'</div><div class="content"><div class="word">'+escHtml(w.word)+(w.is_mastered?'<span class="mastered">已掌握</span>':'')+'</div><div class="meaning">'+escHtml(meaningStr)+'</div></div><div class="actions"><button class="btn-icon" onclick="speakText(\''+escJs(w.word)+'\',\'en-US\')" style="background:#e8e5fd;color:#667eea">🔊</button>'+(!w.is_mastered?'<button class="btn-icon" onclick="toggleMastered(\''+escJs(w.id)+'\',true)" style="background:#e8fdf0;color:#27ae60">✓</button>':'')+'<button class="btn-icon" onclick="deleteWord(\''+escJs(w.id)+'\')" style="background:#fde8e8;color:#e74c3c">✕</button></div></div>';
   });
   document.getElementById('wordList').innerHTML=html;
 }
@@ -367,15 +418,15 @@ function updateStats(){
 }
 
 async function toggleMastered(id,mastered){
-  try{await fetch(SUPABASE_URL+'/rest/v1/words?id=eq.'+id,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({is_mastered:mastered})});loadWords()}catch(e){showToast('失败')}
+  try{await fetch(SUPABASE_URL+'/rest/v1/words?id=eq.'+id,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({is_mastered:mastered})});loadWords()}catch(e){showToast('⚠️ 网络不稳定')}
 }
 
 async function deleteWord(id){
   if(!confirm('确定删除？'))return;
-  try{await fetch(SUPABASE_URL+'/rest/v1/words?id=eq.'+id,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});loadWords();showToast('🗑️ 已删除')}catch(e){showToast('失败')}
+  try{await fetch(SUPABASE_URL+'/rest/v1/words?id=eq.'+id,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});loadWords();showToast('🗑️ 已删除')}catch(e){showToast('⚠️ 网络不稳定')}
 }
 
-// 跟读练习
+// ===== 跟读练习 =====
 function initPractice(){
   if(currentMode==='word'){if(myWords.length===0)loadWords().then(function(){showPracticeWord()});else showPracticeWord()}
   else showPracticeSentence();
@@ -391,7 +442,7 @@ function switchMode(mode){
 }
 
 function showPracticeWord(){
-  if(myWords.length===0){document.getElementById('practiceWord').textContent='暂无单词';document.getElementById('practicePhonetic').textContent='';document.getElementById('practiceMeaning').textContent='请先添加';return}
+  if(myWords.length===0){document.getElementById('practiceWord').textContent='暂无单词';document.getElementById('practicePhonetic').textContent='';document.getElementById('practiceMeaning').textContent='请先在查词或记单词中添加';return}
   if(practiceIndex>=myWords.length)practiceIndex=0;
   var w=myWords[practiceIndex];
   document.getElementById('practiceWord').textContent=w.word;
@@ -411,13 +462,13 @@ function showPracticeSentence(){
 
 function nextSentence(){sentenceIndex++;if(sentenceIndex>=sentenceList.length)sentenceIndex=0;showPracticeSentence()}
 
-// 语音识别
+// ===== 语音识别 =====
 function toggleRecord(){if(isRecording)stopRecording();else startRecording('word')}
 function toggleSentenceRecord(){if(isRecording)stopRecording();else startRecording('sentence')}
 
 function startRecording(mode){
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){showToast('❌ 浏览器不支持语音识别，请用 Chrome 打开');return}
+  if(!SR){showToast('❌ 浏览器不支持，请用 Chrome 打开本页面');return}
   recognition=new SR();
   recognition.lang='en-US';recognition.interimResults=false;recognition.continuous=false;
   var btnId=mode==='word'?'recordBtn':'recordSentenceBtn';
@@ -430,13 +481,13 @@ function startRecording(mode){
   };
   recognition.onerror=function(e){
     isRecording=false;document.getElementById(btnId).classList.remove('recording');document.getElementById(btnId).textContent='🎤 跟读';
-    if(e.error==='not-allowed')showToast('❌ 请允许麦克风权限');
-    else if(e.error==='no-speech')showToast('❌ 未检测到语音，请靠近麦克风');
+    if(e.error==='not-allowed')showToast('❌ 请允许麦克风权限（浏览器设置）');
+    else if(e.error==='no-speech')showToast('❌ 未检测到语音，请靠近麦克风说话');
     else if(e.error==='network')showToast('❌ 网络错误，语音识别需要网络');
     else showToast('❌ 识别失败: '+e.error);
   };
   recognition.onend=function(){isRecording=false;document.getElementById(btnId).classList.remove('recording');document.getElementById(btnId).textContent='🎤 跟读'};
-  try{recognition.start()}catch(e){showToast('❌ 启动失败')}
+  try{recognition.start()}catch(e){showToast('❌ 启动失败')};
 }
 
 function stopRecording(){if(recognition)recognition.stop()}
@@ -456,7 +507,7 @@ function calcSentenceScore(target,recognized){
 
 function levenshtein(a,b){
   var m=[];
-  for(var j=0;j<=b.length;j++){m[j]=[];for(var i=0;i<=a.length;i++){if(j===0)m[j][i]=i;else if(i===0)m[j][i]=j;else m[j][i]=b[j-1]===a[i-1]?m[j-1][i-1]:Math.min(m[j-1][i-1]+1,m[j][i-1]+1,m[j-1][i]+1)}}
+  for(var j=0;j<=b.length;j++){m[j]=[];for(var i=0;i<=a.length;i++){if(j===0)m[j][i]=i;else if(i===0)m[j][i]=j;else m[j][i]=b.charAt(j-1)===a.charAt(i-1)?m[j-1][i-1]:Math.min(m[j-1][i-1]+1,m[j][i-1]+1,m[j-1][i]+1)}}
   return m[b.length][a.length];
 }
 
@@ -464,15 +515,15 @@ function showResult(score,recognized,resultId,scoreId,textId,feedbackId){
   var rd=document.getElementById(resultId),sd=document.getElementById(scoreId),td=document.getElementById(textId),fd=document.getElementById(feedbackId);
   var cls='bad',fb='';
   if(score>=80){cls='good';fb='🎉 太棒了！'}else if(score>=60){cls='ok';fb='👍 不错，继续加油！'}else{cls='bad';fb='💪 再试一次！'}
-  sd.className='score-display '+cls;sd.textContent=score+'分';td.textContent='识别：'+recognized;fd.textContent=fb;
+  sd.className='score-display '+cls;sd.textContent=score+'分';td.textContent='识别：'+escHtml(recognized);fd.textContent=fb;
   rd.className='practice-result show '+cls;
 }
 
-// UI
+// ===== UI =====
 document.querySelectorAll('.tab').forEach(function(tab){tab.addEventListener('click',function(){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});tab.classList.add('active');document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active')});document.getElementById('sec-'+tab.dataset.tab).classList.add('active');if(tab.dataset.tab==='list')loadWords();if(tab.dataset.tab==='practice')initPractice()})});
 document.querySelectorAll('.filter').forEach(function(f){f.addEventListener('click',function(){document.querySelectorAll('.filter').forEach(function(x){x.classList.remove('active')});f.classList.add('active');currentFilter=f.dataset.filter;renderWordList()})});
 
-function showToast(msg){var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},2000)}
+function showToast(msg){var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},2500)}
 document.getElementById('searchInput').focus();
 </script>
 </body>
