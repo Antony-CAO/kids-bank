@@ -1,104 +1,100 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>曹栋单词本</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#333;padding-bottom:30px}
-    .header{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:20px;text-align:center}
-    .header h1{font-size:20px;margin-bottom:4px}
-    .header p{font-size:13px;opacity:.85}
-    .tabs{display:flex;background:white;border-bottom:1px solid #eee;position:sticky;top:0;z-index:10}
-    .tab{flex:1;padding:12px 4px;text-align:center;font-size:13px;cursor:pointer;color:#888;border-bottom:2px solid transparent;transition:all .2s}
-    .tab.active{color:#667eea;border-bottom-color:#667eea;font-weight:600}
-    .container{max-width:600px;margin:0 auto;padding:16px}
-    .section{display:none}.section.active{display:block}
-    .search-box{display:flex;gap:8px;margin-bottom:16px}
-    .search-box input{flex:1;padding:12px 16px;border:1px solid #ddd;border-radius:12px;font-size:16px;outline:none}
-    .search-box button{padding:12px 20px;background:#667eea;color:white;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
-    .word-card{background:white;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
-    .word-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
-    .word-card .word{font-size:28px;font-weight:700;color:#333}
-    .phonetic{font-size:16px;color:#888}
-    .speak-btn{background:#e8e5fd;color:#667eea;border:none;border-radius:50%;width:36px;height:36px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .meaning{font-size:15px;color:#555;line-height:1.8;margin-bottom:8px;padding-left:12px;border-left:3px solid #667eea}
-    .pos-tag{display:inline-block;background:#e8e5fd;color:#667eea;font-size:12px;padding:2px 8px;border-radius:4px;font-weight:600;margin-right:6px}
-    .cn-meaning{font-size:17px;color:#222;font-weight:600;margin-bottom:10px;padding:10px 12px;background:#f0fff0;border-radius:8px;border-left:3px solid #27ae60;line-height:1.6}
-    .examples-section{margin-top:12px}
-    .examples-section h4{font-size:14px;color:#667eea;margin-bottom:8px}
-    .example-item{background:#f8f8ff;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:background .2s}
-    .example-item:active{background:#eef0ff}
-    .example-item .en{font-size:15px;color:#333;line-height:1.5}
-    .example-item .zh{font-size:13px;color:#666;margin-top:4px}
-    .play-hint{font-size:11px;color:#bbb;margin-top:2px}
-    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    .btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500}
-    .btn-save{background:#e8e5fd;color:#667eea}
-    .loading{text-align:center;padding:40px 20px;color:#888;font-size:14px}
-    .loading .spinner{display:inline-block;width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:#667eea;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .error{text-align:center;padding:20px;color:#e74c3c;background:#fdf2f2;border-radius:12px;font-size:14px}
-    .add-form{background:white;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
-    .add-form h3{font-size:15px;margin-bottom:12px;color:#667eea}
-    .add-form input,.add-form textarea{width:100%;padding:12px 14px;border:1px solid #e0e0e0;border-radius:10px;font-size:15px;margin-bottom:10px;outline:none;resize:none;font-family:inherit}
-    .add-form textarea{height:80px}
-    .btn-add{width:100%;padding:14px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer}
-    .word-item{background:white;border-radius:12px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,.04);display:flex;align-items:flex-start;gap:10px}
-    .word-item .num{width:24px;height:24px;background:#e8e5fd;color:#667eea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px}
-    .word-item .content{flex:1}
-    .word-item .word{font-size:17px;font-weight:700;color:#333}
-    .word-item .meaning{font-size:13px;color:#888;margin-top:2px;border:none;padding:0}
-    .word-item .mastered{display:inline-block;background:#27ae60;color:white;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:600}
-    .word-item .actions{display:flex;gap:4px;flex-shrink:0;align-items:center}
-    .word-item .btn-icon{width:28px;height:28px;border-radius:6px;border:none;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-    .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
-    .stat{background:white;border-radius:12px;padding:16px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,.04)}
-    .stat .num{font-size:24px;font-weight:700;color:#667eea}
-    .stat .label{font-size:11px;color:#aaa;margin-top:2px}
-    .filter-bar{display:flex;gap:6px;margin-bottom:12px}
-    .filter-bar .filter{padding:6px 12px;border-radius:20px;font-size:12px;border:1px solid #ddd;background:white;color:#888;cursor:pointer}
-    .filter-bar .filter.active{background:#667eea;color:white;border-color:#667eea}
-    .practice-card{background:white;border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);text-align:center}
-    .target-word{font-size:32px;font-weight:700;color:#333;margin-bottom:8px}
-    .target-phonetic{font-size:16px;color:#888;margin-bottom:8px}
-    .target-meaning{font-size:14px;color:#666;background:#f8f8ff;padding:10px 14px;border-radius:8px;margin-bottom:16px;display:inline-block}
-    .sentence-practice{font-size:18px;color:#333;line-height:1.6;margin-bottom:8px;padding:16px;background:#f8f8ff;border-radius:12px;cursor:pointer}
-    .sentence-zh{font-size:14px;color:#888;margin-bottom:12px}
-    .practice-controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
-    .btn-practice{padding:12px 24px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer}
-    .btn-demo{background:#e8e5fd;color:#667eea}
-    .btn-record{background:#ff6b6b;color:white}
-    .btn-record.recording{background:#e74c3c;animation:pulse-rec 1s infinite}
-    @keyframes pulse-rec{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-    .btn-next{background:#f0f0f0;color:#555}
-    .practice-result{margin-top:16px;padding:16px;border-radius:12px;display:none}
-    .practice-result.show{display:block;animation:fadeUp .3s}
-    .practice-result.good{background:#e8fdf0;border:1px solid #27ae60}
-    .practice-result.ok{background:#fff8e1;border:1px solid #f39c12}
-    .practice-result.bad{background:#fdf2f2;border:1px solid #e74c3c}
-    .score-display{font-size:48px;font-weight:700;margin:10px 0}
-    .score-display.good{color:#27ae60}.score-display.ok{color:#f39c12}.score-display.bad{color:#e74c3c}
-    .recognized-text{font-size:16px;color:#555;margin:8px 0;padding:10px;background:rgba(255,255,255,.8);border-radius:8px}
-    .toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:white;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;animation:fadeUp .3s;pointer-events:none}
-    @keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-    .mode-switch{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
-    .mode-btn{padding:8px 16px;border-radius:20px;font-size:13px;border:1px solid #ddd;background:white;color:#888;cursor:pointer}
-    .mode-btn.active{background:#667eea;color:white;border-color:#667eea}
-    .browser-tip{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;font-size:12px;color:#856404;margin-bottom:12px}
-    .online-dot{width:8px;height:8px;border-radius:50%;background:#27ae60;display:inline-block;margin-right:4px;animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-    .empty{text-align:center;padding:40px;color:#aaa}
-    .offline-banner{background:#e74c3c;color:white;padding:8px 16px;text-align:center;font-size:13px;margin-bottom:12px;border-radius:8px}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>曹栋单词本</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#333;padding-bottom:30px}
+.header{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:20px;text-align:center}
+.header h1{font-size:20px;margin-bottom:4px}
+.header p{font-size:13px;opacity:.85}
+.tabs{display:flex;background:white;border-bottom:1px solid #eee;position:sticky;top:0;z-index:10}
+.tab{flex:1;padding:12px 4px;text-align:center;font-size:13px;cursor:pointer;color:#888;border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:#667eea;border-bottom-color:#667eea;font-weight:600}
+.container{max-width:600px;margin:0 auto;padding:16px}
+.section{display:none}.section.active{display:block}
+.search-box{display:flex;gap:8px;margin-bottom:16px}
+.search-box input{flex:1;padding:12px 16px;border:1px solid #ddd;border-radius:12px;font-size:16px;outline:none}
+.search-box button{padding:12px 20px;background:#667eea;color:white;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.word-card{background:white;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.word-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.word-card .word{font-size:28px;font-weight:700;color:#333}
+.phonetic{font-size:16px;color:#888}
+.speak-btn{background:#e8e5fd;color:#667eea;border:none;border-radius:50%;width:36px;height:36px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.meaning{font-size:15px;color:#555;line-height:1.8;margin-bottom:8px;padding-left:12px;border-left:3px solid #667eea}
+.pos-tag{display:inline-block;background:#e8e5fd;color:#667eea;font-size:12px;padding:2px 8px;border-radius:4px;font-weight:600;margin-right:6px}
+.cn-meaning{font-size:17px;color:#222;font-weight:600;margin-bottom:10px;padding:10px 12px;background:#f0fff0;border-radius:8px;border-left:3px solid #27ae60;line-height:1.6}
+.examples-section{margin-top:12px}
+.examples-section h4{font-size:14px;color:#667eea;margin-bottom:8px}
+.example-item{background:#f8f8ff;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:background .2s}
+.example-item:active{background:#eef0ff}
+.example-item .en{font-size:15px;color:#333;line-height:1.5}
+.example-item .zh{font-size:13px;color:#666;margin-top:4px}
+.play-hint{font-size:11px;color:#bbb;margin-top:2px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500}
+.btn-save{background:#e8e5fd;color:#667eea}
+.loading{text-align:center;padding:40px 20px;color:#888;font-size:14px}
+.loading .spinner{display:inline-block;width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:#667eea;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error{text-align:center;padding:20px;color:#e74c3c;background:#fdf2f2;border-radius:12px;font-size:14px}
+.add-form{background:white;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.add-form h3{font-size:15px;margin-bottom:12px;color:#667eea}
+.add-form input,.add-form textarea{width:100%;padding:12px 14px;border:1px solid #e0e0e0;border-radius:10px;font-size:15px;margin-bottom:10px;outline:none;resize:none;font-family:inherit}
+.add-form textarea{height:80px}
+.btn-add{width:100%;padding:14px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer}
+.word-item{background:white;border-radius:12px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,.04);display:flex;align-items:flex-start;gap:10px}
+.word-item .num{width:24px;height:24px;background:#e8e5fd;color:#667eea;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px}
+.word-item .content{flex:1}
+.word-item .word{font-size:17px;font-weight:700;color:#333}
+.word-item .mean{font-size:13px;color:#888;margin-top:2px}
+.word-item .mastered{display:inline-block;background:#27ae60;color:white;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:600}
+.word-item .actions{display:flex;gap:4px;flex-shrink:0;align-items:center}
+.word-item .btn-icon{width:28px;height:28px;border-radius:6px;border:none;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.stat{background:white;border-radius:12px;padding:16px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,.04)}
+.stat .num{font-size:24px;font-weight:700;color:#667eea}
+.stat .label{font-size:11px;color:#aaa;margin-top:2px}
+.filter-bar{display:flex;gap:6px;margin-bottom:12px}
+.filter-bar .filter{padding:6px 12px;border-radius:20px;font-size:12px;border:1px solid #ddd;background:white;color:#888;cursor:pointer}
+.filter-bar .filter.active{background:#667eea;color:white;border-color:#667eea}
+.practice-card{background:white;border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);text-align:center}
+.target-word{font-size:32px;font-weight:700;color:#333;margin-bottom:8px}
+.target-phonetic{font-size:16px;color:#888;margin-bottom:8px}
+.target-meaning{font-size:14px;color:#666;background:#f8f8ff;padding:10px 14px;border-radius:8px;margin-bottom:16px;display:inline-block}
+.sentence-practice{font-size:18px;color:#333;line-height:1.6;margin-bottom:8px;padding:16px;background:#f8f8ff;border-radius:12px;cursor:pointer}
+.sentence-zh{font-size:14px;color:#888;margin-bottom:12px}
+.practice-controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.btn-practice{padding:12px 24px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer}
+.btn-demo{background:#e8e5fd;color:#667eea}
+.btn-record{background:#ff6b6b;color:white}
+.btn-record.recording{background:#e74c3c;animation:pulse-rec 1s infinite}
+@keyframes pulse-rec{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.btn-next{background:#f0f0f0;color:#555}
+.practice-result{margin-top:16px;padding:16px;border-radius:12px;display:none}
+.practice-result.show{display:block;animation:fadeUp .3s}
+.practice-result.good{background:#e8fdf0;border:1px solid #27ae60}
+.practice-result.ok{background:#fff8e1;border:1px solid #f39c12}
+.practice-result.bad{background:#fdf2f2;border:1px solid #e74c3c}
+.score-display{font-size:48px;font-weight:700;margin:10px 0}
+.score-display.good{color:#27ae60}.score-display.ok{color:#f39c12}.score-display.bad{color:#e74c3c}
+.recognized-text{font-size:16px;color:#555;margin:8px 0;padding:10px;background:rgba(255,255,255,.8);border-radius:8px}
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:white;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;animation:fadeUp .3s;pointer-events:none}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.mode-switch{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
+.mode-btn{padding:8px 16px;border-radius:20px;font-size:13px;border:1px solid #ddd;background:white;color:#888;cursor:pointer}
+.mode-btn.active{background:#667eea;color:white;border-color:#667eea}
+.browser-tip{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;font-size:12px;color:#856404;margin-bottom:12px}
+.empty{text-align:center;padding:40px;color:#aaa}
+</style>
 </head>
 <body>
 <div class="header">
   <h1>📒 曹栋单词本</h1>
-  <p><span class="online-dot"></span><span id="connStatus">已连接</span></p>
+  <p>📱 数据存在本机，无需网络</p>
 </div>
-<div id="offlineBanner" class="offline-banner" style="display:none">⚠️ 网络不稳定，部分功能可能受限</div>
 <div class="tabs">
   <div class="tab active" data-tab="lookup">查词</div>
   <div class="tab" data-tab="add">记单词</div>
@@ -153,7 +149,7 @@
         <div class="target-phonetic" id="practicePhonetic"></div>
         <div class="target-meaning" id="practiceMeaning"></div>
         <div class="practice-controls">
-          <button class="btn-practice btn-demo" onclick="speakTextSafe('practiceWord','en-US')">🔊 示范</button>
+          <button class="btn-practice btn-demo" onclick="speakEl('practiceWord')">🔊 示范</button>
           <button class="btn-practice btn-record" id="recordBtn" onclick="toggleRecord()">🎤 跟读</button>
           <button class="btn-practice btn-next" onclick="nextWord()">⏭️ 下一个</button>
         </div>
@@ -166,10 +162,10 @@
     </div>
     <div id="sentencePractice" style="display:none">
       <div class="practice-card">
-        <div class="sentence-practice" id="practiceSentence" onclick="speakTextSafe('practiceSentence','en-US')">加载中...</div>
+        <div class="sentence-practice" id="practiceSentence" onclick="speakEl('practiceSentence')">加载中...</div>
         <div class="sentence-zh" id="practiceSentenceZh"></div>
         <div class="practice-controls">
-          <button class="btn-practice btn-demo" onclick="speakTextSafe('practiceSentence','en-US')">🔊 示范</button>
+          <button class="btn-practice btn-demo" onclick="speakEl('practiceSentence')">🔊 示范</button>
           <button class="btn-practice btn-record" id="recordSentenceBtn" onclick="toggleSentenceRecord()">🎤 跟读</button>
           <button class="btn-practice btn-next" onclick="nextSentence()">⏭️ 下一个</button>
         </div>
@@ -183,25 +179,13 @@
   </div>
 </div>
 <script>
-var SUPABASE_URL='https://pikgowxalrkjrijykoe.supabase.co';
-var SUPABASE_KEY='sb_publishable_0jOHX7hrPXFV6A2lv9HgPA_9LxT04Xx';
-var USER_ID='caodong_wordbook';
-var currentFilter='all',myWords=[],practiceIndex=0,currentMode='word';
+// ===== 本地存储（不依赖任何云端）=====
+var STORAGE_KEY='caodong_wordbook_v3';
+function loadLocal(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[]}catch(e){return[]}}
+function saveLocal(words){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(words))}catch(e){}}
+var myWords=loadLocal();
+var currentFilter='all',practiceIndex=0,currentMode='word';
 var recognition=null,isRecording=false;
-var supabaseOK=true;
-
-// 网络状态监听
-window.addEventListener('online',function(){
-  supabaseOK=true;
-  document.getElementById('connStatus').textContent='已连接';
-  document.getElementById('offlineBanner').style.display='none';
-});
-window.addEventListener('offline',function(){
-  supabaseOK=false;
-  document.getElementById('connStatus').textContent='离线';
-  document.getElementById('offlineBanner').style.display='block';
-});
-
 var sentenceList=[
   {en:"Hello, nice to meet you.",zh:"你好，很高兴认识你。"},
   {en:"I love learning English.",zh:"我喜欢学英语。"},
@@ -216,38 +200,25 @@ var sentenceList=[
 ];
 var sentenceIndex=0;
 
-// ===== TTS: 可靠发音 =====
+// ===== TTS =====
 var voicesReady=false;
-function getVoices(){return new Promise(function(resolve){var v=speechSynthesis.getVoices();if(v.length){voicesReady=true;return resolve(v)}speechSynthesis.onvoiceschanged=function(){voicesReady=true;resolve(speechSynthesis.getVoices())};setTimeout(function(){voicesReady=true;resolve(speechSynthesis.getVoices())},1500)})}
-getVoices();
-
-// 安全发音：自动等待 voice 加载
-function speakTextSafe(elId,lang){
-  var el=typeof elId==='string'?document.getElementById(elId):null;
-  var text=el?el.textContent:elId;
-  speakText(text,lang);
-}
+function initVoices(){var v=speechSynthesis.getVoices();if(v.length){voicesReady=true;return}speechSynthesis.onvoiceschanged=function(){voicesReady=true}}
+initVoices();
 
 function speakText(text,lang){
   if(!text||text==='加载中...'||text==='暂无单词')return;
-  function doSpeak(){
-    speechSynthesis.cancel();
-    var ut=new SpeechSynthesisUtterance(text);
-    ut.lang=lang||'en-US';ut.rate=0.85;ut.volume=1;
-    var voices=speechSynthesis.getVoices();
-    var enVoice=voices.find(function(v){return v.lang.startsWith('en')&&v.localService})||voices.find(function(v){return v.lang.startsWith('en')});
-    if(enVoice)ut.voice=enVoice;
-    speechSynthesis.speak(ut);
-  }
-  if(!voicesReady){getVoices().then(doSpeak)}else{doSpeak()}
+  function doSpeak(){speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang=lang||'en-US';u.rate=0.85;u.volume=1;var vs=speechSynthesis.getVoices();var ev=vs.find(function(v){return v.lang.startsWith('en')&&v.localService})||vs.find(function(v){return v.lang.startsWith('en')});if(ev)u.voice=ev;speechSynthesis.speak(u)}
+  if(!voicesReady){var iv=setInterval(function(){if(speechSynthesis.getVoices().length){voicesReady=true;clearInterval(iv);doSpeak()}},100);setTimeout(function(){clearInterval(iv);doSpeak()},2000)}
+  else{doSpeak()}
 }
+function speakEl(id){var el=document.getElementById(id);if(el)speakText(el.textContent,'en-US')}
 
 // ===== 翻译 =====
 function translateToChinese(text){
   return fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair=en|zh-CN')
-    .then(function(res){return res.json()})
-    .then(function(data){return(data.responseStatus===200&&data.responseData)?data.responseData.translatedText:''})
-    .catch(function(){return''});
+    .then(function(r){return r.json()})
+    .then(function(d){return(d.responseStatus===200&&d.responseData)?d.responseData.translatedText:''})
+    .catch(function(){return''})
 }
 
 // ===== 查词 =====
@@ -256,159 +227,92 @@ async function lookup(){
   if(!input)return;
   document.getElementById('lookupResult').innerHTML='<div class="loading"><div class="spinner"></div><div>查询中...</div></div>';
   var isChinese=/[\u4e00-\u9fa5]/.test(input);
-  if(isChinese){
-    await lookupChinese(input);
-  }else{
-    await lookupEnglish(input);
-  }
+  if(isChinese){await lookupChinese(input)}else{await lookupEnglish(input)}
 }
 
 async function lookupChinese(chinese){
   try{
-    var res=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(chinese)+'&langpair=zh-CN|en');
-    var data=await res.json();
-    if(data.responseStatus!==200||!data.responseData)throw new Error('翻译失败');
-    var english=data.responseData.translatedText;
-    if(!english||english==='NO QUERY SPECIFIED')throw new Error('翻译失败');
-    await lookupEnglish(english,chinese);
-  }catch(e){
-    document.getElementById('lookupResult').innerHTML='<div class="error">❌ 查询失败，请检查网络后重试</div>';
-  }
+    var r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(chinese)+'&langpair=zh-CN|en');
+    var d=await r.json();
+    if(d.responseStatus!==200||!d.responseData)throw new Error();
+    var en=d.responseData.translatedText;
+    if(!en||en==='NO QUERY SPECIFIED')throw new Error();
+    await lookupEnglish(en);
+  }catch(e){document.getElementById('lookupResult').innerHTML='<div class="error">❌ 查询失败，请检查网络</div>'}
 }
 
-async function lookupEnglish(word,originalChinese){
+async function lookupEnglish(word){
   try{
-    var dictRes=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(word));
-    if(!dictRes.ok)throw new Error('词典无结果');
-    var entries=await dictRes.json();
-    var entry=entries[0];
-    var wordText=entry.word;
-    var phonetic=entry.phonetic||'';
-    // 找第一个有 text 的音标
-    if(!phonetic&&entry.phonetics){
-      for(var pi=0;pi<entry.phonetics.length;pi++){
-        if(entry.phonetics[pi].text){phonetic=entry.phonetics[pi].text;break}
-      }
+    var dr=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(word));
+    if(!dr.ok)throw new Error();
+    var entries=await dr.json();
+    var e=entries[0];
+    var wordText=e.word;
+    var phonetic=e.phonetic||'';
+    if(!phonetic&&e.phonetics){for(var i=0;i<e.phonetics.length;i++){if(e.phonetics[i].text){phonetic=e.phonetics[i].text;break}}}
+
+    var mHTML='',examples=[];
+    e.meanings.forEach(function(m){m.definitions.slice(0,2).forEach(function(d){mHTML+='<div class="meaning"><span class="pos-tag">'+esc(m.partOfSpeech)+'</span>'+esc(d.definition)+'</div>';if(d.example)examples.push(d.example)})});
+
+    var cnMeaning=await translateToChinese(wordText);
+
+    var exList=[];
+    var toTranslate=examples.slice(0,3);
+    if(toTranslate.length>0){
+      var translations=await Promise.all(toTranslate.map(function(x){return translateToChinese(x)}));
+      for(var i=0;i<toTranslate.length;i++)exList.push({en:toTranslate[i],zh:translations[i]});
+    }
+    if(exList.length===0){
+      var auto=['I learned the word "'+wordText+'" today.','Can you use "'+wordText+'" in a sentence?','The word "'+wordText+'" is very useful.'];
+      var autoTr=await Promise.all(auto.map(function(x){return translateToChinese(x)}));
+      for(var i=0;i<auto.length;i++)exList.push({en:auto[i],zh:autoTr[i]});
     }
 
-    // 构建英文释义
-    var meaningsHTML='';
-    var allExamples=[];
-    entry.meanings.forEach(function(m){
-      m.definitions.slice(0,2).forEach(function(def){
-        meaningsHTML+='<div class="meaning"><span class="pos-tag">'+escHtml(m.partOfSpeech)+'</span>'+escHtml(def.definition)+'</div>';
-        if(def.example)allExamples.push(def.example);
-      });
-    });
-
-    // 中文释义（并行翻译，不阻塞渲染）
-    var chineseMeaning=await translateToChinese(wordText);
-
-    // 翻译例句（最多3句）
-    var examplesToShow=[];
-    var exCount=Math.min(allExamples.length,3);
-    if(exCount>0){
-      var exPromises=allExamples.slice(0,exCount).map(function(ex){return translateToChinese(ex)});
-      var exTranslations=await Promise.all(exPromises);
-      for(var i=0;i<exCount;i++){
-        examplesToShow.push({en:allExamples[i],zh:exTranslations[i]});
-      }
-    }
-
-    // 如果没有例句，生成简单例句
-    if(examplesToShow.length===0){
-      var autoEn=[
-        'The word "'+wordText+'" is new to me.',
-        'I use the word "'+wordText+'" every day.',
-        'Can you spell "'+wordText+'"?'
-      ];
-      var autoPromises=autoEn.map(function(e){return translateToChinese(e)});
-      var autoTranslations=await Promise.all(autoPromises);
-      for(var i=0;i<autoEn.length;i++){
-        examplesToShow.push({en:autoEn[i],zh:autoTranslations[i]});
-      }
-    }
-
-    // 渲染
-    var html='<div class="word-card">';
-    html+='<div class="word-row">';
-    html+='<span class="word">'+escHtml(wordText)+'</span>';
-    if(phonetic)html+='<span class="phonetic">'+escHtml(phonetic)+'</span>';
-    html+='<button class="speak-btn" onclick="speakText(\''+escJs(wordText)+'\',\'en-US\')">🔊</button>';
-    html+='</div>';
-    if(chineseMeaning){
-      html+='<div class="cn-meaning">📖 '+escHtml(chineseMeaning)+'</div>';
-    }
-    html+=meaningsHTML;
-    if(examplesToShow.length>0){
-      html+='<div class="examples-section"><h4>📝 例句</h4>';
-      examplesToShow.forEach(function(ex){
-        html+='<div class="example-item" onclick="speakText(\''+escJs(ex.en)+'\',\'en-US\')">';
-        html+='<div class="en">'+escHtml(ex.en)+'</div>';
-        if(ex.zh)html+='<div class="zh">📖 '+escHtml(ex.zh)+'</div>';
-        html+='<div class="play-hint">👆 点击播放</div>';
-        html+='</div>';
-      });
-      html+='</div>';
-    }
-    html+='<div class="actions">';
-    html+='<button class="btn btn-save" onclick="saveToBook(\''+escJs(wordText)+'\',\''+escJs(phonetic)+'\',\''+escJs(chineseMeaning)+'\')">⭐ 保存到单词本</button>';
-    html+='</div></div>';
-    document.getElementById('lookupResult').innerHTML=html;
-  }catch(e){
-    document.getElementById('lookupResult').innerHTML='<div class="error">❌ 未找到该词，请检查拼写或换个词试试</div>';
-  }
+    var h='<div class="word-card"><div class="word-row"><span class="word">'+esc(wordText)+'</span>';
+    if(phonetic)h+='<span class="phonetic">'+esc(phonetic)+'</span>';
+    h+='<button class="speak-btn" onclick="speakText(\''+ejs(wordText)+"','en-US')\">🔊</button></div>";
+    if(cnMeaning)h+='<div class="cn-meaning">📖 '+esc(cnMeaning)+'</div>';
+    h+=mHTML;
+    if(exList.length>0){h+='<div class="examples-section"><h4>📝 例句</h4>';exList.forEach(function(x){h+='<div class="example-item" onclick="speakText(\''+ejs(x.en)+"','en-US')\"><div class=\"en\">"+esc(x.en)+'</div>';if(x.zh)h+='<div class="zh">📖 '+esc(x.zh)+'</div>';h+='<div class="play-hint">👆 点击播放</div></div>'});h+='</div>'}
+    h+='<div class="actions"><button class="btn btn-save" onclick="saveToBook(\''+ejs(wordText)+"','"+ejs(phonetic)+"','"+ejs(cnMeaning)+'\')">⭐ 保存到单词本</button></div></div>';
+    document.getElementById('lookupResult').innerHTML=h;
+  }catch(e){document.getElementById('lookupResult').innerHTML='<div class="error">❌ 未找到该词，请检查拼写或换个词</div>'}
 }
 
-function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function escJs(s){if(!s)return'';return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/\r/g,'')}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function ejs(s){if(!s)return'';return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' ')}
 
 // ===== 保存单词 =====
-async function saveToBook(word,phonetic,meaning){
-  try{
-    var exist=await fetch(SUPABASE_URL+'/rest/v1/words?user_id=eq.'+USER_ID+'&word=eq.'+word.toLowerCase(),{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}}).then(function(r){return r.json()}).catch(function(){return[]});
-    if(exist&&exist.length>0){showToast('⚠️ 已记录过');return}
-    await fetch(SUPABASE_URL+'/rest/v1/words',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({user_id:USER_ID,word:word.toLowerCase(),phonetic:phonetic,meaning:meaning,example:'',is_mastered:false,created_at:new Date().toISOString()})}).catch(function(e){throw e});
-    showToast('✅ 已保存到单词本');
-  }catch(e){showToast('❌ 保存失败，请检查网络')}
+function saveToBook(word,phonetic,meaning){
+  if(myWords.find(function(w){return w.word.toLowerCase()===word.toLowerCase()})){showToast('⚠️ 已记录过');return}
+  myWords.unshift({id:Date.now().toString(36),word:word,phonetic:phonetic||'',meaning:meaning||'',example:'',is_mastered:false,created_at:new Date().toISOString()});
+  saveLocal(myWords);
+  showToast('✅ 已保存到单词本');
 }
 
-async function addWord(){
+function addWord(){
   var word=document.getElementById('addWord').value.trim();
+  if(!word){showToast('请输入单词');return}
   var phonetic=document.getElementById('addPhonetic').value.trim();
   var meaning=document.getElementById('addMeaning').value.trim();
   var example=document.getElementById('addExample').value.trim();
-  if(!word){showToast('请输入单词');return}
-  try{
-    var exist=await fetch(SUPABASE_URL+'/rest/v1/words?user_id=eq.'+USER_ID+'&word=eq.'+word.toLowerCase(),{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}}).then(function(r){return r.json()}).catch(function(){return[]});
-    if(exist&&exist.length>0){showToast('⚠️ 已记录过');return}
-    await fetch(SUPABASE_URL+'/rest/v1/words',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({user_id:USER_ID,word:word.toLowerCase(),phonetic:phonetic,meaning:meaning,example:example,is_mastered:false,created_at:new Date().toISOString()})}).catch(function(e){throw e});
-    showToast('✅ 已保存');
-    document.getElementById('addWord').value='';
-    document.getElementById('addPhonetic').value='';
-    document.getElementById('addMeaning').value='';
-    document.getElementById('addExample').value='';
-  }catch(e){showToast('❌ 保存失败，请检查网络')}
+  if(myWords.find(function(w){return w.word.toLowerCase()===word.toLowerCase()})){showToast('⚠️ 已记录过');return}
+  myWords.unshift({id:Date.now().toString(36),word:word,phonetic:phonetic,meaning:meaning,example:example,is_mastered:false,created_at:new Date().toISOString()});
+  saveLocal(myWords);
+  showToast('✅ 已保存');
+  document.getElementById('addWord').value='';document.getElementById('addPhonetic').value='';document.getElementById('addMeaning').value='';document.getElementById('addExample').value='';
 }
 
-// ===== 单词本 =====
-async function loadWords(){
-  try{
-    var res=await fetch(SUPABASE_URL+'/rest/v1/words?user_id=eq.'+USER_ID+'&order=created_at.desc',{headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY}});
-    myWords=res.ok?await res.json():[];
-  }catch(e){myWords=[];showToast('⚠️ 无法连接云端，使用本地模式')}
-  renderWordList();updateStats();
-}
-
+// ===== 单词本列表 =====
 function renderWordList(){
-  var filtered=currentFilter==='all'?myWords:myWords.filter(function(w){return w.is_mastered==currentFilter});
-  if(filtered.length===0){document.getElementById('wordList').innerHTML='<div class="empty">暂无单词，去查词添加吧！</div>';return}
-  var html='';
+  var filtered=currentFilter==='all'?myWords:myWords.filter(function(w){return w.is_mastered==(currentFilter==='1')});
+  if(filtered.length===0){document.getElementById('wordList').innerHTML='<div class="empty">暂无单词，去查词添加吧！</div>';updateStats();return}
+  var h='';
   filtered.forEach(function(w,i){
-    var meaningStr=(w.phonetic?w.phonetic+' · ':'')+(w.meaning||'');
-    html+='<div class="word-item"><div class="num">'+(i+1)+'</div><div class="content"><div class="word">'+escHtml(w.word)+(w.is_mastered?'<span class="mastered">已掌握</span>':'')+'</div><div class="meaning">'+escHtml(meaningStr)+'</div></div><div class="actions"><button class="btn-icon" onclick="speakText(\''+escJs(w.word)+'\',\'en-US\')" style="background:#e8e5fd;color:#667eea">🔊</button>'+(!w.is_mastered?'<button class="btn-icon" onclick="toggleMastered(\''+escJs(w.id)+'\',true)" style="background:#e8fdf0;color:#27ae60">✓</button>':'')+'<button class="btn-icon" onclick="deleteWord(\''+escJs(w.id)+'\')" style="background:#fde8e8;color:#e74c3c">✕</button></div></div>';
+    h+='<div class="word-item"><div class="num">'+(i+1)+'</div><div class="content"><div class="word">'+esc(w.word)+(w.is_mastered?'<span class="mastered">已掌握</span>':'')+'</div><div class="mean">'+esc((w.phonetic?w.phonetic+' · ':'')+(w.meaning||''))+'</div></div><div class="actions"><button class="btn-icon" onclick="speakText(\''+ejs(w.word)+"','en-US')\" style=\"background:#e8e5fd;color:#667eea\">🔊</button>"+(!w.is_mastered?'<button class="btn-icon" onclick="markMastered(\''+ejs(w.id)+"')\" style=\"background:#e8fdf0;color:#27ae60\">✓</button>":'')+'<button class="btn-icon" onclick="delWord(\''+ejs(w.id)+"')\" style=\"background:#fde8e8;color:#e74c3c\">✕</button></div></div>';
   });
-  document.getElementById('wordList').innerHTML=html;
+  document.getElementById('wordList').innerHTML=h;
+  updateStats();
 }
 
 function updateStats(){
@@ -417,32 +321,21 @@ function updateStats(){
   document.getElementById('statUnlearned').textContent=myWords.filter(function(w){return !w.is_mastered}).length;
 }
 
-async function toggleMastered(id,mastered){
-  try{await fetch(SUPABASE_URL+'/rest/v1/words?id=eq.'+id,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({is_mastered:mastered})});loadWords()}catch(e){showToast('⚠️ 网络不稳定')}
-}
-
-async function deleteWord(id){
-  if(!confirm('确定删除？'))return;
-  try{await fetch(SUPABASE_URL+'/rest/v1/words?id=eq.'+id,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});loadWords();showToast('🗑️ 已删除')}catch(e){showToast('⚠️ 网络不稳定')}
-}
+function markMastered(id){var w=myWords.find(function(w){return w.id===id});if(w){w.is_mastered=true;saveLocal(myWords);renderWordList()}}
+function delWord(id){if(!confirm('确定删除？'))return;myWords=myWords.filter(function(w){return w.id!==id});saveLocal(myWords);renderWordList();showToast('🗑️ 已删除')}
 
 // ===== 跟读练习 =====
-function initPractice(){
-  if(currentMode==='word'){if(myWords.length===0)loadWords().then(function(){showPracticeWord()});else showPracticeWord()}
-  else showPracticeSentence();
-}
-
-function switchMode(mode){
-  currentMode=mode;
+function initPractice(){if(currentMode==='word')showPracticeWord();else showPracticeSentence()}
+function switchMode(m){
+  currentMode=m;
   document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('active')});
-  document.querySelector('[data-mode="'+mode+'"]').classList.add('active');
-  document.getElementById('wordPractice').style.display=mode==='word'?'block':'none';
-  document.getElementById('sentencePractice').style.display=mode==='sentence'?'block':'none';
-  if(mode==='word')showPracticeWord();else showPracticeSentence();
+  document.querySelector('[data-mode="'+m+'"]').classList.add('active');
+  document.getElementById('wordPractice').style.display=m==='word'?'block':'none';
+  document.getElementById('sentencePractice').style.display=m==='sentence'?'block':'none';
+  if(m==='word')showPracticeWord();else showPracticeSentence();
 }
-
 function showPracticeWord(){
-  if(myWords.length===0){document.getElementById('practiceWord').textContent='暂无单词';document.getElementById('practicePhonetic').textContent='';document.getElementById('practiceMeaning').textContent='请先在查词或记单词中添加';return}
+  if(myWords.length===0){document.getElementById('practiceWord').textContent='暂无单词';document.getElementById('practicePhonetic').textContent='';document.getElementById('practiceMeaning').textContent='请先添加';return}
   if(practiceIndex>=myWords.length)practiceIndex=0;
   var w=myWords[practiceIndex];
   document.getElementById('practiceWord').textContent=w.word;
@@ -450,80 +343,61 @@ function showPracticeWord(){
   document.getElementById('practiceMeaning').textContent=w.meaning||'';
   document.getElementById('practiceResult').classList.remove('show');
 }
-
 function nextWord(){practiceIndex++;if(practiceIndex>=myWords.length)practiceIndex=0;showPracticeWord()}
-
 function showPracticeSentence(){
   var s=sentenceList[sentenceIndex%sentenceList.length];
   document.getElementById('practiceSentence').textContent=s.en;
   document.getElementById('practiceSentenceZh').textContent=s.zh;
   document.getElementById('sentenceResult').classList.remove('show');
 }
-
 function nextSentence(){sentenceIndex++;if(sentenceIndex>=sentenceList.length)sentenceIndex=0;showPracticeSentence()}
 
 // ===== 语音识别 =====
-function toggleRecord(){if(isRecording)stopRecording();else startRecording('word')}
-function toggleSentenceRecord(){if(isRecording)stopRecording();else startRecording('sentence')}
-
-function startRecording(mode){
+function toggleRecord(){if(isRecording)stopRec();else startRec('word')}
+function toggleSentenceRecord(){if(isRecording)stopRec();else startRec('sentence')}
+function startRec(mode){
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){showToast('❌ 浏览器不支持，请用 Chrome 打开本页面');return}
-  recognition=new SR();
-  recognition.lang='en-US';recognition.interimResults=false;recognition.continuous=false;
-  var btnId=mode==='word'?'recordBtn':'recordSentenceBtn';
-  recognition.onstart=function(){isRecording=true;document.getElementById(btnId).classList.add('recording');document.getElementById(btnId).textContent='⏹️ 停止';showToast('🎤 请跟读...')};
-  recognition.onresult=function(e){
-    var rec=e.results[0][0].transcript.trim();
-    var target;
-    if(mode==='word'){target=document.getElementById('practiceWord').textContent;var score=calcScore(target.toLowerCase(),rec.toLowerCase());showResult(score,rec,'practiceResult','scoreDisplay','recognizedText','feedbackText')}
-    else{target=document.getElementById('practiceSentence').textContent;var score=calcSentenceScore(target.toLowerCase(),rec.toLowerCase());showResult(score,rec,'sentenceResult','sentenceScoreDisplay','sentenceRecognizedText','sentenceFeedbackText')}
+  if(!SR){showToast('❌ 请用 Chrome 打开本页面，微信不支持');return}
+  recognition=new SR();recognition.lang='en-US';recognition.interimResults=false;recognition.continuous=false;
+  var btn=mode==='word'?'recordBtn':'recordSentenceBtn';
+  recognition.onstart=function(){isRecording=true;document.getElementById(btn).classList.add('recording');document.getElementById(btn).textContent='⏹️ 停止';showToast('🎤 请跟读...')};
+  recognition.onresult=function(ev){
+    var rec=ev.results[0][0].transcript.trim();var target;
+    if(mode==='word'){target=document.getElementById('practiceWord').textContent;showResult(calcScore(target.toLowerCase(),rec.toLowerCase()),rec,'practiceResult','scoreDisplay','recognizedText','feedbackText')}
+    else{target=document.getElementById('practiceSentence').textContent;showResult(calcSenScore(target.toLowerCase(),rec.toLowerCase()),rec,'sentenceResult','sentenceScoreDisplay','sentenceRecognizedText','sentenceFeedbackText')}
   };
-  recognition.onerror=function(e){
-    isRecording=false;document.getElementById(btnId).classList.remove('recording');document.getElementById(btnId).textContent='🎤 跟读';
-    if(e.error==='not-allowed')showToast('❌ 请允许麦克风权限（浏览器设置）');
-    else if(e.error==='no-speech')showToast('❌ 未检测到语音，请靠近麦克风说话');
-    else if(e.error==='network')showToast('❌ 网络错误，语音识别需要网络');
-    else showToast('❌ 识别失败: '+e.error);
+  recognition.onerror=function(ev){
+    isRecording=false;document.getElementById(btn).classList.remove('recording');document.getElementById(btn).textContent='🎤 跟读';
+    if(ev.error==='not-allowed')showToast('❌ 请允许麦克风权限');
+    else if(ev.error==='no-speech')showToast('❌ 未检测到语音');
+    else if(ev.error==='network')showToast('❌ 语音识别需联网');
+    else showToast('❌ '+ev.error);
   };
-  recognition.onend=function(){isRecording=false;document.getElementById(btnId).classList.remove('recording');document.getElementById(btnId).textContent='🎤 跟读'};
-  try{recognition.start()}catch(e){showToast('❌ 启动失败')};
+  recognition.onend=function(){isRecording=false;document.getElementById(btn).classList.remove('recording');document.getElementById(btn).textContent='🎤 跟读'};
+  try{recognition.start()}catch(e){showToast('❌ 启动失败')}
 }
+function stopRec(){if(recognition)recognition.stop()}
 
-function stopRecording(){if(recognition)recognition.stop()}
-
-function calcScore(target,recognized){if(target===recognized)return 100;var len=Math.max(target.length,recognized.length);if(len===0)return 100;return Math.max(0,Math.round((1-levenshtein(target,recognized)/len)*100))}
-
-function calcSentenceScore(target,recognized){
-  var tw=target.split(/\s+/),rw=recognized.split(/\s+/);
-  var ts=new Set(tw),rs=new Set(rw),common=0;
-  ts.forEach(function(w){if(rs.has(w))common++});
-  var wordScore=tw.length>0?common/tw.length:0;
-  var len=Math.max(target.length,recognized.length);
-  var dist=len>0?levenshtein(target,recognized):0;
-  var sim=1-dist/len;
-  return Math.max(0,Math.round((wordScore*.6+sim*.4)*100));
+function calcScore(a,b){if(a===b)return 100;var l=Math.max(a.length,b.length);return l===0?100:Math.max(0,Math.round((1-lev(a,b)/l)*100))}
+function calcSenScore(a,b){
+  var tw=a.split(/\s+/),rw=b.split(/\s+/),ts=new Set(tw),rs=new Set(rw),c=0;
+  ts.forEach(function(w){if(rs.has(w))c++});
+  var ws=tw.length?c/tw.length:0;var l=Math.max(a.length,b.length);var d=l?lev(a,b):0;
+  return Math.max(0,Math.round((ws*.6+(1-d/l)*.4)*100));
 }
+function lev(a,b){var m=[];for(var j=0;j<=b.length;j++){m[j]=[];for(var i=0;i<=a.length;i++){if(!j)m[j][i]=i;else if(!i)m[j][i]=j;else m[j][i]=b[j-1]===a[i-1]?m[j-1][i-1]:Math.min(m[j-1][i-1]+1,m[j][i-1]+1,m[j-1][i]+1)}}return m[b.length][a.length]}
 
-function levenshtein(a,b){
-  var m=[];
-  for(var j=0;j<=b.length;j++){m[j]=[];for(var i=0;i<=a.length;i++){if(j===0)m[j][i]=i;else if(i===0)m[j][i]=j;else m[j][i]=b.charAt(j-1)===a.charAt(i-1)?m[j-1][i-1]:Math.min(m[j-1][i-1]+1,m[j][i-1]+1,m[j-1][i]+1)}}
-  return m[b.length][a.length];
-}
-
-function showResult(score,recognized,resultId,scoreId,textId,feedbackId){
-  var rd=document.getElementById(resultId),sd=document.getElementById(scoreId),td=document.getElementById(textId),fd=document.getElementById(feedbackId);
-  var cls='bad',fb='';
-  if(score>=80){cls='good';fb='🎉 太棒了！'}else if(score>=60){cls='ok';fb='👍 不错，继续加油！'}else{cls='bad';fb='💪 再试一次！'}
-  sd.className='score-display '+cls;sd.textContent=score+'分';td.textContent='识别：'+escHtml(recognized);fd.textContent=fb;
-  rd.className='practice-result show '+cls;
+function showResult(score,rec,rid,sid,tid,fid){
+  var rd=document.getElementById(rid),sd=document.getElementById(sid),td=document.getElementById(tid),fd=document.getElementById(fid);
+  var cls=score>=80?'good':score>=60?'ok':'bad',fb=score>=80?'🎉 太棒了！':score>=60?'👍 不错！':'💪 再试一次！';
+  sd.className='score-display '+cls;sd.textContent=score+'分';td.textContent='识别：'+rec;fd.textContent=fb;rd.className='practice-result show '+cls;
 }
 
 // ===== UI =====
-document.querySelectorAll('.tab').forEach(function(tab){tab.addEventListener('click',function(){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});tab.classList.add('active');document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active')});document.getElementById('sec-'+tab.dataset.tab).classList.add('active');if(tab.dataset.tab==='list')loadWords();if(tab.dataset.tab==='practice')initPractice()})});
+document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});t.classList.add('active');document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active')});document.getElementById('sec-'+t.dataset.tab).classList.add('active');if(t.dataset.tab==='list')renderWordList();if(t.dataset.tab==='practice')initPractice()})});
 document.querySelectorAll('.filter').forEach(function(f){f.addEventListener('click',function(){document.querySelectorAll('.filter').forEach(function(x){x.classList.remove('active')});f.classList.add('active');currentFilter=f.dataset.filter;renderWordList()})});
-
 function showToast(msg){var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},2500)}
+renderWordList();
 document.getElementById('searchInput').focus();
 </script>
 </body>
