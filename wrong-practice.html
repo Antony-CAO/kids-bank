@@ -7,16 +7,19 @@
 <style>
 :root{--bg:#f5f4f1;--card:#fff;--text:#2c2416;--muted:#8c8070;--border:#e4ddd2;--accent:#b5463a;--gold:#b8860b;--green:#2d6a4f;--blue:#1a5f8a;--orange:#e07b00;}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.65;padding-bottom:90px}
-header{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid var(--border);padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-header h1{font-size:18px;color:var(--accent)}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.65;padding-bottom:80px}
+header{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid var(--border);padding:10px 14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+header h1{font-size:17px;color:var(--accent)}
 .sub{font-size:12px;color:var(--muted);margin-top:2px}
-.banner{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff3e0,#fde8d0);border:1px solid #f0d0a0;border-radius:12px;padding:14px 16px;margin:10px 14px}
-.banner .num{font-size:38px;font-weight:800;color:var(--orange);line-height:1}
-.banner .lbl{font-size:13px;color:#8a5300}
-.banner .lbl b{display:block;font-size:15px}
-.banner .acts{margin-left:auto;display:flex;gap:6px;flex-direction:column}
-.mini{font-size:11px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;font-family:inherit;font-weight:600;color:var(--text)}
+.banner{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff3e0,#fde8d0);border:1px solid #f0d0a0;border-radius:12px;padding:12px 16px;margin:10px 14px}
+.banner .num{font-size:34px;font-weight:800;color:var(--orange);line-height:1;min-width:52px;text-align:center}
+.banner .lbl{font-size:12px;color:#8a5300;flex:1}
+.banner .lbl b{display:block;font-size:14px;color:#6b4300}
+.tabs{display:flex;gap:6px;margin:10px 14px;flex-wrap:wrap}
+.tab{flex:1;padding:9px 12px;border-radius:10px;border:1px solid var(--border);font-size:14px;cursor:pointer;background:#fff;font-weight:700;text-align:center}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tab.practice-active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.tab.wrong-active{background:var(--orange);color:#fff;border-color:var(--orange)}
 .container{max-width:720px;margin:0 auto;padding:0 14px}
 .card{background:var(--card);border-radius:12px;padding:16px;margin:12px 0;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .card .tag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:10px;color:#fff;margin-right:6px;vertical-align:1px}
@@ -52,30 +55,37 @@ header h1{font-size:18px;color:var(--accent)}
 .modal h2{font-size:16px;color:var(--accent);margin-bottom:8px}
 .modal p{font-size:13px;color:var(--muted);margin-bottom:10px}
 .modal textarea{width:100%;height:90px;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;font-family:inherit;resize:vertical;outline:none}
-.modal textarea:focus{border-color:var(--accent)}
 .btn{padding:10px 18px;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:600;font-family:inherit}
 .btn-accent{background:var(--accent);color:#fff}
 .btn-green{background:var(--green);color:#fff}
 .btn-outline{background:#fff;border:1px solid var(--border);color:var(--text)}
 .modal .row{display:flex;gap:8px;margin-top:12px;justify-content:flex-end}
+.mini{font-size:11px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;font-family:inherit;font-weight:600;color:var(--text)}
+.toolbar{display:flex;gap:6px;margin:0 14px;justify-content:flex-end}
 .msg{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#2c2416;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;z-index:300;opacity:0;transition:.25s;pointer-events:none}
 .msg.show{opacity:1}
 </style>
 </head>
 <body>
 <header>
-  <h1>📕 错题重练</h1>
-  <div class="sub">服装制版师初赛 · 只刷错题 · 答对才移出</div>
+  <h1>📕 服装制版师 · 错题重练</h1>
+  <div class="sub">刷题攒错题 · 答对移出 · 专业解析</div>
 </header>
 
 <div class="banner">
   <div class="num" id="wrongNum">0</div>
-  <div class="lbl">道错题待攻克<b id="subLbl">点选项直接判分</b></div>
-  <div class="acts">
-    <button class="mini" onclick="openImport()">📥 导入错题</button>
-    <button class="mini" onclick="doExport()">📤 导出错题</button>
-    <button class="mini" onclick="resetAll()">🔄 清空</button>
-  </div>
+  <div class="lbl"><b>道错题待攻克</b><span id="subLbl">刷题产生错题 → 错题重练</span></div>
+</div>
+
+<div class="tabs">
+  <div class="tab practice-active" id="tabPractice" onclick="setMode('practice')">🆕 刷题攒错题</div>
+  <div class="tab" id="tabWrong" onclick="setMode('wrong')">🔴 错题重练</div>
+</div>
+
+<div class="toolbar">
+  <button class="mini" onclick="openImport()">📥 导入</button>
+  <button class="mini" onclick="doExport()">📤 导出</button>
+  <button class="mini" onclick="resetAll()">🔄 清空</button>
 </div>
 
 <div class="container">
@@ -85,7 +95,7 @@ header h1{font-size:18px;color:var(--accent)}
 <div class="modal-bg" id="importModal">
   <div class="modal">
     <h2>📥 导入错题</h2>
-    <p>在「旧答题网页」点【导出错题】复制一段码，粘贴到下面，即可恢复你之前刷的错题。</p>
+    <p>在旧答题网页点【导出错题】复制一段码，粘贴到下面，即可恢复之前的错题。</p>
     <textarea id="importCode" placeholder="粘贴错题码…"></textarea>
     <div class="row">
       <button class="btn btn-outline" onclick="closeImport()">取消</button>
@@ -101,12 +111,37 @@ const CARDS = [{"type": "single", "label": "单选", "id": 1, "q": "人在成长
 const STORE = 'fzbs_wrong_only_v1';
 const TOTAL = CARDS.length;
 
-// state: { [gid]: 错了几次 }
+// state = { wrong: {gid: count}, done: {gid: 1} }
 let state = loadState();
+let mode = 'practice';
 
 function loadState(){
-  try{ return JSON.parse(localStorage.getItem(STORE)) || {}; }
-  catch(e){ return {}; }
+  let s = { wrong:{}, done:{} };
+  try{ s = JSON.parse(localStorage.getItem(STORE)) || s; }catch(e){}
+  if(!s.wrong) s.wrong = {}; if(!s.done) s.done = {};
+  // 自动迁移旧系统错题
+  let migrated = {};
+  try{ migrated = JSON.parse(localStorage.getItem('fzbs_wrong_migrated_v1')) || {}; }catch(e){}
+  let changed = false;
+  function merge(oldKey){
+    try{
+      const old = JSON.parse(localStorage.getItem(oldKey)) || {};
+      Object.keys(old).forEach(gid => {
+        if(migrated[gid]) return;
+        const st = old[gid];
+        if(st && st.answered){
+          if(!st.correct){ s.wrong[gid] = st.wrongCount || 1; changed = true; }
+          else { s.done[gid] = 1; changed = true; }
+        }
+      });
+    }catch(e){}
+  }
+  merge('fzbs_wrong_practice_v1');
+  merge('fzbs_card_v1');
+  if(changed){
+    try{ localStorage.setItem(STORE, JSON.stringify(s)); }catch(e){}
+  }
+  return s;
 }
 function saveState(){ try{ localStorage.setItem(STORE, JSON.stringify(state)); }catch(e){} }
 
@@ -116,22 +151,44 @@ function correctLabel(c){
   return c.ansIdx.map(i => String.fromCharCode(65+i)).join('、');
 }
 
+function wrongCount(){ return Object.keys(state.wrong).length; }
+
+function setMode(m){
+  mode = m;
+  document.getElementById('tabPractice').className = 'tab' + (m==='practice'?' practice-active':'');
+  document.getElementById('tabWrong').className = 'tab' + (m==='wrong'?' wrong-active':'');
+  render();
+}
+
 function render(){
-  const gids = Object.keys(state).map(Number).sort((a,b)=>a-b);
-  document.getElementById('wrongNum').textContent = gids.length;
-  document.getElementById('subLbl').textContent = gids.length ? '点选项判分，答对移出' : '错题本已清空 🎉';
+  document.getElementById('wrongNum').textContent = wrongCount();
   const list = document.getElementById('list');
-  if(gids.length === 0){
-    list.innerHTML = '<div class="empty"><span class="big">🏆</span>错题本空啦！<div class="hint">点右上角「📥 导入错题」恢复之前的错题<br>或去答题网页刷题产生错题</div></div>';
+
+  if(mode === 'wrong'){
+    const gids = Object.keys(state.wrong).map(Number).sort((a,b)=>a-b);
+    document.getElementById('subLbl').textContent = gids.length ? '答对移出错题本' : '错题本空啦 🎉';
+    if(gids.length === 0){
+      list.innerHTML = '<div class="empty"><span class="big">🏆</span>错题本空啦！<div class="hint">点上面「🆕 刷题攒错题」先刷题<br>答错的会自动进错题本</div></div>';
+      return;
+    }
+    list.innerHTML = gids.map(gid => renderCard(getCard(gid))).join('');
     return;
   }
-  list.innerHTML = gids.map(gid => renderCard(getCard(gid))).join('');
+
+  // practice 模式：显示未完成（未答对）的题
+  const todo = CARDS.filter(c => !state.done[c.gid]);
+  document.getElementById('subLbl').textContent = '还剩 ' + todo.length + ' 题 · 答对跳过，答错进错题本';
+  if(todo.length === 0){
+    list.innerHTML = '<div class="empty"><span class="big">🎉</span>全部刷完了！<div class="hint">答错的题都在「🔴 错题重练」里</div></div>';
+    return;
+  }
+  list.innerHTML = todo.map(c => renderCard(c)).join('');
 }
 
 function renderCard(c){
   const gid = c.gid;
-  const wrongTimes = state[gid] || 1;
   const isMulti = c.type === 'multi';
+  const wrongTimes = state.wrong[gid] || 0;
   const optsHtml = c.opts.map((o,i)=>{
     const letter = String.fromCharCode(65+i);
     return '<div class="opt'+(isMulti?' multi':'')+'" onclick="toggleOpt('+gid+','+i+')">'+
@@ -139,7 +196,7 @@ function renderCard(c){
   }).join('');
   return '<div class="card" data-gid="'+gid+'">'+
     '<div><span class="tag '+c.type+'">'+c.label+'</span>'+
-    '<span class="no">第 '+gid+' 题'+(wrongTimes>1?' · 已错 '+wrongTimes+' 次':'')+'</span></div>'+
+    '<span class="no">第 '+gid+' 题'+(wrongTimes>0?' · 已错 '+wrongTimes+' 次':'')+'</span></div>'+
     '<div class="q">'+c.q+'</div>'+optsHtml+
     '<div class="feedback" id="fb'+gid+'"></div>'+
   '</div>';
@@ -148,21 +205,17 @@ function renderCard(c){
 function toggleOpt(gid, idx){
   const c = getCard(gid);
   const cardEl = document.querySelector('.card[data-gid="'+gid+'"]');
-  // 清空该题所有选项选中态
-  cardEl.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
-  const optEl = cardEl.querySelectorAll('.opt')[idx];
-  optEl.classList.add('sel');
+  if(!cardEl) return;
   const isMulti = c.type === 'multi';
+  const optEl = cardEl.querySelectorAll('.opt')[idx];
   if(isMulti){
-    // 多选：切换选中
     optEl.classList.toggle('sel');
     const selected = cardEl.querySelectorAll('.opt.sel');
-    if(selected.length >= c.ansIdx.length){
-      judge(gid, c, cardEl);
-    }
+    if(selected.length >= c.ansIdx.length) judge(gid, c, cardEl);
     return;
   }
-  // 单选/判断：点选即判分
+  cardEl.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
+  optEl.classList.add('sel');
   judge(gid, c, cardEl);
 }
 
@@ -171,8 +224,7 @@ function judge(gid, c, cardEl){
   let selectedIdx = [];
   if(isMulti){
     cardEl.querySelectorAll('.opt.sel').forEach(o=>{
-      const idx = Array.from(cardEl.querySelectorAll('.opt')).indexOf(o);
-      selectedIdx.push(idx);
+      selectedIdx.push(Array.from(cardEl.querySelectorAll('.opt')).indexOf(o));
     });
   } else {
     const sel = cardEl.querySelector('.opt.sel');
@@ -183,7 +235,6 @@ function judge(gid, c, cardEl){
   const correctSet = c.ansIdx.slice().sort().join(',');
   const isCorrect = userSet === correctSet;
 
-  // 标注对错
   cardEl.querySelectorAll('.opt').forEach((o, i)=>{
     o.style.pointerEvents = 'none';
     if(c.ansIdx.includes(i)) o.classList.add('correct');
@@ -194,26 +245,35 @@ function judge(gid, c, cardEl){
   const fb = cardEl.querySelector('.feedback');
   if(isCorrect){
     fb.className = 'feedback show ok';
-    fb.innerHTML = '✅ 答对了！已移出错题本<div class="explain">💡 '+c.explain_pro+'</div>';
-    // 答对移出错题本
-    delete state[gid];
+    fb.innerHTML = '✅ 答对了！' + (mode==='wrong' ? '已移出错题本' : '') +
+      '<div class="explain">💡 '+c.explain_pro+'</div>';
+    // 答对：从错题本移除，标记已完成
+    delete state.wrong[gid];
+    state.done[gid] = 1;
     saveState();
-    toast('✅ 答对，已移出错题本');
-    setTimeout(()=>{ cardEl.style.opacity='0'; cardEl.style.transition='.3s'; setTimeout(render, 300); }, 600);
+    if(mode === 'wrong'){
+      toast('✅ 答对，已移出错题本');
+      setTimeout(()=>{ cardEl.style.opacity='0'; cardEl.style.transition='.3s'; setTimeout(render, 300); }, 700);
+    } else {
+      // 刷题模式：停留展示解析，加"下一题"
+      fb.innerHTML += '<div style="margin-top:8px"><button class="btn btn-accent" onclick="render()">下一题 →</button></div>';
+    }
   } else {
     fb.className = 'feedback show no';
     fb.innerHTML = '❌ 答错了 <b class="ans">正确答案：'+correctLabel(c)+'</b>'+
-      '<div class="explain">💡 '+c.explain_pro+'</div>'+
-      '<div style="margin-top:8px"><button class="btn btn-green" onclick="retry('+gid+')">🔁 重练这道</button></div>';
-    // 答错：错题次数 +1
-    state[gid] = (state[gid]||0) + 1;
+      '<div class="explain">💡 '+c.explain_pro+'</div>';
+    // 答错：进错题本
+    state.wrong[gid] = (state.wrong[gid]||0) + 1;
     saveState();
+    if(mode === 'practice'){
+      fb.innerHTML += '<div style="margin-top:8px"><button class="btn btn-accent" onclick="render()">下一题 →</button></div>';
+    } else {
+      fb.innerHTML += '<div style="margin-top:8px"><button class="btn btn-green" onclick="retry('+gid+')">🔁 重练这道</button></div>';
+    }
   }
 }
 
 function retry(gid){
-  // 重练：重置该题的展示，重新答题
-  const c = getCard(gid);
   const cardEl = document.querySelector('.card[data-gid="'+gid+'"]');
   if(!cardEl) return;
   cardEl.querySelectorAll('.opt').forEach(o=>{
@@ -224,86 +284,59 @@ function retry(gid){
   cardEl.querySelector('.feedback').innerHTML = '';
 }
 
-// ===== 导入 / 导出（bitmap + base64，固定短码）=====
+// ===== 导入/导出 =====
 function gidsToCode(gids){
   const bits = new Uint8Array(Math.ceil(TOTAL/8));
-  gids.forEach(g=>{
-    const idx = g-1;
-    bits[Math.floor(idx/8)] |= (1 << (idx%8));
-  });
-  let bin = '';
-  bits.forEach(b=> bin += String.fromCharCode(b));
+  gids.forEach(g=>{ const idx=g-1; bits[Math.floor(idx/8)] |= (1<<(idx%8)); });
+  let bin=''; bits.forEach(b=>bin+=String.fromCharCode(b));
   return btoa(bin).replace(/=+$/,'');
 }
 function codeToGids(code){
   try{
-    code = code.trim();
-    while(code.length % 4 !== 0) code += '=';
-    const bin = atob(code);
-    const bits = new Uint8Array(bin.length);
-    for(let i=0;i<bin.length;i++) bits[i] = bin.charCodeAt(i);
-    const gids = [];
-    for(let g=1; g<=TOTAL; g++){
-      const idx = g-1;
-      if(bits[Math.floor(idx/8)] & (1 << (idx%8))) gids.push(g);
-    }
+    code=code.trim(); while(code.length%4!==0) code+='=';
+    const bin=atob(code); const bits=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) bits[i]=bin.charCodeAt(i);
+    const gids=[];
+    for(let g=1;g<=TOTAL;g++){ const idx=g-1; if(bits[Math.floor(idx/8)]&(1<<(idx%8))) gids.push(g); }
     return gids;
   }catch(e){ return null; }
 }
-
 function doExport(){
-  const gids = Object.keys(state).map(Number);
-  if(gids.length === 0){ toast('错题本为空，无内容可导出'); return; }
+  const gids = Object.keys(state.wrong).map(Number);
+  if(gids.length===0){ toast('错题本为空'); return; }
   const code = gidsToCode(gids);
-  // 复制到剪贴板
-  copyText(code).then(()=>{
-    toast('✅ 已复制 '+gids.length+' 道错题的码');
-  }).catch(()=>{
-    prompt('复制失败，请手动复制下面的码：', code);
-  });
+  copyText(code).then(()=>toast('✅ 已复制 '+gids.length+' 道错题码')).catch(()=>prompt('手动复制：', code));
 }
 function openImport(){ document.getElementById('importModal').classList.add('show'); }
 function closeImport(){ document.getElementById('importModal').classList.remove('show'); }
 function doImport(){
   const code = document.getElementById('importCode').value;
   const gids = codeToGids(code);
-  if(!gids || gids.length === 0){ toast('❌ 码无效，请检查后重试'); return; }
+  if(!gids || gids.length===0){ toast('❌ 码无效'); return; }
   let added = 0;
-  gids.forEach(g=>{
-    if(!state[g]){ state[g] = 1; added++; }
-  });
-  saveState();
-  closeImport();
-  document.getElementById('importCode').value = '';
-  toast('✅ 导入 '+gids.length+' 道错题（新增 '+added+' 道）');
+  gids.forEach(g=>{ if(!state.wrong[g]){ state.wrong[g]=1; added++; } });
+  saveState(); closeImport(); document.getElementById('importCode').value='';
+  toast('✅ 导入 '+gids.length+' 道（新增 '+added+' 道）');
   render();
 }
-
 function copyText(t){
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    return navigator.clipboard.writeText(t);
-  }
-  return new Promise((res, rej)=>{
-    const ta = document.createElement('textarea');
-    ta.value = t; document.body.appendChild(ta); ta.select();
+  if(navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t);
+  return new Promise((res,rej)=>{
+    const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select();
     try{ document.execCommand('copy'); res(); }catch(e){ rej(e); }
     document.body.removeChild(ta);
   });
 }
-
 function resetAll(){
-  if(confirm('确定清空整个错题本吗？')){
+  if(confirm('确定清空所有进度吗？')){
     try{ localStorage.removeItem(STORE); }catch(e){}
-    state = {};
-    render();
-    toast('已清空');
+    state = { wrong:{}, done:{} };
+    render(); toast('已清空');
   }
 }
-
 function toast(t){
-  const m = document.getElementById('msg');
-  m.textContent = t; m.classList.add('show');
-  clearTimeout(m._t); m._t = setTimeout(()=>m.classList.remove('show'), 1800);
+  const m=document.getElementById('msg'); m.textContent=t; m.classList.add('show');
+  clearTimeout(m._t); m._t=setTimeout(()=>m.classList.remove('show'),1800);
 }
 
 render();
