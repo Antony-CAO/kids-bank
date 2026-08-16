@@ -253,7 +253,8 @@ function judge(gid, c, cardEl){
     saveState();
     if(mode === 'wrong'){
       toast('✅ 答对，已移出错题本');
-      setTimeout(()=>{ cardEl.style.opacity='0'; cardEl.style.transition='.3s'; setTimeout(render, 300); }, 700);
+      // 答对后停留展示解析，用户自己点"下一题"再走
+      fb.innerHTML += '<div style="margin-top:8px"><button class="btn btn-accent" onclick="render()">下一题 →</button></div>';
     } else {
       // 刷题模式：停留展示解析，加"下一题"
       fb.innerHTML += '<div style="margin-top:8px"><button class="btn btn-accent" onclick="render()">下一题 →</button></div>';
