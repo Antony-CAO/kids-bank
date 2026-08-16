@@ -340,6 +340,22 @@ function toast(t){
 }
 
 render();
+
+// ===== URL 参数自动导入（点链接即恢复错题）=====
+try{
+  const params = new URLSearchParams(location.search);
+  const imp = params.get('import');
+  if(imp){
+    const gids = codeToGids(imp);
+    if(gids && gids.length > 0){
+      let added = 0;
+      gids.forEach(g => { if(!state.wrong[g]){ state.wrong[g] = 1; added++; } });
+      saveState();
+      setMode('wrong');
+      toast('✅ 已自动恢复 ' + gids.length + ' 道错题');
+    }
+  }
+}catch(e){}
 </script>
 </body>
 </html>
