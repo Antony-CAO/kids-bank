@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>任贤齐经典歌单</title>
+<title>80·90年代经典歌单</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -18,7 +18,7 @@
     text-align: center;
   }
   .header h1 {
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 700;
     background: linear-gradient(90deg,#ffd166,#ff9f1c,#ffd166);
     -webkit-background-clip: text;
@@ -80,7 +80,7 @@
     border-radius: 50%;
     background: rgba(255,255,255,.1);
     display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 700; color: #ffd166;
+    font-size: 13px; font-weight: 700; color: #ffd166;
   }
   .song.active .idx { background: #ff9f1c; color: #1a1a2e; }
   .song .meta { flex: 1; min-width: 0; }
@@ -100,7 +100,7 @@
 </head>
 <body>
   <div class="header">
-    <h1>任贤齐 · 经典歌单</h1>
+    <h1>80·90年代 · 经典歌单</h1>
     <p>免费完整版 · 点歌即播 · 无需会员</p>
   </div>
 
@@ -112,19 +112,38 @@
   <div class="song-list" id="list"></div>
 
   <div class="foot">
-    提示：点歌曲即播放。若当前页无法播放，用手机浏览器（Safari/Chrome）打开本文件即可。<br>
+    提示：点歌曲即播放。若当前页无法播放，用手机浏览器（Safari/Chrome）打开本页即可。<br>
     视频来源：哔哩哔哩 UP 主上传的公开内容。
   </div>
 
 <script>
   var songs = [
-    { bvid: "BV1xknuzMEKy", name: "心太软 + 伤心太平洋", sub: "4K修复 · 两首连播" },
-    { bvid: "BV1EcvNzDEb6", name: "对面的女孩看过来", sub: "经典原版" },
-    { bvid: "BV1FU4y1t7Ds", name: "我是一只鱼", sub: "4K修复版" },
-    { bvid: "BV1PG4y1s7HY", name: "任逍遥", sub: "1998 MV · 1080P" },
+    { bvid: "BV1xknuzMEKy", name: "心太软 + 伤心太平洋", sub: "任贤齐 · 4K修复两首连播" },
+    { bvid: "BV1EcvNzDEb6", name: "对面的女孩看过来", sub: "任贤齐 · 经典原版" },
+    { bvid: "BV1FU4y1t7Ds", name: "我是一只鱼", sub: "任贤齐 · 4K修复" },
+    { bvid: "BV1PG4y1s7HY", name: "任逍遥", sub: "任贤齐 · 1998 MV 1080P" },
     { bvid: "BV19T4y1C7No", name: "浪花一朵朵", sub: "任贤齐/阿牛/光良 · 4K修复" },
-    { bvid: "BV12B4y1c7u7", name: "春天花会开", sub: "演唱会现场版" },
-    { bvid: "BV11LqRBHE3G", name: "天涯", sub: "无损音质版" }
+    { bvid: "BV12B4y1c7u7", name: "春天花会开", sub: "任贤齐 · 演唱会现场" },
+    { bvid: "BV11LqRBHE3G", name: "天涯", sub: "任贤齐 · 无损音质" },
+    { bvid: "BV1Px411G73V", name: "光辉岁月", sub: "Beyond · 原版MV" },
+    { bvid: "BV1Up411o7Do", name: "海阔天空", sub: "Beyond · 古天乐版MV" },
+    { bvid: "BV11opuzyEF2", name: "搁浅", sub: "周杰伦 · 4K修复" },
+    { bvid: "BV1PK4y1b7dt", name: "最伟大的作品", sub: "周杰伦 · 官方MV" },
+    { bvid: "BV1crs8zPECG", name: "回来", sub: "张信哲 · 高清MV" },
+    { bvid: "BV1iy4y117qo", name: "爱如潮水", sub: "张信哲 · 演唱会版" },
+    { bvid: "BV1Gv6zBPEt7", name: "千千阙歌", sub: "陈慧娴 · 告别演唱会4K" },
+    { bvid: "BV1VjG9zsEeR", name: "吻别", sub: "张学友 · 4K60FPS" },
+    { bvid: "BV1tD2ZB4ECy", name: "吻别", sub: "张学友 · 4K修复版" },
+    { bvid: "BV1VhDSYYEyx", name: "忘情水", sub: "刘德华 · MV" },
+    { bvid: "BV1BV4y127mj", name: "至少还有你", sub: "林忆莲 · 华纳官方4K" },
+    { bvid: "BV1ryPjeQEZz", name: "至少还有你", sub: "林忆莲 · 4K Hi-Res" },
+    { bvid: "BV1Re4de3EEi", name: "后来", sub: "刘若英 · 4K60FPS" },
+    { bvid: "BV1U34y117UN", name: "后来", sub: "刘若英 · 滚石4K修复MV" },
+    { bvid: "BV1pG4y1B77b", name: "朋友", sub: "周华健 · 8K Hi-Res" },
+    { bvid: "BV13k4y1j7LC", name: "朋友", sub: "周华健 · SACD无损修复" },
+    { bvid: "BV1Nv411g75q", name: "遇见", sub: "孙燕姿 · 官方字幕修复" },
+    { bvid: "BV1qvZHYrEZu", name: "红豆", sub: "王菲 · 4K杜比视界现场" },
+    { bvid: "BV1Py4y1b75w", name: "红豆", sub: "王菲 · 2000大地飞歌现场" }
   ];
 
   var list = document.getElementById("list");
