@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>任贤齐经典歌单</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+    min-height: 100vh;
+    color: #eee;
+    padding-bottom: 20px;
+  }
+  .header {
+    padding: 28px 20px 16px;
+    text-align: center;
+  }
+  .header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    background: linear-gradient(90deg,#ffd166,#ff9f1c,#ffd166);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: 2px;
+  }
+  .header p {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #8aa;
+    letter-spacing: 1px;
+  }
+  .player-wrap {
+    margin: 6px 12px 14px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 6px 24px rgba(0,0,0,.5);
+    position: relative;
+    padding-top: 56.25%;
+  }
+  .player-wrap iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border: none;
+  }
+  .list-title {
+    padding: 6px 20px 10px;
+    font-size: 13px;
+    color: #8aa;
+    letter-spacing: 1px;
+  }
+  .song-list {
+    padding: 0 12px;
+  }
+  .song {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 14px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.08);
+    cursor: pointer;
+    transition: all .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .song:active { transform: scale(.98); }
+  .song.active {
+    background: rgba(255,159,28,.16);
+    border-color: rgba(255,159,28,.55);
+  }
+  .song .idx {
+    width: 30px; height: 30px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #ffd166;
+  }
+  .song.active .idx { background: #ff9f1c; color: #1a1a2e; }
+  .song .meta { flex: 1; min-width: 0; }
+  .song .name { font-size: 16px; font-weight: 600; }
+  .song .sub { font-size: 12px; color: #8aa; margin-top: 3px; }
+  .song .play {
+    font-size: 18px; color: #ffd166; flex-shrink: 0;
+  }
+  .foot {
+    text-align: center;
+    font-size: 11px;
+    color: #667;
+    padding: 14px 20px 4px;
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>任贤齐 · 经典歌单</h1>
+    <p>免费完整版 · 点歌即播 · 无需会员</p>
+  </div>
+
+  <div class="player-wrap">
+    <iframe id="player" src="https://player.bilibili.com/player.html?bvid=BV1xknuzMEKy&page=1&autoplay=0&danmaku=0" allowfullscreen scrolling="no" allow="autoplay; fullscreen"></iframe>
+  </div>
+
+  <div class="list-title">— 点下面任意一首切换 —</div>
+  <div class="song-list" id="list"></div>
+
+  <div class="foot">
+    提示：点歌曲即播放。若当前页无法播放，用手机浏览器（Safari/Chrome）打开本文件即可。<br>
+    视频来源：哔哩哔哩 UP 主上传的公开内容。
+  </div>
+
+<script>
+  var songs = [
+    { bvid: "BV1xknuzMEKy", name: "心太软 + 伤心太平洋", sub: "4K修复 · 两首连播" },
+    { bvid: "BV1EcvNzDEb6", name: "对面的女孩看过来", sub: "经典原版" },
+    { bvid: "BV1FU4y1t7Ds", name: "我是一只鱼", sub: "4K修复版" },
+    { bvid: "BV1PG4y1s7HY", name: "任逍遥", sub: "1998 MV · 1080P" },
+    { bvid: "BV19T4y1C7No", name: "浪花一朵朵", sub: "任贤齐/阿牛/光良 · 4K修复" },
+    { bvid: "BV12B4y1c7u7", name: "春天花会开", sub: "演唱会现场版" },
+    { bvid: "BV11LqRBHE3G", name: "天涯", sub: "无损音质版" }
+  ];
+
+  var list = document.getElementById("list");
+  var player = document.getElementById("player");
+
+  function render() {
+    var html = "";
+    for (var i = 0; i < songs.length; i++) {
+      html += '<div class="song" data-i="' + i + '">'
+            + '<div class="idx">' + (i + 1) + '</div>'
+            + '<div class="meta"><div class="name">' + songs[i].name + '</div>'
+            + '<div class="sub">' + songs[i].sub + '</div></div>'
+            + '<div class="play">▶</div></div>';
+    }
+    list.innerHTML = html;
+  }
+
+  list.addEventListener("click", function(e) {
+    var el = e.target;
+    while (el && !el.classList.contains("song")) el = el.parentElement;
+    if (!el) return;
+    var i = parseInt(el.getAttribute("data-i"), 10);
+    var s = songs[i];
+    player.src = "https://player.bilibili.com/player.html?bvid=" + s.bvid + "&page=1&autoplay=1&danmaku=0";
+    var items = document.querySelectorAll(".song");
+    for (var k = 0; k < items.length; k++) items[k].classList.remove("active");
+    el.classList.add("active");
+  });
+
+  render();
+  var first = document.querySelector(".song");
+  if (first) first.classList.add("active");
+</script>
+</body>
+</html>
