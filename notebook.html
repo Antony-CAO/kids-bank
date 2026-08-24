@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>买笔记本 · 互动动画</title>
+<style>
+  :root{
+    --bg:#0f172a; --card:#1e293b; --gold:#fbbf24; --orange:#fb923c;
+    --green:#4ade80; --blue:#60a5fa; --white:#e2e8f0; --grey:#94a3b8;
+    --red:#f87171; --pink:#f472b6;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation;}
+  html,body{margin:0; padding:0; background:var(--bg);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--white);}
+  body{padding:14px 12px 44px;}
+  h1{font-size:21px; margin:0 0 2px; text-align:center; color:var(--gold);}
+  .sub{text-align:center; font-size:12px; color:var(--grey); margin-bottom:12px;}
+  .card{background:var(--card); border-radius:16px; padding:14px; margin-bottom:12px;
+    box-shadow:0 4px 16px rgba(0,0,0,.3);}
+  .card h2{font-size:15px; margin:0 0 10px; color:var(--blue);}
+  .qbox{background:#0b1220; border-radius:12px; padding:11px 13px; font-size:14px; line-height:1.7;}
+  .qbox b{color:var(--orange);} .qbox .ans{color:var(--gold);}
+  table{width:100%; border-collapse:collapse; margin:8px 0; font-size:14px;}
+  th,td{border:1px solid #334155; padding:8px; text-align:center;}
+  th{background:#0b1220; color:var(--blue);}
+  .brand-love{color:var(--pink); font-weight:700;}
+  .brand-hand{color:var(--green); font-weight:700;}
+  .hint{font-size:12px; color:var(--grey); text-align:center; margin-top:6px; line-height:1.5;}
+  .formula{background:#0b1220; border-radius:10px; padding:10px 12px; font-size:14px;
+    color:var(--green); margin-top:8px; font-family:Menlo,Consolas,monospace;}
+  .step{display:flex; gap:10px; margin-bottom:12px; align-items:flex-start;}
+  .step .n{flex:0 0 24px; height:24px; border-radius:50%; background:var(--orange);
+    color:#0b1220; font-weight:700; display:flex; align-items:center; justify-content:center;
+    font-size:13px; margin-top:2px;}
+  .step .t{font-size:14px; line-height:1.6;} .step .t b{color:var(--gold);}
+  .tip{font-size:12px; color:var(--grey); line-height:1.6;}
+  .btn{display:block; width:100%; padding:14px; border:none; border-radius:12px;
+    background:linear-gradient(135deg,#f59e0b,#f97316); color:#0b1220; font-size:16px;
+    font-weight:700; margin-top:12px; cursor:pointer;}
+  .btn:active{transform:scale(.97);}
+  .btn2{background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff;}
+  .btn-red{background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff;}
+  .btn-row{display:flex; gap:8px; margin-top:10px;}
+  .btn-row .btn{margin-top:0; flex:1;}
+  .btn.small{padding:12px 0; font-size:17px;}
+
+  .big-num-box{text-align:center; margin:6px 0 2px;}
+  .big-num-box .big{font-size:50px; font-weight:800; color:var(--gold); line-height:1.1;}
+  .big-num-box .unit{font-size:14px; color:var(--grey);}
+
+  .ctrl{display:flex; align-items:stretch; gap:10px; margin-top:8px;}
+  .ctrl .step{flex:1; border:none; border-radius:14px; font-size:28px; font-weight:800;
+    padding:14px 0; cursor:pointer; color:#0b1220;}
+  .ctrl .step:active{transform:scale(.96);}
+  .ctrl .plus{background:linear-gradient(135deg,#22c55e,#16a34a);}
+  .ctrl .minus{background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff;}
+  .ctrl .center{flex:0 0 96px; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; background:#0b1220; border-radius:14px;}
+  .ctrl .center .num{font-size:30px; font-weight:800; color:var(--gold);}
+  .ctrl .center .lbl{font-size:10px; color:var(--grey);}
+
+  input[type=range]{width:100%; -webkit-appearance:none; height:10px; border-radius:6px;
+    background:#334155; outline:none; margin:12px 0 4px;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:30px; height:30px;
+    border-radius:50%; background:var(--gold); cursor:pointer; border:3px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.4);}
+  .slider-lbl{display:flex; justify-content:space-between; font-size:11px; color:var(--grey);}
+
+  .compare{display:flex; gap:10px; margin-top:10px;}
+  .compare .col{flex:1; border-radius:14px; padding:12px; text-align:center;}
+  .col-love{background:#2a1520; border:2px solid var(--pink);}
+  .col-hand{background:#0f2018; border:2px solid var(--green);}
+  .compare .name{font-size:14px; font-weight:700; margin-bottom:4px;}
+  .compare .price{font-size:26px; font-weight:800;}
+  .compare .per{font-size:11px; color:var(--grey);}
+  .save-box{background:#0b1220; border-radius:12px; padding:10px 12px; margin-top:10px;
+    font-size:14px; text-align:center; line-height:1.6;}
+  .save-box .save{color:var(--green); font-weight:800; font-size:20px;}
+</style>
+</head>
+<body>
+  <h1>📒 买笔记本</h1>
+  <div class="sub">👆 拖人数 · 切牌子 · 实时算总价</div>
+
+  <div class="card">
+    <h2>📖 题目</h2>
+    <div class="qbox">
+      王老师要给希望小学(2)班 <b id="qN">36</b> 名同学每人买 1 本笔记本，需要多少钱？
+      <table>
+        <tr><th>牌子</th><th>单价</th></tr>
+        <tr><td class="brand-love">💗 爱人牌</td><td>3.5 元/本</td></tr>
+        <tr><td class="brand-hand">🤝 牵手牌</td><td>1.6 元/本</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>👥 先定人数（默认 36 人）</h2>
+    <div class="big-num-box">
+      <div class="big" id="nBig">36</div>
+      <div class="unit">名同学</div>
+    </div>
+    <div class="ctrl">
+      <button class="step minus" data-step="-10">−10</button>
+      <button class="step minus" data-step="-1">−1</button>
+      <div class="center"><div class="num" id="nCenter">36</div><div class="lbl">人数</div></div>
+      <button class="step plus" data-step="1">+1</button>
+      <button class="step plus" data-step="10">+10</button>
+    </div>
+    <input type="range" id="slider" min="1" max="60" value="36" step="1">
+    <div class="slider-lbl"><span>1 人</span><span>拖动调人数</span><span>60 人</span></div>
+  </div>
+
+  <div class="card">
+    <h2>💡 选牌子，看要花多少钱</h2>
+    <div class="btn-row">
+      <button class="btn" id="btnLove" style="background:linear-gradient(135deg,#f472b6,#db2777); color:#fff;">💗 爱人牌<br><span style="font-size:11px;font-weight:400;">3.5 元/本</span></button>
+      <button class="btn" id="btnHand" style="background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff;">🤝 牵手牌<br><span style="font-size:11px;font-weight:400;">1.6 元/本</span></button>
+    </div>
+
+    <div class="compare">
+      <div class="col col-love">
+        <div class="name brand-love">💗 爱人牌</div>
+        <div class="price" id="lovePrice">126</div>
+        <div class="per">元（3.5×36）</div>
+      </div>
+      <div class="col col-hand">
+        <div class="name brand-hand">🤝 牵手牌</div>
+        <div class="price" id="handPrice">57.6</div>
+        <div class="per">元（1.6×36）</div>
+      </div>
+    </div>
+
+    <div class="save-box">
+      买牵手牌能省 <span class="save" id="saveMoney">68.4</span> 元 💰
+    </div>
+    <div class="hint">👆 点上面两个牌子按钮，会高亮显示对应方案</div>
+  </div>
+
+  <div class="card" id="stepCard">
+    <h2>🧮 完整解题步骤</h2>
+    <div id="stepContent"></div>
+    <div class="tip">💡 记法：<b>总价 = 人数 × 单价</b>；小数乘法可以先「去小数点算整数」，再点回小数点。<br>例：36 × 3.5 = 36 × 35 ÷ 10 = 1260 ÷ 10 = 126。</div>
+  </div>
+
+  <button class="btn" id="resetBtn">🔄 回到题目（36人）</button>
+
+<script>
+(function(){
+  var n = 36;   // 人数
+  var qN = document.getElementById('qN');
+  var nBig = document.getElementById('nBig');
+  var nCenter = document.getElementById('nCenter');
+  var slider = document.getElementById('slider');
+  var lovePrice = document.getElementById('lovePrice');
+  var handPrice = document.getElementById('handPrice');
+  var saveMoney = document.getElementById('saveMoney');
+  var stepContent = document.getElementById('stepContent');
+
+  // 精确计算（用"角"做单位，避免浮点误差）
+  // 爱人牌 3.5元 = 35角；牵手牌 1.6元 = 16角
+  function loveJiao(){ return n * 35; }   // 角
+  function handJiao(){ return n * 16; }   // 角
+  function saveJiao(){ return loveJiao() - handJiao(); }
+
+  function jiaoToYuan(j){
+    var whole = Math.floor(j / 10);
+    var frac = j % 10;
+    if(frac === 0) return '' + whole;
+    return whole + '.' + frac;
+  }
+
+  function setN(v){
+    n = Math.max(1, Math.min(60, Math.round(v)));
+    slider.value = n;
+    render();
+  }
+
+  function render(){
+    qN.textContent = n;
+    nBig.textContent = n;
+    nCenter.textContent = n;
+    lovePrice.textContent = jiaoToYuan(loveJiao());
+    handPrice.textContent = jiaoToYuan(handJiao());
+    saveMoney.textContent = jiaoToYuan(saveJiao());
+    renderSteps();
+  }
+
+  function renderSteps(){
+    var lj = loveJiao(), hj = handJiao();
+    stepContent.innerHTML =
+      '<div class="step"><div class="n">①</div><div class="t">买 <b>爱人牌</b>（3.5元/本）：<br>' +
+      '<span class="formula">' + n + ' × 3.5 = <b>' + jiaoToYuan(lj) + '</b>（元）</span></div></div>' +
+      '<div class="step"><div class="n">②</div><div class="t">买 <b>牵手牌</b>（1.6元/本）：<br>' +
+      '<span class="formula">' + n + ' × 1.6 = <b>' + jiaoToYuan(hj) + '</b>（元）</span></div></div>' +
+      '<div class="step"><div class="n">③</div><div class="t">两种牌子差多少：<br>' +
+      '<span class="formula">' + jiaoToYuan(lj) + ' − ' + jiaoToYuan(hj) + ' = <b>' + jiaoToYuan(saveJiao()) + '</b>（元）</span></div></div>' +
+      '<div class="step"><div class="n">✅</div><div class="t">想省钱就买 <b>牵手牌</b>，花 <b>' + jiaoToYuan(hj) + '</b> 元。</div></div>';
+  }
+
+  // 加减按钮
+  var stepBtns = document.querySelectorAll('.ctrl .step');
+  stepBtns.forEach(function(b){
+    b.addEventListener('click', function(){ setN(n + parseInt(b.getAttribute('data-step'), 10)); });
+  });
+
+  slider.addEventListener('input', function(){ setN(parseInt(slider.value, 10)); });
+
+  // 牌子按钮：高亮提示
+  var btnLove = document.getElementById('btnLove');
+  var btnHand = document.getElementById('btnHand');
+  btnLove.addEventListener('click', function(){
+    alert('买爱人牌：' + n + ' × 3.5 = ' + jiaoToYuan(loveJiao()) + ' 元');
+  });
+  btnHand.addEventListener('click', function(){
+    alert('买牵手牌：' + n + ' × 1.6 = ' + jiaoToYuan(handJiao()) + ' 元');
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', function(){ setN(36); });
+
+  setN(36);
+})();
+</script>
+</body>
+</html>
