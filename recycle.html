@@ -64,8 +64,12 @@
       <div class="stat"><div class="v c-green" id="reShow">0</div><div class="l">产出再生纸 kg</div></div>
       <div class="stat"><div class="v c-blue" id="tonShow">0</div><div class="l">合多少吨</div></div>
     </div>
-    <div class="hint">👆 点右边「+10kg」按钮往传送带投废纸，看再生纸堆一点点长高</div>
-    <button class="btn btn2" id="addBtn">➕ 再投 10 kg 废纸</button>
+    <div class="hint">👆 点下面按钮往传送带投废纸，看再生纸堆一点点长高</div>
+    <div style="display:flex; gap:8px; margin-top:12px;">
+      <button class="btn btn2 step-btn" data-step="1" style="flex:1;">➕1</button>
+      <button class="btn btn2 step-btn" data-step="10" style="flex:1;">➕10</button>
+      <button class="btn btn2 step-btn" data-step="50" style="flex:1;">➕50</button>
+    </div>
   </div>
 
   <div class="card">
@@ -179,7 +183,10 @@
   }
 
   // 事件
-  document.getElementById('addBtn').addEventListener('click', function(){ setKg(kg+10); });
+  var stepBtns = document.querySelectorAll('.step-btn');
+  stepBtns.forEach(function(b){
+    b.addEventListener('click', function(){ setKg(kg + parseInt(b.getAttribute('data-step'), 10)); });
+  });
   document.getElementById('resetBtn').addEventListener('click', function(){ setKg(0); });
   document.getElementById('fullBtn').addEventListener('click', function(){ setKg(160); });
 
