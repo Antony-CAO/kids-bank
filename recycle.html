@@ -48,12 +48,18 @@
 
   <div class="card">
     <h2>📖 题目</h2>
-    <div class="qbox">
+    <div class="qbox" id="qText">
       1 kg 废纸可制造 <b>0.85 kg</b> 再生纸，生产 1 t 纸要砍 <b>16 棵</b>大树。<br>
-      <span class="ans">五年级两个班收集了 <b>160 kg</b> 废纸：</span><br>
+      <span class="ans">五年级两个班收集了 <b id="qKg">160</b> kg 废纸：</span><br>
       ① 能造再生纸多少千克？合多少吨？<br>
       ② 相当于保护了几棵大树？
     </div>
+    <div style="display:flex; gap:8px; margin-top:12px;">
+      <button class="btn" id="randBtn" style="flex:1; margin-top:0;">🎲 随机出新题</button>
+      <button class="btn btn2" id="answerBtn" style="flex:1; margin-top:0;">👀 看答案</button>
+    </div>
+    <div class="hint" id="answerBox" style="display:none;"></div>
+    <div class="hint" id="winBox" style="display:none; color:#4ade80; font-weight:700; font-size:15px;">🎉 答对啦！</div>
   </div>
 
   <div class="card">
@@ -89,10 +95,15 @@
 
   <button class="btn" id="resetBtn">🔄 清零重新投（回到 0）</button>
   <button class="btn" id="fullBtn" style="margin-top:8px;">🎯 一步到位：投满 160 kg</button>
+  <button class="btn" id="randGoBtn" style="margin-top:8px;">🎯 直接投到题目的数</button>
 
 <script>
 (function(){
   var kg = 0;
+  var targetKg = 160; // 当前题目问的公斤数
+  var qKg = document.getElementById('qKg');
+  var answerBox = document.getElementById('answerBox');
+  var winBox = document.getElementById('winBox');
   var kgShow=document.getElementById('kgShow'), reShow=document.getElementById('reShow'),
       tonShow=document.getElementById('tonShow'), treeFormula=document.getElementById('treeFormula');
   var factory=document.getElementById('factory'), forest=document.getElementById('forest');
@@ -112,6 +123,7 @@
     reShow.textContent = Math.round(re()*10)/10;
     tonShow.textContent = Math.round(ton()*1000)/1000;
     treeFormula.textContent = ton().toFixed(3)+' t × 16 棵 = '+(ton()*16).toFixed(2)+' ≈ '+trees()+' 棵';
+    checkWin();
     drawFactory();
     drawForest();
   }
@@ -187,6 +199,39 @@
   stepBtns.forEach(function(b){
     b.addEventListener('click', function(){ setKg(kg + parseInt(b.getAttribute('data-step'), 10)); });
   });
+
+  // 随机出新题：随机一个 30~200 的整十数公斤
+  function newQuestion(){
+    var tens = [30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200];
+    targetKg = tens[Math.floor(Math.random()*tens.length)];
+    qKg.textContent = targetKg;
+    answerBox.style.display = 'none';
+    winBox.style.display = 'none';
+    setKg(0);
+  }
+
+  // 看答案
+  function showAnswer(){
+    var r = targetKg*0.85;
+    var t = targetKg/1000;
+    var tr = Math.round(t*16);
+    answerBox.innerHTML = '答案：① '+targetKg+'×0.85 = <b style="color:#4ade80;">'+ (Math.round(r*10)/10) +' kg</b> = <b style="color:#60a5fa;">'+ (Math.round(t*1000)/1000) +' 吨</b><br>② '+ t.toFixed(3) +'×16 = '+ (t*16).toFixed(2) +' ≈ <b style="color:#fb923c;">'+ tr +' 棵</b>';
+    answerBox.style.display = 'block';
+  }
+
+  // 直接投到题目数，用于核对
+  document.getElementById('randGoBtn').addEventListener('click', function(){ setKg(targetKg); });
+  document.getElementById('randBtn').addEventListener('click', newQuestion);
+  document.getElementById('answerBtn').addEventListener('click', showAnswer);
+
+  // 当投纸数量恰好等于题目数时，提示答对
+  function checkWin(){
+    if(targetKg && kg === targetKg){
+      winBox.style.display = 'block';
+    } else {
+      // 只在已答对后因操作消失
+    }
+  }
   document.getElementById('resetBtn').addEventListener('click', function(){ setKg(0); });
   document.getElementById('fullBtn').addEventListener('click', function(){ setKg(160); });
 
