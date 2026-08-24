@@ -8,12 +8,12 @@
   :root{
     --bg:#0f172a; --card:#1e293b; --gold:#fbbf24; --orange:#fb923c;
     --green:#4ade80; --blue:#60a5fa; --white:#e2e8f0; --grey:#94a3b8;
-    --brown:#b45309; --brown2:#92400e;
+    --red:#f87171; --slider:#334155;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation;}
   html,body{margin:0; padding:0; background:var(--bg);
     font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--white);}
-  body{padding:14px 12px 40px;}
+  body{padding:14px 12px 44px;}
   h1{font-size:21px; margin:0 0 2px; text-align:center; color:var(--gold);}
   .sub{text-align:center; font-size:12px; color:var(--grey); margin-bottom:12px;}
   .card{background:var(--card); border-radius:16px; padding:14px; margin-bottom:12px;
@@ -39,12 +39,40 @@
     background:linear-gradient(135deg,#f59e0b,#f97316); color:#0b1220; font-size:16px;
     font-weight:700; margin-top:12px; cursor:pointer;}
   .btn:active{transform:scale(.97);}
-  .btn2{background:linear-gradient(135deg,#22c55e,#16a34a);}
+  .btn2{background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff;}
+  .btn-red{background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff;}
+  .btn-row{display:flex; gap:8px; margin-top:10px; align-items:stretch;}
+  .btn-row .btn{margin-top:0; flex:1;}
+  .btn.small{padding:12px 0; font-size:17px;}
+
+  /* 大数字中心 */
+  .big-num-box{text-align:center; margin:6px 0 2px;}
+  .big-num-box .big{font-size:52px; font-weight:800; color:var(--gold); line-height:1.1;}
+  .big-num-box .unit{font-size:14px; color:var(--grey);}
+
+  /* 加减控制条： 减号 [数字] 加号 */
+  .ctrl{display:flex; align-items:stretch; gap:10px; margin-top:8px;}
+  .ctrl .step{flex:1; border:none; border-radius:14px; font-size:30px; font-weight:800;
+    padding:14px 0; cursor:pointer; color:#0b1220;}
+  .ctrl .step:active{transform:scale(.96);}
+  .ctrl .plus{background:linear-gradient(135deg,#22c55e,#16a34a);}
+  .ctrl .minus{background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff;}
+  .ctrl .center{flex:0 0 90px; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; background:#0b1220; border-radius:14px;}
+  .ctrl .center .num{font-size:30px; font-weight:800; color:var(--gold);}
+  .ctrl .center .lbl{font-size:10px; color:var(--grey);}
+
+  /* 滑块 */
+  input[type=range]{width:100%; -webkit-appearance:none; height:10px; border-radius:6px;
+    background:var(--slider); outline:none; margin:12px 0 4px;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:30px; height:30px;
+    border-radius:50%; background:var(--gold); cursor:pointer; border:3px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.4);}
+  .slider-lbl{display:flex; justify-content:space-between; font-size:11px; color:var(--grey);}
 </style>
 </head>
 <body>
   <h1>♻️ 废纸回收大揭秘</h1>
-  <div class="sub">👆 用手指点、拖、滑 · 一看就懂</div>
+  <div class="sub">👆 拖动滑块 · 点加号减号 · 数字精确到分毫</div>
 
   <div class="card">
     <h2>📖 题目</h2>
@@ -54,33 +82,48 @@
       ① 能造再生纸多少千克？合多少吨？<br>
       ② 相当于保护了几棵大树？
     </div>
-    <div style="display:flex; gap:8px; margin-top:12px;">
-      <button class="btn" id="randBtn" style="flex:1; margin-top:0;">🎲 随机出新题</button>
-      <button class="btn btn2" id="answerBtn" style="flex:1; margin-top:0;">👀 看答案</button>
+    <div class="btn-row">
+      <button class="btn" id="randBtn">🎲 随机出题</button>
+      <button class="btn btn2" id="answerBtn">👀 看答案</button>
     </div>
     <div class="hint" id="answerBox" style="display:none;"></div>
-    <div class="hint" id="winBox" style="display:none; color:#4ade80; font-weight:700; font-size:15px;">🎉 答对啦！</div>
+    <div class="hint" id="winBox" style="display:none; color:#4ade80; font-weight:700; font-size:16px;">🎉 答对啦！</div>
   </div>
 
   <div class="card">
-    <h2>🏭 回收工厂（点+号投废纸）</h2>
-    <canvas id="factory" width="720" height="300"></canvas>
+    <h2>🏭 回收工厂</h2>
+
+    <!-- 大数字 -->
+    <div class="big-num-box">
+      <div class="big" id="kgBig">0</div>
+      <div class="unit">kg 废纸</div>
+    </div>
+
+    <!-- 加减控制条 -->
+    <div class="ctrl">
+      <button class="step minus" data-step="-10">−10</button>
+      <button class="step minus" data-step="-1">−1</button>
+      <div class="center"><div class="num" id="kgCenter">0</div><div class="lbl">废纸</div></div>
+      <button class="step plus" data-step="1">+1</button>
+      <button class="step plus" data-step="10">+10</button>
+    </div>
+
+    <!-- 滑块 -->
+    <input type="range" id="slider" min="0" max="200" value="0" step="1">
+    <div class="slider-lbl"><span>0 kg</span><span>拖动精确控制</span><span>200 kg</span></div>
+
+    <canvas id="factory" width="720" height="240"></canvas>
     <div class="stats">
-      <div class="stat"><div class="v c-orange" id="kgShow">0</div><div class="l">投入废纸 kg</div></div>
       <div class="stat"><div class="v c-green" id="reShow">0</div><div class="l">产出再生纸 kg</div></div>
-      <div class="stat"><div class="v c-blue" id="tonShow">0</div><div class="l">合多少吨</div></div>
+      <div class="stat"><div class="v c-blue" id="tonShow">0</div><div class="l">再生纸合多少吨</div></div>
+      <div class="stat"><div class="v c-orange" id="treeShow">0</div><div class="l">保护大树(棵)</div></div>
     </div>
-    <div class="hint">👆 点下面按钮往传送带投废纸，看再生纸堆一点点长高</div>
-    <div style="display:flex; gap:8px; margin-top:12px;">
-      <button class="btn btn2 step-btn" data-step="1" style="flex:1;">➕1</button>
-      <button class="btn btn2 step-btn" data-step="10" style="flex:1;">➕10</button>
-      <button class="btn btn2 step-btn" data-step="50" style="flex:1;">➕50</button>
-    </div>
+    <div class="hint">👆 加多了点减号退回，拖动滑块想调多少调多少</div>
   </div>
 
   <div class="card">
     <h2>🌳 保护了几棵大树？</h2>
-    <canvas id="forest" width="720" height="210"></canvas>
+    <canvas id="forest" width="720" height="200"></canvas>
     <div class="formula" id="treeFormula">0 t × 16 棵 = 0 ≈ 0 棵</div>
     <div class="hint">👆 也可以直接点某棵树，看它会不会被你救下</div>
   </div>
@@ -89,40 +132,69 @@
     <h2>🧮 完整解题步骤</h2>
     <div class="step"><div class="n">①</div><div class="t">再生纸多少千克：<br><span class="formula">160 × 0.85 = <b>136</b>（kg）</span></div></div>
     <div class="step"><div class="n">①</div><div class="t">合多少吨：<br><span class="formula">136 kg = <b>0.136</b>（t）</span></div></div>
-    <div class="step"><div class="n">②</div><div class="t">保护几棵树：<br><span class="formula">160 kg = 0.16 t → 0.16 × 16 = 2.56 ≈ <b>3</b>（棵）</span></div></div>
-    <div class="tip">💡 记法：废纸→再生纸是「打 85 折」（×0.85）；保护树是「先换吨，再 ×16，四舍五入」。</div>
+    <div class="step"><div class="n">②</div><div class="t">保护几棵树（用废纸吨数）：<br><span class="formula">160 kg = 0.16 t → 0.16 × 16 = 2.56 ≈ <b>3</b>（棵）</span></div></div>
+    <div class="tip">💡 记法：废纸→再生纸是「打 85 折」（×0.85）；<br>「合多少吨」问的是<b>再生纸</b>重量（136kg = 0.136t）；<br>「保护树」用<b>废纸</b>吨数（0.16t × 16 ≈ 3棵）。两个别搞混。</div>
   </div>
 
-  <button class="btn" id="resetBtn">🔄 清零重新投（回到 0）</button>
-  <button class="btn" id="fullBtn" style="margin-top:8px;">🎯 一步到位：投满 160 kg</button>
-  <button class="btn" id="randGoBtn" style="margin-top:8px;">🎯 直接投到题目的数</button>
+  <button class="btn" id="resetBtn">🔄 清零</button>
+  <button class="btn" id="fullBtn">🎯 一步到位：投满题目数</button>
 
 <script>
 (function(){
   var kg = 0;
-  var targetKg = 160; // 当前题目问的公斤数
+  var targetKg = 160;
   var qKg = document.getElementById('qKg');
   var answerBox = document.getElementById('answerBox');
   var winBox = document.getElementById('winBox');
-  var kgShow=document.getElementById('kgShow'), reShow=document.getElementById('reShow'),
-      tonShow=document.getElementById('tonShow'), treeFormula=document.getElementById('treeFormula');
-  var factory=document.getElementById('factory'), forest=document.getElementById('forest');
-  var fctx=factory.getContext('2d'), tctx=forest.getContext('2d');
-  var FR = factory.width / 720; // 比例
+  var kgBig = document.getElementById('kgBig');
+  var kgCenter = document.getElementById('kgCenter');
+  var slider = document.getElementById('slider');
+  var reShow = document.getElementById('reShow');
+  var tonShow = document.getElementById('tonShow');
+  var treeShow = document.getElementById('treeShow');
+  var treeFormula = document.getElementById('treeFormula');
+  var factory = document.getElementById('factory');
+  var forest = document.getElementById('forest');
+  var fctx = factory.getContext('2d');
+  var tctx = forest.getContext('2d');
+  var FR = factory.width / 720;
+
+  // ===== 精确数值（整数运算，避免浮点误差）=====
+  // 再生纸 = 废纸 × 0.85，用「分」做单位：re_cents = kg × 85（百分之一kg）
+  function reCents(){ return kg * 85; }             // 单位：0.01 kg
+  function reStr(){ 
+    var c = reCents();
+    var whole = Math.floor(c/100);
+    var frac = c % 100;
+    if(frac === 0) return ''+whole;
+    if(frac % 10 === 0) return whole + '.' + (frac/10);
+    return whole + '.' + (frac<10?'0':'') + frac;
+  }
+  function tonStr(){
+    // 再生纸吨 = reCents / 100000（因为 re kg = reCents/100，再 /1000 = reCents/100000）
+    var n = reCents();
+    var t = n / 100000;
+    return trimZero(t.toFixed(5));
+  }
+  function trees(){ return Math.round(kg * 16 / 1000); }  // 废纸吨 × 16
+  function trimZero(s){
+    return s.replace(/\.?0+$/,'');
+  }
 
   function setKg(v){
-    kg = Math.max(0, Math.min(200, v));
+    kg = Math.max(0, Math.min(200, Math.round(v)));
+    slider.value = kg;
     render();
   }
-  function re(){ return kg*0.85; }
-  function ton(){ return kg/1000; }
-  function trees(){ return Math.round(ton()*16); }
 
   function render(){
-    kgShow.textContent = kg;
-    reShow.textContent = Math.round(re()*10)/10;
-    tonShow.textContent = Math.round(ton()*1000)/1000;
-    treeFormula.textContent = ton().toFixed(3)+' t × 16 棵 = '+(ton()*16).toFixed(2)+' ≈ '+trees()+' 棵';
+    kgBig.textContent = kg;
+    kgCenter.textContent = kg;
+    reShow.textContent = reStr();
+    tonShow.textContent = tonStr();
+    treeShow.textContent = trees();
+    var tonWaste = (kg/1000);
+    treeFormula.textContent = trimZero(tonWaste.toFixed(3)) + ' t × 16 棵 = ' + trimZero((tonWaste*16).toFixed(2)) + ' ≈ ' + trees() + ' 棵';
     checkWin();
     drawFactory();
     drawForest();
@@ -132,38 +204,32 @@
     var c=fctx,w=factory.width,h=factory.height;
     c.clearRect(0,0,w,h);
     var S=FR;
-    // 地面
-    c.fillStyle='#334155'; c.fillRect(0,h-26*S,w,26*S);
-    // 传送带
-    var bw=260*S, bx=(w-bw)/2, by=h-60*S;
-    c.fillStyle='#1e293b'; c.fillRect(bx,by,bw,22*S);
-    var off=(Date.now()/20)%(28*S);
+    c.fillStyle='#334155'; c.fillRect(0,h-24*S,w,24*S);
+    var bw=250*S, bx=(w-bw)/2, by=h-56*S;
+    c.fillStyle='#1e293b'; c.fillRect(bx,by,bw,20*S);
+    var off=(Date.now()/20)%(26*S);
     c.fillStyle='#475569';
-    for(var x=bx-28*S+off; x<bx+bw; x+=28*S){ c.fillRect(x,by+2*S,12*S,18*S); }
-    c.fillStyle='#fbbf24'; c.font='bold '+(20*S)+'px sans-serif'; c.textAlign='center';
-    c.fillText('▶', bx+bw/2, by+17*S);
+    for(var x=bx-26*S+off; x<bx+bw; x+=26*S){ c.fillRect(x,by+2*S,11*S,16*S); }
+    c.fillStyle='#fbbf24'; c.font='bold '+(19*S)+'px sans-serif'; c.textAlign='center';
+    c.fillText('▶', bx+bw/2, by+15*S);
 
-    // 标签
-    c.font=(14*S)+'px "PingFang SC",sans-serif'; c.fillStyle='#94a3b8';
-    c.fillText('废纸堆', 120*S, 26*S);
-    c.fillText('再生纸堆', w-120*S, 26*S);
+    c.font=(13*S)+'px "PingFang SC",sans-serif'; c.fillStyle='#94a3b8';
+    c.fillText('废纸堆', 110*S, 24*S);
+    c.fillText('再生纸堆', w-110*S, 24*S);
 
-    // 左：废纸堆
     var n1=Math.max(0,Math.round(kg/10));
-    drawStack(c,120*S,h-52*S,n1,'#b45309','#92400e',S);
-    // 右：再生纸堆
-    var n2=Math.max(0,Math.round(re()/10));
-    drawStack(c,w-120*S,h-52*S,n2,'#e2e8f0','#cbd5e1',S);
+    drawStack(c,110*S,h-48*S,n1,'#b45309','#92400e',S);
+    var n2=Math.max(0,Math.round(reCents()/1000));
+    drawStack(c,w-110*S,h-48*S,n2,'#e2e8f0','#cbd5e1',S);
 
-    // 数字
-    c.font='bold '+(20*S)+'px "PingFang SC",sans-serif';
-    c.fillStyle='#fb923c'; c.fillText(kg+' kg',120*S,h-64*S);
-    c.fillStyle='#4ade80'; c.fillText((Math.round(re()*10)/10)+' kg',w-120*S,h-64*S);
+    c.font='bold '+(18*S)+'px "PingFang SC",sans-serif';
+    c.fillStyle='#fb923c'; c.fillText(kg+' kg',110*S,h-58*S);
+    c.fillStyle='#4ade80'; c.fillText(reStr()+' kg',w-110*S,h-58*S);
   }
 
   function drawStack(c,cx,baseY,n,fill,stroke,S){
     for(var i=0;i<n;i++){
-      var ww=48*S,hh=16*S;
+      var ww=46*S,hh=15*S;
       var x=cx-ww/2, y=baseY-(i+1)*hh;
       c.fillStyle=fill; c.fillRect(x,y,ww,hh-2*S);
       c.strokeStyle=stroke; c.lineWidth=1; c.strokeRect(x+0.5,y+0.5,ww-1,hh-2*S-1);
@@ -177,14 +243,14 @@
     var total=16, t=trees();
     var gap=w/total;
     for(var i=0;i<total;i++){
-      var x=gap*i+gap/2, baseY=h-22;
+      var x=gap*i+gap/2, baseY=h-20;
       var pro=i<t;
-      c.fillStyle=pro?'#7c4a1e':'#3f3f46'; c.fillRect(x-5,baseY-52,10,52);
+      c.fillStyle=pro?'#7c4a1e':'#3f3f46'; c.fillRect(x-5,baseY-48,10,48);
       c.fillStyle=pro?'#4ade80':'#52525b';
-      c.beginPath(); c.moveTo(x,baseY-96); c.lineTo(x-24,baseY-50); c.lineTo(x+24,baseY-50); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(x,baseY-88); c.lineTo(x-23,baseY-46); c.lineTo(x+23,baseY-46); c.closePath(); c.fill();
       if(pro){
-        c.fillStyle='#fbbf24'; c.beginPath(); c.arc(x,baseY-104,7,0,Math.PI*2); c.fill();
-        c.fillStyle='#0b1220'; c.font='bold 10px sans-serif'; c.textAlign='center'; c.fillText('✓',x,baseY-100);
+        c.fillStyle='#fbbf24'; c.beginPath(); c.arc(x,baseY-96,7,0,Math.PI*2); c.fill();
+        c.fillStyle='#0b1220'; c.font='bold 10px sans-serif'; c.textAlign='center'; c.fillText('✓',x,baseY-92);
       }
     }
     c.font='12px "PingFang SC",sans-serif'; c.textAlign='left';
@@ -194,13 +260,16 @@
     c.fillStyle='#e2e8f0'; c.fillText('会砍掉(灰) '+(total-t)+' 棵',166,20);
   }
 
-  // 事件
-  var stepBtns = document.querySelectorAll('.step-btn');
+  // 加减按钮
+  var stepBtns = document.querySelectorAll('.step');
   stepBtns.forEach(function(b){
     b.addEventListener('click', function(){ setKg(kg + parseInt(b.getAttribute('data-step'), 10)); });
   });
 
-  // 随机出新题：随机一个 30~200 的整十数公斤
+  // 滑块
+  slider.addEventListener('input', function(){ setKg(parseInt(slider.value, 10)); });
+
+  // 随机出题
   function newQuestion(){
     var tens = [30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200];
     targetKg = tens[Math.floor(Math.random()*tens.length)];
@@ -212,46 +281,36 @@
 
   // 看答案
   function showAnswer(){
-    var r = targetKg*0.85;
-    var t = targetKg/1000;
-    var tr = Math.round(t*16);
-    answerBox.innerHTML = '答案：① '+targetKg+'×0.85 = <b style="color:#4ade80;">'+ (Math.round(r*10)/10) +' kg</b> = <b style="color:#60a5fa;">'+ (Math.round(t*1000)/1000) +' 吨</b><br>② '+ t.toFixed(3) +'×16 = '+ (t*16).toFixed(2) +' ≈ <b style="color:#fb923c;">'+ tr +' 棵</b>';
+    var r = targetKg * 85; // 分
+    var rw = Math.floor(r/100), rf = r%100;
+    var rStr = rf===0 ? ''+rw : (rf%10===0 ? rw+'.'+(rf/10) : rw+'.'+(rf<10?'0':'')+rf);
+    var tStr = trimZero((r/100000).toFixed(5));
+    var tr = Math.round(targetKg*16/1000);
+    answerBox.innerHTML = '答案：① '+targetKg+'×0.85 = <b style="color:#4ade80;">'+ rStr +' kg</b> = <b style="color:#60a5fa;">'+ tStr +' 吨</b><br>② 保护树：'+ trimZero((targetKg/1000).toFixed(3)) +'×16 = '+ trimZero((targetKg/1000*16).toFixed(2)) +' ≈ <b style="color:#fb923c;">'+ tr +' 棵</b>';
     answerBox.style.display = 'block';
   }
 
-  // 直接投到题目数，用于核对
-  document.getElementById('randGoBtn').addEventListener('click', function(){ setKg(targetKg); });
   document.getElementById('randBtn').addEventListener('click', newQuestion);
   document.getElementById('answerBtn').addEventListener('click', showAnswer);
-
-  // 当投纸数量恰好等于题目数时，提示答对
-  function checkWin(){
-    if(targetKg && kg === targetKg){
-      winBox.style.display = 'block';
-    } else {
-      // 只在已答对后因操作消失
-    }
-  }
+  document.getElementById('fullBtn').addEventListener('click', function(){ setKg(targetKg); });
   document.getElementById('resetBtn').addEventListener('click', function(){ setKg(0); });
-  document.getElementById('fullBtn').addEventListener('click', function(){ setKg(160); });
 
-  // 点大树：直接救下到那一棵
+  function checkWin(){
+    if(targetKg && kg === targetKg){ winBox.style.display = 'block'; }
+  }
+
+  // 点大树
   function forestTap(e){
     var r=forest.getBoundingClientRect();
-    var sx=forest.width/r.width, sy=forest.height/r.height;
-    var px=(e.clientX-r.left)*sx, py=(e.clientY-r.top)*sy;
-    var gap=forest.width/16;
-    var idx=Math.floor(px/gap); // 0-15
+    var sx=forest.width/r.width;
+    var px=(e.clientX-r.left)*sx;
+    var idx=Math.floor(px/(forest.width/16));
     if(idx>=0 && idx<16){
-      // 目标棵数 = idx+1（救下前 idx+1 棵）
-      var targetTrees=idx+1;
-      var targetKg = targetTrees/16*1000; // 需要 kg = (trees/16)*1000
-      setKg(Math.round(targetKg));
+      setKg(Math.round((idx+1)/16*1000));
     }
   }
   forest.addEventListener('click', forestTap);
 
-  // 动画循环
   function loop(){ drawFactory(); requestAnimationFrame(loop); }
   setKg(0);
   loop();
