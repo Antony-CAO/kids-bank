@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>火柴人大乱斗</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0b1020;touch-action:none;
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+  canvas{display:block;background:#333;}
+  /* 菜单 */
+  #menu{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;background:linear-gradient(160deg,#141b33,#0b1020);color:#eee;
+    padding:20px;overflow:auto;}
+  #menu h1{font-size:34px;color:#ffb020;margin-bottom:4px;text-shadow:0 3px 0 #7a3d00;}
+  #menu .sub{color:#8aa0c0;font-size:13px;margin-bottom:18px;}
+  .panel{width:100%;max-width:560px;background:#1a2338;border-radius:16px;padding:16px;margin-bottom:14px;
+    border:1px solid #2a3a58;}
+  .panel h2{font-size:15px;color:#ffb020;margin-bottom:10px;}
+  .grid{display:flex;flex-wrap:wrap;gap:10px;}
+  .opt{flex:1 1 30%;min-width:90px;padding:10px 8px;border-radius:12px;background:#242f4a;
+    border:2px solid #3a4a6a;text-align:center;cursor:pointer;transition:.12s;}
+  .opt.sel{border-color:#ffb020;background:#3a3a20;box-shadow:0 0 10px #ffb02055;}
+  .opt .ic{font-size:26px;display:block;margin-bottom:3px;}
+  .opt .nm{font-size:13px;font-weight:700;}
+  .opt .ds{font-size:10px;color:#8aa0c0;margin-top:2px;}
+  .opt:active{transform:scale(.95);}
+  #startBtn{width:100%;max-width:560px;padding:16px;border:none;border-radius:14px;
+    background:linear-gradient(135deg,#ff8c00,#ff4d00);color:#fff;font-size:20px;font-weight:800;
+    cursor:pointer;margin-top:4px;text-shadow:0 2px 0 #a32d00;}
+  #startBtn:active{transform:scale(.97);}
+  .tip{font-size:11px;color:#6a7a9a;margin-top:12px;text-align:center;line-height:1.6;}
+  /* 游戏 HUD */
+  #hud{position:fixed;inset:0;z-index:10;pointer-events:none;}
+  #topbar{position:absolute;top:8px;left:10px;right:10px;display:flex;align-items:center;gap:8px;}
+  .hpwrap{flex:1;height:16px;background:#00000088;border-radius:8px;overflow:hidden;border:1px solid #555;}
+  #hpbar{height:100%;width:100%;background:linear-gradient(90deg,#ff3b3b,#ff6b6b);transition:width .15s;}
+  .stat{background:#00000088;color:#fff;padding:4px 10px;border-radius:8px;font-size:13px;font-weight:700;white-space:nowrap;}
+  #combo{position:absolute;top:38px;right:12px;font-size:26px;font-weight:900;color:#ffd020;
+    text-shadow:0 2px 0 #7a3d00;opacity:0;transition:opacity .2s;}
+  /* 虚拟摇杆 + 按钮 */
+  #joy{position:fixed;z-index:11;left:18px;bottom:18px;width:120px;height:120px;border-radius:50%;
+    background:#ffffff22;border:2px solid #ffffff44;touch-action:none;}
+  #stick{position:absolute;left:50%;top:50%;width:48px;height:48px;border-radius:50%;
+    background:#ffffff88;transform:translate(-50%,-50%);}
+  #btns{position:fixed;z-index:11;right:18px;bottom:22px;display:flex;gap:12px;}
+  .act{width:74px;height:74px;border-radius:50%;border:2px solid #ffffff66;color:#fff;
+    font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;
+    background:#ff4d0066;text-shadow:0 1px 2px #000;touch-action:none;}
+  .act.atk{background:#ff4d00aa;}
+  .act.dash{background:#00a2ff88;}
+  #over{position:fixed;inset:0;z-index:25;display:none;flex-direction:column;align-items:center;
+    justify-content:center;background:#000000cc;color:#fff;}
+  #over h2{font-size:38px;color:#ffd020;margin-bottom:8px;}
+  #over p{font-size:17px;color:#ccc;margin-bottom:6px;}
+  #over button{margin-top:16px;padding:14px 40px;border:none;border-radius:12px;
+    background:#ff8c00;color:#fff;font-size:18px;font-weight:800;cursor:pointer;}
+  #rotate{position:fixed;inset:0;z-index:99;display:none;align-items:center;justify-content:center;
+    background:#0b1020;color:#fff;font-size:20px;text-align:center;padding:30px;}
+</style>
+</head>
+<body>
+<div id="rotate">📱 请把手机横过来玩<br>（竖屏体验较差）</div>
+<div id="wrap"><canvas id="cv"></canvas></div>
+
+<div id="menu">
+  <h1>🔥 火柴人大乱斗</h1>
+  <div class="sub">选地图 · 选武器 · 干掉所有敌人</div>
+  <div class="panel">
+    <h2>🗺️ 选择地图</h2>
+    <div class="grid" id="mapGrid"></div>
+  </div>
+  <div class="panel">
+    <h2>⚔️ 选择武器</h2>
+    <div class="grid" id="weapGrid"></div>
+  </div>
+  <button id="startBtn">开 始 战 斗</button>
+  <div class="tip">移动：左侧摇杆 / 键盘 WASD 或方向键<br>攻击：右侧红按钮 / 空格或 J<br>冲刺：蓝按钮 / Shift<br>地图比屏幕大，角色走到边缘画面会自动跟随</div>
+</div>
+
+<div id="hud">
+  <div id="topbar">
+    <div class="hpwrap"><div id="hpbar"></div></div>
+    <div class="stat" id="scoreStat">得分 0</div>
+    <div class="stat" id="waveStat">第 1 波</div>
+    <div class="stat" id="weapStat">拳头</div>
+  </div>
+  <div id="combo">🔥 连击</div>
+</div>
+
+<div id="joy"><div id="stick"></div></div>
+<div id="btns">
+  <div class="act dash">冲刺</div>
+  <div class="act atk">攻击</div>
+</div>
+
+<div id="over">
+  <h2 id="overTitle">胜利！</h2>
+  <p id="overScore"></p>
+  <p id="overWave"></p>
+  <button id="againBtn">再 来 一 局</button>
+</div>
+
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+var W=1280,H=720; // 逻辑分辨率
+cv.width=W; cv.height=H;
+
+// ===== 地图数据 =====
+var MAPS={
+  grass:{name:"青青草原",bg:"#6db34e",bg2:"#8ec96e",ground:"#4c8a3a",deco:"tree"},
+  desert:{name:"金色沙漠",bg:"#ecc87a",bg2:"#f2d894",ground:"#c9a04e",deco:"cactus"},
+  snow:{name:"冰雪世界",bg:"#c9e2f2",bg2:"#e4f0f8",ground:"#b9d9ec",deco:"pine"},
+  night:{name:"暗夜都市",bg:"#1b2437",bg2:"#242f4a",ground:"#2c3a55",deco:"lamp"}
+};
+var WORLD_W=3000, WORLD_H=1700;
+
+// ===== 武器数据 =====
+var WEAPONS={
+  fist:{name:"拳头",ic:"✊",type:"melee",dmg:14,range:70,cd:280,arc:1.2},
+  sword:{name:"短刀",ic:"🔪",type:"melee",dmg:30,range:90,cd:420,arc:1.5},
+  greatsword:{name:"大剑",ic:"🗡️",type:"melee",dmg:55,range:110,cd:850,arc:2.2},
+  gun:{name:"手枪",ic:"🔫",type:"ranged",dmg:30,range:650,cd:480,speed:15},
+  smg:{name:"冲锋枪",ic:"🔫",type:"ranged",dmg:11,range:520,cd:110,speed:17},
+  bow:{name:"弓箭",ic:"🏹",type:"ranged",dmg:45,range:780,cd:650,speed:12},
+  staff:{name:"法杖",ic:"🪄",type:"ranged",dmg:38,range:460,cd:560,speed:9,aoe:70}
+};
+
+// ===== 状态 =====
+var selMap="grass", selWeap="fist";
+var player, enemies, bullets, particles, texts;
+var cam={x:0,y:0};
+var score=0, wave=1, combo=0, comboT=0;
+var keys={}, joyDir={x:0,y:0}, joyActive=false;
+var gameOver=false, started=false;
+var shake=0, lastTime=0, decos=[];
+
+function buildMenu(){
+  var mg=document.getElementById("mapGrid"), wg=document.getElementById("weapGrid");
+  mg.innerHTML=""; wg.innerHTML="";
+  var mIcons={grass:"🌿",desert:"🏜️",snow:"❄️",night:"🌃"};
+  Object.keys(MAPS).forEach(function(k){
+    var d=document.createElement("div"); d.className="opt"+(k===selMap?" sel":"");
+    d.innerHTML='<span class="ic">'+mIcons[k]+'</span><span class="nm">'+MAPS[k].name+'</span>';
+    d.onclick=function(){selMap=k;buildMenu();};
+    mg.appendChild(d);
+  });
+  Object.keys(WEAPONS).forEach(function(k){
+    var w=WEAPONS[k];
+    var d=document.createElement("div"); d.className="opt"+(k===selWeap?" sel":"");
+    d.innerHTML='<span class="ic">'+w.ic+'</span><span class="nm">'+w.name+'</span><span class="ds">伤害'+w.dmg+'</span>';
+    d.onclick=function(){selWeap=k;buildMenu();};
+    wg.appendChild(d);
+  });
+}
+
+// ===== 火柴人绘制 =====
+function drawStick(x,y,opt){
+  // opt: {dir, walk, attack, atkT, hurt, color, weapon, dying, dead, flip}
+  var c=opt.color||"#fff", f=opt.flip?-1:1;
+  var sc=opt.scale||1;
+  ctx.save();
+  ctx.translate(x,y);
+  if(opt.hurt){ ctx.globalAlpha=0.6; }
+  var sway=opt.walk?Math.sin(opt.walk*10)*1:0;
+  var lean=opt.walk?0.12:0;
+  var atk=opt.attack||0; // 0~1 攻击动画进度
+  var die=opt.dying||0;
+
+  ctx.rotate(lean*f*0.3 + (opt.hurt?f*0.2:0) + (die?f*0.9*die:0));
+  ctx.scale(f*sc,sc);
+  // 头
+  ctx.fillStyle=c;
+  ctx.beginPath(); ctx.arc(0,-34,11,0,Math.PI*2); ctx.fill();
+  // 身体
+  ctx.strokeStyle=c; ctx.lineWidth=5; ctx.lineCap="round";
+  ctx.beginPath(); ctx.moveTo(0,-23); ctx.lineTo(0,6); ctx.stroke();
+  // 腿
+  var leg=opt.walk?Math.sin(opt.walk*10)*10:0;
+  var leg2=opt.walk?Math.sin(opt.walk*10+Math.PI)*10:0;
+  if(die){ leg=0; leg2=0; }
+  ctx.beginPath();
+  ctx.moveTo(0,6); ctx.lineTo(leg,24); ctx.lineTo(leg+3,34);
+  ctx.moveTo(0,6); ctx.lineTo(leg2,24); ctx.lineTo(leg2+3,34);
+  ctx.stroke();
+  // 手臂（攻击时挥动）
+  var armA, armB;
+  if(atk>0){
+    var a=Math.sin(atk*Math.PI); // 0->1->0
+    armA=-40-a*70; // 向前挥
+    armB=20;
+  } else {
+    armA=opt.walk?Math.sin(opt.walk*10+Math.PI)*14:-14;
+    armB=opt.walk?Math.sin(opt.walk*10)*14:14;
+  }
+  ctx.beginPath();
+  ctx.moveTo(0,-18); ctx.lineTo(armA,-2);
+  ctx.moveTo(0,-18); ctx.lineTo(armB,-2);
+  ctx.stroke();
+  // 武器
+  if(opt.weapon && opt.weapon!=="fist"){
+    var w=WEAPONS[opt.weapon];
+    var wx=armA, wy=-2;
+    var ang=atk>0? -0.5-a*1.6 : -0.6;
+    ctx.save();
+    ctx.translate(wx,wy);
+    ctx.rotate(ang);
+    ctx.strokeStyle=w.color||"#d0d8e8"; ctx.lineWidth=4;
+    if(opt.weapon==="sword"||opt.weapon==="greatsword"){
+      var L=opt.weapon==="greatsword"?34:24;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(L,0); ctx.stroke();
+      ctx.fillStyle="#ffd020"; ctx.fillRect(L-3,-2,3,5); // 护手
+    } else if(opt.weapon==="gun"||opt.weapon==="smg"){
+      ctx.fillStyle="#333";
+      ctx.fillRect(0,-3,opt.weapon==="smg"?22:16,6);
+    } else if(opt.weapon==="bow"){
+      ctx.beginPath(); ctx.arc(8,0,12,-1.2,1.2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-4,-12); ctx.lineTo(-4,12); ctx.stroke();
+    } else if(opt.weapon==="staff"){
+      ctx.strokeStyle="#8a5a20"; ctx.lineWidth=5;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(26,0); ctx.stroke();
+      ctx.fillStyle="#7cf"; ctx.beginPath(); ctx.arc(28,0,6,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+// ===== 实体 =====
+function makePlayer(){
+  return {x:WORLD_W/2, y:WORLD_H/2, hp:100, maxHp:100, dir:1, walk:0, attack:0, atkCd:0,
+    weapon:selWeap, color:"#ffd020", speed:4.2, hurt:0, dash:0, dashCd:0, radius:16};
+}
+function makeEnemy(x,y){
+  return {x:x,y:y,hp:40+wave*6,maxHp:40+wave*6,dir:-1,walk:0,attack:0,atkCd:0,
+    color:"#ff5060", speed:2+Math.min(1.2,wave*0.12), hurt:0, dying:0, dead:false, radius:15, t:Math.random()*10};
+}
+
+function spawnWave(){
+  enemies=[];
+  var n=3+wave*2;
+  if(n>18)n=18;
+  for(var i=0;i<n;i++){
+    var a=Math.random()*Math.PI*2, d=300+Math.random()*400;
+    var ex=player.x+Math.cos(a)*d, ey=player.y+Math.sin(a)*d;
+    ex=Math.max(40,Math.min(WORLD_W-40,ex));
+    ey=Math.max(40,Math.min(WORLD_H-40,ey));
+    enemies.push(makeEnemy(ex,ey));
+  }
+}
+
+function initGame(){
+  player=makePlayer();
+  bullets=[]; particles=[]; texts=[];
+  score=0; wave=1; combo=0; gameOver=false;
+  spawnWave();
+  genDecos();
+  updateHud();
+}
+
+function genDecos(){
+  decos=[];
+  var n=40;
+  for(var i=0;i<n;i++){
+    decos.push({x:Math.random()*WORLD_W,y:Math.random()*WORLD_H,
+      s:0.6+Math.random()*1.4,type:MAPS[selMap].deco});
+  }
+}
+
+// ===== 输入 =====
+window.addEventListener("keydown",function(e){
+  keys[e.key.toLowerCase()]=true;
+  if(e.key===" "||e.key==="j"||e.key==="J"){ tryAttack(); e.preventDefault(); }
+  if(e.key==="shift"){ tryDash(); }
+});
+window.addEventListener("keyup",function(e){ keys[e.key.toLowerCase()]=false; });
+
+var joy=document.getElementById("joy"), stick=document.getElementById("stick");
+var joyCx,joyCy;
+function joyPos(e){ var r=joy.getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2}; }
+joy.addEventListener("touchstart",function(e){ e.preventDefault(); joyActive=true; var p=joyPos(e); joyCx=p.x; joyCy=p.y; var t=e.touches[0]; updateJoy(t.clientX,t.clientY); });
+joy.addEventListener("touchmove",function(e){ e.preventDefault(); if(joyActive){var t=e.touches[0]; updateJoy(t.clientX,t.clientY);} });
+function updateJoy(tx,ty){
+  var dx=tx-joyCx, dy=ty-joyCy, m=Math.hypot(dx,dy), max=48;
+  if(m>max){ dx=dx/m*max; dy=dy/m*max; }
+  stick.style.transform="translate(calc(-50% + "+dx+"px), calc(-50% + "+dy+"px))";
+  joyDir.x=dx/max; joyDir.y=dy/max;
+}
+function joyEnd(){ joyActive=false; joyDir.x=0; joyDir.y=0; stick.style.transform="translate(-50%,-50%)"; }
+joy.addEventListener("touchend",joyEnd); joy.addEventListener("touchcancel",joyEnd);
+
+document.querySelector(".act.atk").addEventListener("touchstart",function(e){e.preventDefault();tryAttack();});
+document.querySelector(".act.dash").addEventListener("touchstart",function(e){e.preventDefault();tryDash();});
+
+// ===== 战斗逻辑 =====
+function tryAttack(){
+  if(!started||gameOver) return;
+  if(player.atkCd>0) return;
+  player.atkCd=WEAPONS[player.weapon].cd/1000;
+  player.attack=1;
+  var w=WEAPONS[player.weapon];
+  if(w.type==="melee"){
+    // 近战范围判定
+    enemies.forEach(function(en){
+      if(en.dead)return;
+      var dx=en.x-player.x, dy=en.y-player.y;
+      var dist=Math.hypot(dx,dy);
+      var range=w.range+en.radius;
+      if(dist<range){
+        var ang=Math.atan2(dy,dx);
+        var facing=Math.sign(dx)||player.dir;
+        if(Math.abs(ang)<w.arc+0.4 || Math.abs(ang-Math.PI)<0.4){
+          hitEnemy(en,w.dmg);
+        }
+      }
+    });
+    addParticles(player.x+player.dir*40,player.y-10,"#ffd020",6);
+  } else {
+    // 远程
+    var dir=player.dir;
+    var bx=player.x+dir*30, by=player.y-12;
+    bullets.push({x:bx,y:by,vx:dir*w.speed,vy:0,dmg:w.dmg,range:w.range,life:w.range/w.speed,weapon:player.weapon});
+    if(player.weapon==="staff"){
+      // 法杖多个弹道
+      bullets.push({x:bx,y:by,vx:dir*w.speed*0.9,vy:2.5,dmg:w.dmg,range:w.range,life:w.range/w.speed,weapon:player.weapon});
+      bullets.push({x:bx,y:by,vx:dir*w.speed*0.9,vy:-2.5,dmg:w.dmg,range:w.range,life:w.range/w.speed,weapon:player.weapon});
+    }
+  }
+}
+
+function tryDash(){
+  if(!started||gameOver) return;
+  if(player.dashCd>0) return;
+  player.dash=0.25; player.dashCd=0.9;
+  addParticles(player.x,player.y+10,"#8ae0ff",8);
+}
+
+function hitEnemy(en,dmg){
+  en.hp-=dmg; en.hurt=0.12;
+  addParticles(en.x,en.y-10,"#ff4040",5);
+  combo++; comboT=1.2;
+  texts.push({x:en.x,y:en.y-30,txt:"-"+dmg,color:"#fff",life:0.7,vy:-40});
+  if(en.hp<=0){ en.dead=true; en.dying=1; score+=10; addParticles(en.x,en.y,"#ff8060",14); }
+}
+
+function hitPlayer(dmg){
+  if(player.dash>0) return; // 冲刺无敌
+  player.hp-=dmg; player.hurt=0.15; shake=8;
+  addParticles(player.x,player.y-10,"#ff2020",5);
+  if(player.hp<=0){ player.hp=0; endGame(false); }
+}
+
+function addParticles(x,y,color,n){
+  for(var i=0;i<n;i++){
+    particles.push({x:x,y:y,vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6-2,
+      life:0.5+Math.random()*0.4,color:color,r:2+Math.random()*3});
+  }
+}
+
+// ===== 更新 =====
+function update(dt){
+  if(gameOver) return;
+  // 移动
+  var mx=0,my=0;
+  if(joyActive){ mx=joyDir.x; my=joyDir.y; }
+  if(keys["a"]||keys["arrowleft"])mx-=1;
+  if(keys["d"]||keys["arrowright"])mx+=1;
+  if(keys["w"]||keys["arrowup"])my-=1;
+  if(keys["s"]||keys["arrowdown"])my+=1;
+  var ml=Math.hypot(mx,my);
+  var moving=ml>0.15;
+  if(moving){ mx/=ml; my/=ml; }
+  if(player.dash>0){ mx*=2.6; my*=2.6; }
+  player.x+=mx*player.speed*(60*dt)*1.6;
+  player.y+=my*player.speed*(60*dt)*1.6;
+  if(Math.abs(mx)>0.1) player.dir=mx>0?1:-1;
+  player.walk=moving?player.walk+dt*1.2:0;
+  player.x=Math.max(30,Math.min(WORLD_W-30,player.x));
+  player.y=Math.max(30,Math.min(WORLD_H-30,player.y));
+  // cd
+  if(player.atkCd>0)player.atkCd-=dt;
+  if(player.dashCd>0)player.dashCd-=dt;
+  if(player.dash>0)player.dash-=dt;
+  if(player.hurt>0)player.hurt-=dt;
+  if(player.attack>0){ player.attack-=dt*3; if(player.attack<0)player.attack=0; }
+  // 连击计时
+  if(comboT>0){comboT-=dt; if(comboT<=0)combo=0;}
+
+  // 敌人
+  enemies.forEach(function(en){
+    if(en.dead){ if(en.dying>0)en.dying-=dt*1.5; return; }
+    if(en.hurt>0)en.hurt-=dt;
+    if(en.atkCd>0)en.atkCd-=dt;
+    if(en.attack>0){en.attack-=dt*3; if(en.attack<0)en.attack=0;}
+    var dx=player.x-en.x, dy=player.y-en.y, dist=Math.hypot(dx,dy);
+    if(dist>28){
+      en.x+=dx/dist*en.speed*(60*dt)*1.6;
+      en.y+=dy/dist*en.speed*(60*dt)*1.6;
+      en.dir=dx>0?1:-1;
+      en.walk+=dt*1.2;
+      if(en.attack>0)en.attack=0;
+    } else {
+      en.walk=0;
+      if(en.atkCd<=0){ en.attack=1; en.atkCd=0.9; hitPlayer(8+wave); }
+    }
+  });
+  // 敌人互不重叠简化（跳过）
+
+  // 子弹
+  for(var i=bullets.length-1;i>=0;i--){
+    var b=bullets[i];
+    b.x+=b.vx*(60*dt)*1.6; b.y+=b.vy*(60*dt)*1.6;
+    b.life-=dt;
+    var hit=false;
+    enemies.forEach(function(en){
+      if(en.dead||hit)return;
+      var d=Math.hypot(en.x-b.x,en.y-b.y);
+      var r=(b.weapon==="staff"?WEAPONS.staff.aoe:en.radius+6);
+      if(d<r){ hitEnemy(en,b.dmg); hit=true; }
+    });
+    if(hit||b.life<=0||b.x<0||b.x>WORLD_W||b.y<0||b.y>WORLD_H){
+      if(b.weapon==="staff"){ addParticles(b.x,b.y,"#7cf",12); }
+      bullets.splice(i,1);
+    }
+  }
+
+  // 粒子
+  for(var j=particles.length-1;j>=0;j--){
+    var p=particles[j];
+    p.x+=p.vx*(60*dt)*1.6; p.y+=p.vy*(60*dt)*1.6; p.life-=dt;
+    if(p.life<=0)particles.splice(j,1);
+  }
+  // 浮动文字
+  for(var k=texts.length-1;k>=0;k--){
+    var t=texts[k]; t.y+=t.vy*dt; t.life-=dt; if(t.life<=0)texts.splice(k,1);
+  }
+
+  // 摄像机跟随
+  cam.x += (player.x-W/2-cam.x)*0.12;
+  cam.y += (player.y-H/2-cam.y)*0.12;
+  cam.x=Math.max(0,Math.min(WORLD_W-W,cam.x));
+  cam.y=Math.max(0,Math.min(WORLD_H-H,cam.y));
+  if(shake>0)shake-=dt*40;
+
+  // 波次
+  var alive=enemies.some(function(e){return !e.dead;});
+  if(!alive){ wave++; spawnWave(); texts.push({x:player.x,y:player.y-50,txt:"第 "+wave+" 波！",color:"#ffd020",life:1.2,vy:-30}); }
+  updateHud();
+}
+
+function endGame(win){
+  gameOver=true;
+  document.getElementById("over").style.display="flex";
+  document.getElementById("overTitle").textContent=win?"🏆 你赢了！":"💀 你被击败了";
+  document.getElementById("overScore").textContent="最终得分："+score;
+  document.getElementById("overWave").textContent="坚持到第 "+wave+" 波";
+}
+
+function updateHud(){
+  var h=Math.max(0,player?player.hp:100)/100*100;
+  document.getElementById("hpbar").style.width=h+"%";
+  document.getElementById("scoreStat").textContent="得分 "+score;
+  document.getElementById("waveStat").textContent="第 "+wave+" 波";
+  document.getElementById("weapStat").textContent=WEAPONS[selWeap].name;
+  var c=document.getElementById("combo");
+  if(combo>=2){ c.style.opacity=1; c.textContent="🔥 "+combo+" 连击"; }
+  else c.style.opacity=0;
+}
+
+// ===== 渲染 =====
+function draw(){
+  var m=MAPS[selMap];
+  // 背景
+  var g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,m.bg); g.addColorStop(1,m.bg2);
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.save();
+  ctx.translate(-cam.x,-cam.y);
+  // 地面
+  ctx.fillStyle=m.ground;
+  ctx.fillRect(0,0,WORLD_W,WORLD_H);
+  ctx.strokeStyle="rgba(0,0,0,0.15)"; ctx.lineWidth=3;
+  ctx.strokeRect(0,0,WORLD_W,WORLD_H);
+  // 装饰
+  decos.forEach(function(dc){
+    drawDeco(dc);
+  });
+  // 子弹
+  bullets.forEach(function(b){
+    ctx.fillStyle=b.weapon==="staff"?"#7cf":"#ffd020";
+    ctx.beginPath(); ctx.arc(b.x,b.y,5,0,Math.PI*2); ctx.fill();
+    if(b.weapon==="staff"){ ctx.globalAlpha=0.4; ctx.beginPath(); ctx.arc(b.x,b.y,20,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1; }
+  });
+  // 敌人
+  enemies.forEach(function(en){
+    if(en.dead&&en.dying<=0)return;
+    drawStick(en.x,en.y,{dir:en.dir,walk:en.walk,attack:en.attack,hurt:en.hurt,color:en.color,weapon:"sword",flip:en.dir<0,dying:en.dying});
+    // 血条
+    if(!en.dead){
+      var bw=30;
+      ctx.fillStyle="#0008"; ctx.fillRect(en.x-bw/2,en.y-48,bw,5);
+      ctx.fillStyle="#ff4040"; ctx.fillRect(en.x-bw/2,en.y-48,bw*Math.max(0,en.hp/en.maxHp),5);
+    }
+  });
+  // 玩家
+  if(player.hp>0){
+    drawStick(player.x,player.y,{dir:player.dir,walk:player.walk,attack:player.attack,hurt:player.hurt,color:player.color,weapon:player.weapon,flip:player.dir<0});
+  }
+  // 粒子
+  particles.forEach(function(p){
+    ctx.globalAlpha=Math.max(0,p.life/0.7);
+    ctx.fillStyle=p.color;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha=1;
+  // 浮动文字
+  texts.forEach(function(t){
+    ctx.globalAlpha=Math.max(0,t.life);
+    ctx.fillStyle=t.color; ctx.font="bold 20px sans-serif"; ctx.textAlign="center";
+    ctx.fillText(t.txt,t.x,t.y);
+  });
+  ctx.globalAlpha=1;
+  ctx.restore();
+  // 震屏
+  if(shake>0){
+    var sx=(Math.random()-0.5)*shake, sy=(Math.random()-0.5)*shake;
+    ctx.save();
+    ctx.translate(sx,sy);
+  }
+}
+
+function drawDeco(dc){
+  var m=MAPS[selMap];
+  ctx.save(); ctx.translate(dc.x,dc.y); ctx.scale(dc.s,dc.s);
+  if(dc.type==="tree"){
+    ctx.fillStyle="#7a4a20"; ctx.fillRect(-3,0,6,30);
+    ctx.fillStyle="#3d8a3a"; ctx.beginPath(); ctx.arc(0,-10,22,0,Math.PI*2); ctx.fill();
+  } else if(dc.type==="cactus"){
+    ctx.fillStyle="#3d8a3a"; ctx.fillRect(-4,-30,8,30);
+    ctx.fillRect(-4,-24,-12,6); ctx.fillRect(4,-30,10,6);
+  } else if(dc.type==="pine"){
+    ctx.fillStyle="#5a3a20"; ctx.fillRect(-3,0,6,22);
+    ctx.fillStyle="#2a6a4a";
+    ctx.beginPath(); ctx.moveTo(0,-40); ctx.lineTo(-16,-8); ctx.lineTo(16,-8); ctx.fill();
+  } else if(dc.type==="lamp"){
+    ctx.fillStyle="#333"; ctx.fillRect(-2,0,4,40);
+    ctx.fillStyle="#ffd020"; ctx.beginPath(); ctx.arc(0,-4,6,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ===== 主循环 =====
+function loop(t){
+  if(!lastTime)lastTime=t;
+  var dt=Math.min(0.05,(t-lastTime)/1000);
+  lastTime=t;
+  if(started){ update(dt); }
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ===== 启动 =====
+buildMenu();
+document.getElementById("startBtn").onclick=function(){
+  document.getElementById("menu").style.display="none";
+  document.getElementById("hud").style.display="block";
+  initGame();
+  started=true;
+};
+document.getElementById("againBtn").onclick=function(){
+  document.getElementById("over").style.display="none";
+  initGame();
+  started=true;
+};
+requestAnimationFrame(loop);
+
+// 横屏提示
+function checkOri(){
+  var r=document.getElementById("rotate");
+  if(window.innerHeight>window.innerWidth){ r.style.display="flex"; }
+  else r.style.display="none";
+}
+window.addEventListener("resize",checkOri);
+window.addEventListener("orientationchange",function(){setTimeout(checkOri,300);});
+checkOri();
+})();
+</script>
+</body>
+</html>
