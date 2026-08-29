@@ -121,13 +121,13 @@ var WORLD_W=3000, WORLD_H=1700;
 
 // ===== 武器数据 =====
 var WEAPONS={
-  fist:{name:"拳头",ic:"✊",type:"melee",dmg:14,range:70,cd:280,arc:1.2},
-  sword:{name:"短刀",ic:"🔪",type:"melee",dmg:30,range:90,cd:420,arc:1.5},
-  greatsword:{name:"大剑",ic:"🗡️",type:"melee",dmg:55,range:110,cd:850,arc:2.2},
-  gun:{name:"手枪",ic:"🔫",type:"ranged",dmg:30,range:650,cd:480,speed:15},
-  smg:{name:"冲锋枪",ic:"🔫",type:"ranged",dmg:11,range:520,cd:110,speed:17},
-  bow:{name:"弓箭",ic:"🏹",type:"ranged",dmg:45,range:780,cd:650,speed:12},
-  staff:{name:"法杖",ic:"🪄",type:"ranged",dmg:38,range:460,cd:560,speed:9,aoe:70}
+  fist:{name:"拳头",ic:"✊",type:"melee",dmg:14,range:70,cd:150,arc:1.2},
+  sword:{name:"短刀",ic:"🔪",type:"melee",dmg:30,range:90,cd:240,arc:1.5},
+  greatsword:{name:"大剑",ic:"🗡️",type:"melee",dmg:55,range:110,cd:480,arc:2.2},
+  gun:{name:"手枪",ic:"🔫",type:"ranged",dmg:30,range:650,cd:280,speed:20},
+  smg:{name:"冲锋枪",ic:"🔫",type:"ranged",dmg:11,range:520,cd:65,speed:22},
+  bow:{name:"弓箭",ic:"🏹",type:"ranged",dmg:45,range:780,cd:400,speed:17},
+  staff:{name:"法杖",ic:"🪄",type:"ranged",dmg:38,range:460,cd:340,speed:13,aoe:70}
 };
 
 // ===== 状态 =====
@@ -233,7 +233,7 @@ function drawStick(x,y,opt){
 // ===== 实体 =====
 function makePlayer(){
   return {x:WORLD_W/2, y:WORLD_H/2, hp:100, maxHp:100, dir:1, walk:0, attack:0, atkCd:0,
-    weapon:selWeap, color:"#ffd020", speed:4.2, hurt:0, dash:0, dashCd:0, radius:16};
+    weapon:selWeap, color:"#ffd020", speed:6.8, hurt:0, dash:0, dashCd:0, radius:16};
 }
 function makeEnemy(x,y){
   return {x:x,y:y,hp:40+wave*6,maxHp:40+wave*6,dir:-1,walk:0,attack:0,atkCd:0,
@@ -335,7 +335,7 @@ function tryAttack(){
 function tryDash(){
   if(!started||gameOver) return;
   if(player.dashCd>0) return;
-  player.dash=0.25; player.dashCd=0.9;
+  player.dash=0.22; player.dashCd=0.55;
   addParticles(player.x,player.y+10,"#8ae0ff",8);
 }
 
@@ -374,7 +374,7 @@ function update(dt){
   var ml=Math.hypot(mx,my);
   var moving=ml>0.15;
   if(moving){ mx/=ml; my/=ml; }
-  if(player.dash>0){ mx*=2.6; my*=2.6; }
+  if(player.dash>0){ mx*=3.2; my*=3.2; }
   player.x+=mx*player.speed*(60*dt)*1.6;
   player.y+=my*player.speed*(60*dt)*1.6;
   if(Math.abs(mx)>0.1) player.dir=mx>0?1:-1;
@@ -440,8 +440,8 @@ function update(dt){
   }
 
   // 摄像机跟随
-  cam.x += (player.x-W/2-cam.x)*0.12;
-  cam.y += (player.y-H/2-cam.y)*0.12;
+  cam.x += (player.x-W/2-cam.x)*0.30;
+  cam.y += (player.y-H/2-cam.y)*0.30;
   cam.x=Math.max(0,Math.min(WORLD_W-W,cam.x));
   cam.y=Math.max(0,Math.min(WORLD_H-H,cam.y));
   if(shake>0)shake-=dt*40;
