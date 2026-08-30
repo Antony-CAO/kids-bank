@@ -3,78 +3,74 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>舒尔特方格 · 专注力训练</title>
+<title>舒尔特方格 · 多玩法专注力训练</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
   html,body{width:100%;height:100%;overflow:hidden;touch-action:manipulation;
     font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;}
-  body{
-    background:linear-gradient(160deg,#0ea5a5 0%,#0d9488 45%,#0f766e 100%);
-    position:relative;color:#fff;
-  }
-  /* 波浪纹理 */
+  body{background:linear-gradient(160deg,#0ea5a5 0%,#0d9488 45%,#0f766e 100%);
+    position:relative;color:#fff;}
   .wave{position:fixed;bottom:-2px;left:0;right:0;height:28vh;z-index:0;pointer-events:none;}
   .wave svg{width:100%;height:100%;display:block;}
 
-  /* ===== 菜单页 ===== */
   #menu{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
-    justify-content:center;padding:20px;}
-  .logo{text-align:center;margin-bottom:6px;position:relative;z-index:1;}
+    justify-content:center;padding:16px;overflow:auto;}
+  .logo{text-align:center;margin-bottom:10px;position:relative;z-index:1;}
   .logo .badge{display:inline-block;background:linear-gradient(135deg,#fbbf24,#f59e0b);
-    color:#fff;font-size:40px;font-weight:900;padding:10px 30px;border-radius:999px;
+    color:#fff;font-size:32px;font-weight:900;padding:8px 26px;border-radius:999px;
     box-shadow:0 6px 0 #b45309,0 10px 20px rgba(0,0,0,.25);letter-spacing:2px;
     text-shadow:0 2px 0 rgba(0,0,0,.15);}
-  .logo .en{color:#cffafe;font-size:14px;letter-spacing:6px;margin-top:10px;opacity:.9;}
-  .logo .desc{color:#ecfeff;font-size:13px;margin-top:8px;opacity:.85;}
+  .logo .en{color:#cffafe;font-size:12px;letter-spacing:5px;margin-top:8px;opacity:.9;}
+  .logo .desc{color:#ecfeff;font-size:12px;margin-top:6px;opacity:.85;}
 
-  .levels{width:100%;max-width:460px;margin-top:26px;position:relative;z-index:1;}
-  .lvl-group{margin-bottom:16px;}
-  .lvl-group .gtag{font-size:12px;letter-spacing:3px;color:#cffafe;margin-bottom:8px;opacity:.8;
-    display:flex;align-items:center;gap:8px;}
-  .lvl-group .gtag::after{content:'';flex:1;height:1px;background:#ffffff44;}
-  .lvl-row{display:flex;gap:12px;}
-  .lvl{flex:1;background:#ffffff22;border:2px solid #ffffff44;border-radius:16px;
-    padding:16px 8px;text-align:center;cursor:pointer;transition:.15s;backdrop-filter:blur(4px);}
-  .lvl .num{font-size:32px;font-weight:900;line-height:1;}
-  .lvl .gridn{font-size:11px;color:#cffafe;margin-top:6px;opacity:.85;}
-  .lvl:active{transform:scale(.94);background:#ffffff3a;}
-  .lvl:hover{background:#ffffff33;}
+  .panel{width:100%;max-width:500px;background:#ffffff18;border:1px solid #ffffff33;
+    border-radius:16px;padding:12px;margin-bottom:12px;backdrop-filter:blur(4px);
+    position:relative;z-index:1;}
+  .panel h2{font-size:14px;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+  .grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .opt{flex:1 1 30%;min-width:70px;padding:10px 6px;border-radius:12px;background:#ffffff22;
+    border:2px solid #ffffff44;text-align:center;cursor:pointer;transition:.12s;}
+  .opt.sel{border-color:#fbbf24;background:#fbbf2433;box-shadow:0 0 8px #fbbf2455;}
+  .opt .ic{font-size:22px;display:block;margin-bottom:2px;}
+  .opt .nm{font-size:13px;font-weight:800;}
+  .opt .ds{font-size:9px;color:#cffafe;margin-top:1px;opacity:.85;line-height:1.3;}
+  .opt:active{transform:scale(.95);}
 
-  /* ===== 游戏页 ===== */
   #game{position:fixed;inset:0;z-index:10;display:none;flex-direction:column;align-items:center;
-    justify-content:center;padding:14px;}
+    justify-content:center;padding:12px;}
   #top{width:100%;max-width:560px;display:flex;align-items:center;justify-content:space-between;
-    margin-bottom:14px;position:relative;z-index:1;}
-  #timer{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums;
-    background:#00000033;padding:6px 18px;border-radius:12px;min-width:120px;text-align:center;
+    margin-bottom:8px;position:relative;z-index:1;}
+  #timer{font-size:32px;font-weight:900;font-variant-numeric:tabular-nums;
+    background:#00000033;padding:5px 16px;border-radius:12px;min-width:110px;text-align:center;
     text-shadow:0 2px 0 rgba(0,0,0,.2);}
-  #nextNum{font-size:22px;font-weight:800;background:#00000033;padding:6px 16px;border-radius:12px;}
-  #best{font-size:13px;opacity:.9;}
+  #nextNum{font-size:20px;font-weight:800;background:#00000033;padding:5px 14px;border-radius:12px;}
   #backBtn{background:#00000044;border:1px solid #ffffff55;color:#fff;border-radius:10px;
-    padding:8px 14px;font-size:13px;cursor:pointer;font-weight:700;}
+    padding:7px 12px;font-size:12px;cursor:pointer;font-weight:700;}
   #backBtn:active{transform:scale(.94);}
-  #grid{display:grid;gap:8px;width:min(86vw,540px);aspect-ratio:1;position:relative;z-index:1;}
-  .cell{background:#ffffff;color:#0f766e;border-radius:10px;display:flex;align-items:center;
-    justify-content:center;font-size:26px;font-weight:900;cursor:pointer;
-    box-shadow:0 4px 0 #00000022,0 6px 12px rgba(0,0,0,.18);transition:.08s;
-    font-variant-numeric:tabular-nums;}
+  #subbar{width:100%;max-width:560px;display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:10px;position:relative;z-index:1;font-size:12px;}
+  #subbar .mode{background:#00000033;padding:4px 10px;border-radius:8px;font-weight:700;}
+  #subbar .best{opacity:.9;}
+  #grid{display:grid;gap:7px;width:min(88vw,560px);aspect-ratio:1;position:relative;z-index:1;}
+  .cell{background:#fff;color:#0f766e;border-radius:9px;display:flex;align-items:center;
+    justify-content:center;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #00000022,
+    0 5px 10px rgba(0,0,0,.16);transition:.08s;font-variant-numeric:tabular-nums;}
   .cell:active{transform:scale(.93);}
-  .cell.hit{background:#d1fae5;color:#065f46;box-shadow:0 4px 0 #05966966;transform:scale(.95);}
+  .cell.hit{background:#d1fae5;color:#065f46;box-shadow:0 3px 0 #05966966;}
   .cell.wrong{background:#fecaca;color:#991b1b;animation:shake .25s;}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
   .cell.done{background:#c7d2fe;color:#4338ca;opacity:.5;pointer-events:none;}
 
-  /* ===== 结果弹窗 ===== */
   #result{position:fixed;inset:0;z-index:20;display:none;flex-direction:column;align-items:center;
     justify-content:center;background:#00000099;}
-  #result .card{background:#fff;color:#0f766e;border-radius:20px;padding:30px 36px;
+  #result .card{background:#fff;color:#0f766e;border-radius:20px;padding:28px 34px;
     text-align:center;box-shadow:0 20px 40px rgba(0,0,0,.4);max-width:86vw;}
-  #result .rt{font-size:15px;color:#64748b;margin-bottom:4px;}
-  #result .rtime{font-size:52px;font-weight:900;color:#0d9488;line-height:1.1;}
+  #result .rt{font-size:14px;color:#64748b;margin-bottom:4px;}
+  #result .rtime{font-size:50px;font-weight:900;color:#0d9488;line-height:1.1;}
   #result .rbest{font-size:14px;color:#64748b;margin-top:10px;}
   #result .rnew{color:#f59e0b;font-weight:800;margin-top:6px;font-size:16px;}
-  #result .rbtns{margin-top:20px;display:flex;gap:10px;justify-content:center;}
-  #result button{border:none;border-radius:12px;padding:12px 22px;font-size:16px;font-weight:800;cursor:pointer;}
+  #result .rbtns{margin-top:18px;display:flex;gap:10px;justify-content:center;}
+  #result button{border:none;border-radius:12px;padding:11px 20px;font-size:15px;font-weight:800;cursor:pointer;}
   #retryBtn{background:#0d9488;color:#fff;}
   #menuBtn2{background:#e2e8f0;color:#334155;}
   #result button:active{transform:scale(.95);}
@@ -90,31 +86,17 @@
   <div class="logo">
     <div class="badge">舒尔特方格</div>
     <div class="en">SCHULTE GRID</div>
-    <div class="desc">专注力 · 反应速度 · 视觉广度训练</div>
+    <div class="desc">专注力 · 反应速度 · 视觉广度 · 多玩法</div>
   </div>
-  <div class="levels">
-    <div class="lvl-group">
-      <div class="gtag">EASY · 简单</div>
-      <div class="lvl-row">
-        <div class="lvl" data-n="3"><div class="num">3×3</div><div class="gridn">9 格</div></div>
-        <div class="lvl" data-n="4"><div class="num">4×4</div><div class="gridn">16 格</div></div>
-        <div class="lvl" data-n="5"><div class="num">5×5</div><div class="gridn">25 格</div></div>
-      </div>
-    </div>
-    <div class="lvl-group">
-      <div class="gtag">HARD · 困难</div>
-      <div class="lvl-row">
-        <div class="lvl" data-n="6"><div class="num">6×6</div><div class="gridn">36 格</div></div>
-        <div class="lvl" data-n="7"><div class="num">7×7</div><div class="gridn">49 格</div></div>
-      </div>
-    </div>
-    <div class="lvl-group">
-      <div class="gtag">SUPER · 超级</div>
-      <div class="lvl-row">
-        <div class="lvl" data-n="8"><div class="num">8×8</div><div class="gridn">64 格</div></div>
-        <div class="lvl" data-n="9"><div class="num">9×9</div><div class="gridn">81 格</div></div>
-      </div>
-    </div>
+
+  <div class="panel">
+    <h2>🎮 选择玩法</h2>
+    <div class="grid" id="modeGrid"></div>
+  </div>
+
+  <div class="panel">
+    <h2>📐 选择难度</h2>
+    <div class="grid" id="diffGrid"></div>
   </div>
 </div>
 
@@ -124,7 +106,10 @@
     <div id="timer">0.000</div>
     <div id="nextNum">找 1</div>
   </div>
-  <div id="best"></div>
+  <div id="subbar">
+    <span class="mode" id="modeLabel"></span>
+    <span class="best" id="best"></span>
+  </div>
   <div id="grid"></div>
 </div>
 
@@ -136,7 +121,7 @@
     <div class="rnew" id="rNew" style="display:none">🎉 新纪录！</div>
     <div class="rbtns">
       <button id="retryBtn">再 来 一 次</button>
-      <button id="menuBtn2">换 难 度</button>
+      <button id="menuBtn2">换 玩 法</button>
     </div>
   </div>
 </div>
@@ -144,11 +129,41 @@
 <script>
 (function(){
 "use strict";
-var N=5;              // 当前难度
-var nums=[];          // 洗牌后的数字数组
-var next=1;           // 下一个要找的数字
-var startT=0, raf=null;
-var running=false, finished=false;
+
+// ===== 玩法定义 =====
+// seq 函数：输入 n（当前难度 N），返回"要点的数字序列"（从第1个到最后一个）
+var MODES={
+  order:{name:"顺序",ic:"1️⃣",ds:"1→2→3→…",
+    seq:function(N){var a=[];for(var i=1;i<=N*N;i++)a.push(i);return a;}},
+  reverse:{name:"倒序",ic:"🔙",ds:"从大到小",
+    seq:function(N){var a=[];for(var i=N*N;i>=1;i--)a.push(i);return a;}},
+  odd:{name:"奇数",ic:"①③",ds:"1,3,5,7…",
+    seq:function(N){var a=[];for(var i=1;i<=N*N;i++)if(i%2===1)a.push(i);return a;}},
+  even:{name:"偶数",ic:"②④",ds:"2,4,6,8…",
+    seq:function(N){var a=[];for(var i=1;i<=N*N;i++)if(i%2===0)a.push(i);return a;}},
+  step3:{name:"跳三",ic:"1-4-7",ds:"1,4,7,10…",
+    seq:function(N){var a=[];for(var i=1;i<=N*N;i+=3)a.push(i);return a;}},
+  prime:{name:"质数",ic:"🔢",ds:"2,3,5,7…",
+    seq:function(N){
+      function isP(x){if(x<2)return false;for(var k=2;k*k<=x;k++)if(x%k===0)return false;return true;}
+      var a=[];for(var i=2;i<=N*N;i++)if(isP(i))a.push(i);return a;
+    }}
+};
+
+// ===== 难度定义 =====
+var DIFFS={
+  3:{name:"3×3",tag:"简单",ds:"9格"},
+  4:{name:"4×4",tag:"简单",ds:"16格"},
+  5:{name:"5×5",tag:"标准",ds:"25格"},
+  6:{name:"6×6",tag:"困难",ds:"36格"},
+  7:{name:"7×7",tag:"困难",ds:"49格"},
+  8:{name:"8×8",tag:"超级",ds:"64格"},
+  9:{name:"9×9",tag:"超级",ds:"81格"}
+};
+
+var selMode="order", selDiff=5;
+var N=5, seq=[], nextIdx=0, next=1, total=0;
+var startT=0, raf=null, running=false, finished=false;
 
 var menuEl=document.getElementById("menu");
 var gameEl=document.getElementById("game");
@@ -158,11 +173,10 @@ var nextEl=document.getElementById("nextNum");
 var bestEl=document.getElementById("best");
 var resultEl=document.getElementById("result");
 
-function getBestKey(){ return "schulte_best_"+N; }
-function getBest(){ var v=localStorage.getItem(getBestKey()); return v?parseFloat(v):null; }
-function setBest(v){ localStorage.setItem(getBestKey(), String(v)); }
+function getKey(){ return "schulte_"+selMode+"_"+N; }
+function getBest(){ var v=localStorage.getItem(getKey()); return v?parseFloat(v):null; }
+function setBest(v){ localStorage.setItem(getKey(), String(v)); }
 
-// 洗牌
 function shuffle(arr){
   var a=arr.slice();
   for(var i=a.length-1;i>0;i--){
@@ -172,48 +186,66 @@ function shuffle(arr){
   return a;
 }
 
-function start(n){
-  N=n;
-  next=1; finished=false; running=false;
-  var total=N*N;
-  nums=shuffle((function(){var a=[];for(var i=1;i<=total;i++)a.push(i);return a;})());
+function buildMenu(){
+  var mg=document.getElementById("modeGrid"), dg=document.getElementById("diffGrid");
+  mg.innerHTML=""; dg.innerHTML="";
+  Object.keys(MODES).forEach(function(k){
+    var m=MODES[k];
+    var d=document.createElement("div"); d.className="opt"+(k===selMode?" sel":"");
+    d.innerHTML='<span class="ic">'+m.ic+'</span><span class="nm">'+m.name+'</span><span class="ds">'+m.ds+'</span>';
+    d.onclick=function(){selMode=k;buildMenu();};
+    mg.appendChild(d);
+  });
+  Object.keys(DIFFS).forEach(function(k){
+    var dd=DIFFS[k];
+    var d=document.createElement("div"); d.className="opt"+(parseInt(k)===selDiff?" sel":"");
+    d.innerHTML='<span class="ic">'+dd.name+'</span><span class="nm">'+dd.tag+'</span><span class="ds">'+dd.ds+'</span>';
+    d.onclick=function(){selDiff=parseInt(k);buildMenu();};
+    dg.appendChild(d);
+  });
+}
+
+function start(){
+  N=selDiff;
+  seq=MODES[selMode].seq(N);
+  total=seq.length;
+  nextIdx=0; next=seq[0]; finished=false; running=false;
+  var all=[];
+  for(var i=1;i<=N*N;i++)all.push(i);
+  var shuffled=shuffle(all);
+
   menuEl.style.display="none";
   gameEl.style.display="flex";
   resultEl.style.display="none";
-  // 渲染网格
   gridEl.style.gridTemplateColumns="repeat("+N+", 1fr)";
   gridEl.innerHTML="";
-  var fs = N>=8 ? 20 : N>=6 ? 24 : 28;
-  nums.forEach(function(v){
+  var fs = N>=8?18 : N>=6?22 : 26;
+  shuffled.forEach(function(v){
     var d=document.createElement("div");
     d.className="cell"; d.textContent=v; d.dataset.v=v;
     d.style.fontSize=fs+"px";
     d.addEventListener("click",function(){ onTap(d,v); });
     gridEl.appendChild(d);
   });
-  nextEl.textContent="找 1";
+  document.getElementById("modeLabel").textContent=MODES[selMode].name+" · "+N+"×"+N;
+  nextEl.textContent="找 "+next;
   timerEl.textContent="0.000";
   var b=getBest();
-  bestEl.textContent = b ? ("🏆 最佳 "+b.toFixed(3)+"s") : "🏆 暂无记录";
+  bestEl.textContent = b ? ("🏆 最佳 "+b.toFixed(2)+"s") : "🏆 暂无记录";
 }
 
 function onTap(el,v){
   if(finished) return;
   if(v===next){
-    if(!running){
-      running=true;
-      startT=performance.now();
-      raf=requestAnimationFrame(tick);
-    }
+    if(!running){ running=true; startT=performance.now(); raf=requestAnimationFrame(tick); }
     el.classList.add("hit");
-    setTimeout(function(){ el.classList.add("done"); el.classList.remove("hit"); },120);
-    next++;
-    if(next>N*N){
-      finished=true;
-      cancelAnimationFrame(raf);
-      var dt=(performance.now()-startT)/1000;
-      showResult(dt);
+    setTimeout(function(){ el.classList.add("done"); el.classList.remove("hit"); },110);
+    nextIdx++;
+    if(nextIdx>=total){
+      finished=true; cancelAnimationFrame(raf);
+      showResult((performance.now()-startT)/1000);
     } else {
+      next=seq[nextIdx];
       nextEl.textContent="找 "+next;
     }
   } else {
@@ -223,40 +255,33 @@ function onTap(el,v){
 }
 
 function tick(){
-  var dt=(performance.now()-startT)/1000;
-  timerEl.textContent=dt.toFixed(3);
+  timerEl.textContent=((performance.now()-startT)/1000).toFixed(3);
   raf=requestAnimationFrame(tick);
 }
 
 function showResult(dt){
   var b=getBest();
-  var isNew = !b || dt<b;
-  if(isNew) setBest(dt);
+  var isNew=!b||dt<b;
+  if(isNew)setBest(dt);
   document.getElementById("rTime").textContent=dt.toFixed(3)+"s";
   document.getElementById("rBest").textContent = isNew
     ? "用时 "+dt.toFixed(3)+"s"
     : ("最佳纪录 "+b.toFixed(3)+"s");
-  document.getElementById("rNew").style.display = isNew ? "block":"none";
+  document.getElementById("rNew").style.display = isNew?"block":"none";
   resultEl.style.display="flex";
 }
 
-// 事件绑定
-document.querySelectorAll(".lvl").forEach(function(el){
-  el.addEventListener("click",function(){ start(parseInt(el.dataset.n)); });
-});
 document.getElementById("backBtn").addEventListener("click",function(){
   cancelAnimationFrame(raf);
-  resultEl.style.display="none";
-  gameEl.style.display="none";
-  menuEl.style.display="flex";
+  resultEl.style.display="none"; gameEl.style.display="none"; menuEl.style.display="flex";
 });
-document.getElementById("retryBtn").addEventListener("click",function(){ start(N); });
+document.getElementById("retryBtn").addEventListener("click",function(){ start(); });
 document.getElementById("menuBtn2").addEventListener("click",function(){
   cancelAnimationFrame(raf);
-  resultEl.style.display="none";
-  gameEl.style.display="none";
-  menuEl.style.display="flex";
+  resultEl.style.display="none"; gameEl.style.display="none"; menuEl.style.display="flex";
 });
+
+buildMenu();
 })();
 </script>
 </body>
