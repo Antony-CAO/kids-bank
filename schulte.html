@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>舒尔特方格 · 专注力训练</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
+  html,body{width:100%;height:100%;overflow:hidden;touch-action:manipulation;
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;}
+  body{
+    background:linear-gradient(160deg,#0ea5a5 0%,#0d9488 45%,#0f766e 100%);
+    position:relative;color:#fff;
+  }
+  /* 波浪纹理 */
+  .wave{position:fixed;bottom:-2px;left:0;right:0;height:28vh;z-index:0;pointer-events:none;}
+  .wave svg{width:100%;height:100%;display:block;}
+
+  /* ===== 菜单页 ===== */
+  #menu{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;padding:20px;}
+  .logo{text-align:center;margin-bottom:6px;position:relative;z-index:1;}
+  .logo .badge{display:inline-block;background:linear-gradient(135deg,#fbbf24,#f59e0b);
+    color:#fff;font-size:40px;font-weight:900;padding:10px 30px;border-radius:999px;
+    box-shadow:0 6px 0 #b45309,0 10px 20px rgba(0,0,0,.25);letter-spacing:2px;
+    text-shadow:0 2px 0 rgba(0,0,0,.15);}
+  .logo .en{color:#cffafe;font-size:14px;letter-spacing:6px;margin-top:10px;opacity:.9;}
+  .logo .desc{color:#ecfeff;font-size:13px;margin-top:8px;opacity:.85;}
+
+  .levels{width:100%;max-width:460px;margin-top:26px;position:relative;z-index:1;}
+  .lvl-group{margin-bottom:16px;}
+  .lvl-group .gtag{font-size:12px;letter-spacing:3px;color:#cffafe;margin-bottom:8px;opacity:.8;
+    display:flex;align-items:center;gap:8px;}
+  .lvl-group .gtag::after{content:'';flex:1;height:1px;background:#ffffff44;}
+  .lvl-row{display:flex;gap:12px;}
+  .lvl{flex:1;background:#ffffff22;border:2px solid #ffffff44;border-radius:16px;
+    padding:16px 8px;text-align:center;cursor:pointer;transition:.15s;backdrop-filter:blur(4px);}
+  .lvl .num{font-size:32px;font-weight:900;line-height:1;}
+  .lvl .gridn{font-size:11px;color:#cffafe;margin-top:6px;opacity:.85;}
+  .lvl:active{transform:scale(.94);background:#ffffff3a;}
+  .lvl:hover{background:#ffffff33;}
+
+  /* ===== 游戏页 ===== */
+  #game{position:fixed;inset:0;z-index:10;display:none;flex-direction:column;align-items:center;
+    justify-content:center;padding:14px;}
+  #top{width:100%;max-width:560px;display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:14px;position:relative;z-index:1;}
+  #timer{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums;
+    background:#00000033;padding:6px 18px;border-radius:12px;min-width:120px;text-align:center;
+    text-shadow:0 2px 0 rgba(0,0,0,.2);}
+  #nextNum{font-size:22px;font-weight:800;background:#00000033;padding:6px 16px;border-radius:12px;}
+  #best{font-size:13px;opacity:.9;}
+  #backBtn{background:#00000044;border:1px solid #ffffff55;color:#fff;border-radius:10px;
+    padding:8px 14px;font-size:13px;cursor:pointer;font-weight:700;}
+  #backBtn:active{transform:scale(.94);}
+  #grid{display:grid;gap:8px;width:min(86vw,540px);aspect-ratio:1;position:relative;z-index:1;}
+  .cell{background:#ffffff;color:#0f766e;border-radius:10px;display:flex;align-items:center;
+    justify-content:center;font-size:26px;font-weight:900;cursor:pointer;
+    box-shadow:0 4px 0 #00000022,0 6px 12px rgba(0,0,0,.18);transition:.08s;
+    font-variant-numeric:tabular-nums;}
+  .cell:active{transform:scale(.93);}
+  .cell.hit{background:#d1fae5;color:#065f46;box-shadow:0 4px 0 #05966966;transform:scale(.95);}
+  .cell.wrong{background:#fecaca;color:#991b1b;animation:shake .25s;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .cell.done{background:#c7d2fe;color:#4338ca;opacity:.5;pointer-events:none;}
+
+  /* ===== 结果弹窗 ===== */
+  #result{position:fixed;inset:0;z-index:20;display:none;flex-direction:column;align-items:center;
+    justify-content:center;background:#00000099;}
+  #result .card{background:#fff;color:#0f766e;border-radius:20px;padding:30px 36px;
+    text-align:center;box-shadow:0 20px 40px rgba(0,0,0,.4);max-width:86vw;}
+  #result .rt{font-size:15px;color:#64748b;margin-bottom:4px;}
+  #result .rtime{font-size:52px;font-weight:900;color:#0d9488;line-height:1.1;}
+  #result .rbest{font-size:14px;color:#64748b;margin-top:10px;}
+  #result .rnew{color:#f59e0b;font-weight:800;margin-top:6px;font-size:16px;}
+  #result .rbtns{margin-top:20px;display:flex;gap:10px;justify-content:center;}
+  #result button{border:none;border-radius:12px;padding:12px 22px;font-size:16px;font-weight:800;cursor:pointer;}
+  #retryBtn{background:#0d9488;color:#fff;}
+  #menuBtn2{background:#e2e8f0;color:#334155;}
+  #result button:active{transform:scale(.95);}
+</style>
+</head>
+<body>
+<svg class="wave" viewBox="0 0 1440 320" preserveAspectRatio="none">
+  <path fill="#ffffff18" d="M0,192L60,197C120,202,240,212,360,208C480,203,600,187,720,187C840,187,960,203,1080,213C1200,224,1320,229,1380,232L1440,234L1440,320L0,320Z"></path>
+  <path fill="#ffffff10" d="M0,256L80,240C160,224,320,192,480,202C640,213,800,261,960,266C1120,272,1280,240,1360,224L1440,208L1440,320L0,320Z"></path>
+</svg>
+
+<div id="menu">
+  <div class="logo">
+    <div class="badge">舒尔特方格</div>
+    <div class="en">SCHULTE GRID</div>
+    <div class="desc">专注力 · 反应速度 · 视觉广度训练</div>
+  </div>
+  <div class="levels">
+    <div class="lvl-group">
+      <div class="gtag">EASY · 简单</div>
+      <div class="lvl-row">
+        <div class="lvl" data-n="3"><div class="num">3×3</div><div class="gridn">9 格</div></div>
+        <div class="lvl" data-n="4"><div class="num">4×4</div><div class="gridn">16 格</div></div>
+        <div class="lvl" data-n="5"><div class="num">5×5</div><div class="gridn">25 格</div></div>
+      </div>
+    </div>
+    <div class="lvl-group">
+      <div class="gtag">HARD · 困难</div>
+      <div class="lvl-row">
+        <div class="lvl" data-n="6"><div class="num">6×6</div><div class="gridn">36 格</div></div>
+        <div class="lvl" data-n="7"><div class="num">7×7</div><div class="gridn">49 格</div></div>
+      </div>
+    </div>
+    <div class="lvl-group">
+      <div class="gtag">SUPER · 超级</div>
+      <div class="lvl-row">
+        <div class="lvl" data-n="8"><div class="num">8×8</div><div class="gridn">64 格</div></div>
+        <div class="lvl" data-n="9"><div class="num">9×9</div><div class="gridn">81 格</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="game">
+  <div id="top">
+    <button id="backBtn">← 返回</button>
+    <div id="timer">0.000</div>
+    <div id="nextNum">找 1</div>
+  </div>
+  <div id="best"></div>
+  <div id="grid"></div>
+</div>
+
+<div id="result">
+  <div class="card">
+    <div class="rt">本次用时</div>
+    <div class="rtime" id="rTime">0.000s</div>
+    <div class="rbest" id="rBest"></div>
+    <div class="rnew" id="rNew" style="display:none">🎉 新纪录！</div>
+    <div class="rbtns">
+      <button id="retryBtn">再 来 一 次</button>
+      <button id="menuBtn2">换 难 度</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var N=5;              // 当前难度
+var nums=[];          // 洗牌后的数字数组
+var next=1;           // 下一个要找的数字
+var startT=0, raf=null;
+var running=false, finished=false;
+
+var menuEl=document.getElementById("menu");
+var gameEl=document.getElementById("game");
+var gridEl=document.getElementById("grid");
+var timerEl=document.getElementById("timer");
+var nextEl=document.getElementById("nextNum");
+var bestEl=document.getElementById("best");
+var resultEl=document.getElementById("result");
+
+function getBestKey(){ return "schulte_best_"+N; }
+function getBest(){ var v=localStorage.getItem(getBestKey()); return v?parseFloat(v):null; }
+function setBest(v){ localStorage.setItem(getBestKey(), String(v)); }
+
+// 洗牌
+function shuffle(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=a[i];a[i]=a[j];a[j]=t;
+  }
+  return a;
+}
+
+function start(n){
+  N=n;
+  next=1; finished=false; running=false;
+  var total=N*N;
+  nums=shuffle((function(){var a=[];for(var i=1;i<=total;i++)a.push(i);return a;})());
+  menuEl.style.display="none";
+  gameEl.style.display="flex";
+  resultEl.style.display="none";
+  // 渲染网格
+  gridEl.style.gridTemplateColumns="repeat("+N+", 1fr)";
+  gridEl.innerHTML="";
+  var fs = N>=8 ? 20 : N>=6 ? 24 : 28;
+  nums.forEach(function(v){
+    var d=document.createElement("div");
+    d.className="cell"; d.textContent=v; d.dataset.v=v;
+    d.style.fontSize=fs+"px";
+    d.addEventListener("click",function(){ onTap(d,v); });
+    gridEl.appendChild(d);
+  });
+  nextEl.textContent="找 1";
+  timerEl.textContent="0.000";
+  var b=getBest();
+  bestEl.textContent = b ? ("🏆 最佳 "+b.toFixed(3)+"s") : "🏆 暂无记录";
+}
+
+function onTap(el,v){
+  if(finished) return;
+  if(v===next){
+    if(!running){
+      running=true;
+      startT=performance.now();
+      raf=requestAnimationFrame(tick);
+    }
+    el.classList.add("hit");
+    setTimeout(function(){ el.classList.add("done"); el.classList.remove("hit"); },120);
+    next++;
+    if(next>N*N){
+      finished=true;
+      cancelAnimationFrame(raf);
+      var dt=(performance.now()-startT)/1000;
+      showResult(dt);
+    } else {
+      nextEl.textContent="找 "+next;
+    }
+  } else {
+    el.classList.add("wrong");
+    setTimeout(function(){ el.classList.remove("wrong"); },250);
+  }
+}
+
+function tick(){
+  var dt=(performance.now()-startT)/1000;
+  timerEl.textContent=dt.toFixed(3);
+  raf=requestAnimationFrame(tick);
+}
+
+function showResult(dt){
+  var b=getBest();
+  var isNew = !b || dt<b;
+  if(isNew) setBest(dt);
+  document.getElementById("rTime").textContent=dt.toFixed(3)+"s";
+  document.getElementById("rBest").textContent = isNew
+    ? "用时 "+dt.toFixed(3)+"s"
+    : ("最佳纪录 "+b.toFixed(3)+"s");
+  document.getElementById("rNew").style.display = isNew ? "block":"none";
+  resultEl.style.display="flex";
+}
+
+// 事件绑定
+document.querySelectorAll(".lvl").forEach(function(el){
+  el.addEventListener("click",function(){ start(parseInt(el.dataset.n)); });
+});
+document.getElementById("backBtn").addEventListener("click",function(){
+  cancelAnimationFrame(raf);
+  resultEl.style.display="none";
+  gameEl.style.display="none";
+  menuEl.style.display="flex";
+});
+document.getElementById("retryBtn").addEventListener("click",function(){ start(N); });
+document.getElementById("menuBtn2").addEventListener("click",function(){
+  cancelAnimationFrame(raf);
+  resultEl.style.display="none";
+  gameEl.style.display="none";
+  menuEl.style.display="flex";
+});
+})();
+</script>
+</body>
+</html>
