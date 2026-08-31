@@ -175,23 +175,43 @@ var startT=0, raf=null, running=false, finished=false;
 var actx=null;
 function ensureAudio(){
   if(!actx){
-    try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext;
+      actx=new AC();
+    }catch(e){}
   }
   if(actx && actx.state==="suspended"){ actx.resume(); }
   return actx;
 }
 function tone(freq, dur, type, vol, when){
   var ac=ensureAudio(); if(!ac)return;
-  var t0=ac.currentTime+(when||0);
-  var osc=ac.createOscillator();
-  var g=ac.createGain();
-  osc.type=type||"sine";
-  osc.frequency.value=freq;
-  g.gain.setValueAtTime(0.0001,t0);
-  g.gain.exponentialRampToValueAtTime(vol||0.25,t0+0.015);
-  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
-  osc.connect(g); g.connect(ac.destination);
-  osc.start(t0); osc.stop(t0+dur+0.05);
+  try{
+    var t0=ac.currentTime+(when||0);
+    var osc=ac.createOscillator();
+    var g=ac.createGain();
+    osc.type=type||"sine";
+    osc.frequency.value=freq;
+    g.gain.setValueAtTime(0.0001,t0);
+    g.gain.exponentialRampToValueAtTime(vol||0.25,t0+0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+    osc.connect(g); g.connect(ac.destination);
+    osc.start(t0); osc.stop(t0+dur+0.05);
+  }catch(e){}
+}
+// 预解锁：任何触摸/点击都尝试唤醒 AudioContext（解决 iOS 无声）
+function unlockAudio(){
+  var ac=ensureAudio();
+  if(ac && ac.state==="suspended"){
+    ac.resume().then(function(){}).catch(function(){});
+  }
+  // 播一个极轻的“静音”声，强制建立音频通道
+  try{
+    if(ac){
+      var o=ac.createOscillator(), g=ac.createGain();
+      o.type="sine"; o.frequency.value=1; g.gain.value=0.0001;
+      o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime+0.02);
+    }
+  }catch(e){}
 }
 function playTap(num){
   // 点对：音调随数字升高（五声音阶更悦耳）
@@ -255,6 +275,7 @@ function buildMenu(){
 }
 
 function start(){
+  unlockAudio();
   N=selDiff;
   seq=MODES[selMode].seq(N);
   total=seq.length;
@@ -285,6 +306,7 @@ function start(){
 
 function onTap(el,v){
   if(finished) return;
+  unlockAudio();
   if(v===next){
     playTap(next);
     if(!running){ running=true; startT=performance.now(); raf=requestAnimationFrame(tick); }
@@ -333,6 +355,11 @@ document.getElementById("menuBtn2").addEventListener("click",function(){
   resultEl.style.display="none"; gameEl.style.display="none"; menuEl.style.display="flex";
 });
 document.getElementById("startBtn").addEventListener("click",function(){ start(); });
+
+// 全局首次触摸解锁音频（iOS 需要用户手势才能出声）
+["touchstart","touchend","mousedown","click"].forEach(function(evt){
+  document.addEventListener(evt, unlockAudio, {passive:true});
+});
 
 buildMenu();
 })();
