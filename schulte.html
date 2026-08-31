@@ -74,9 +74,10 @@
   #result .rtime{font-size:50px;font-weight:900;color:#0d9488;line-height:1.1;}
   #result .rbest{font-size:14px;color:#64748b;margin-top:10px;}
   #result .rnew{color:#f59e0b;font-weight:800;margin-top:6px;font-size:16px;}
-  #result .rgrade{margin-top:12px;font-size:22px;font-weight:900;padding:6px 0;}
-  #result .rgrade .lv{display:inline-block;padding:4px 18px;border-radius:999px;}
-  #result .rgrade .hint{display:block;font-size:11px;color:#94a3b8;font-weight:500;margin-top:6px;}
+  #result .rgrade{margin-top:14px;font-size:30px;font-weight:900;padding:8px 0;border-top:1px solid #e2e8f0;}
+  #result .rgrade .gtag{display:block;font-size:12px;color:#94a3b8;font-weight:600;letter-spacing:2px;margin-bottom:6px;}
+  #result .rgrade .lv{display:inline-block;padding:8px 28px;border-radius:999px;font-size:32px;}
+  #result .rgrade .hint{display:block;font-size:12px;color:#94a3b8;font-weight:500;margin-top:8px;}
   #result .rbtns{margin-top:18px;display:flex;gap:10px;justify-content:center;}
   #result button{border:none;border-radius:12px;padding:11px 20px;font-size:15px;font-weight:800;cursor:pointer;}
   #retryBtn{background:#0d9488;color:#fff;}
@@ -128,7 +129,7 @@
     <div class="rtime" id="rTime">0.000s</div>
     <div class="rbest" id="rBest"></div>
     <div class="rgrade" id="rGrade"></div>
-    <div class="rnew" id="rNew" style="display:none">🎉 新纪录！</div>
+    <div class="rnew" id="rNew" style="display:none">新纪录！</div>
     <div class="rbtns">
       <button id="retryBtn">再 来 一 次</button>
       <button id="menuBtn2">换 玩 法</button>
@@ -252,11 +253,11 @@ function getGrade(dt){
   var g=GRADE[selMode]||GRADE.order;
   var n=seq.length;
   var pro=g.s*n, good=g.p*n, ok=g.g*n, pass=g.m*n;
-  if(dt<=pro)  return {lv:"🌟 专业级", c:"#7c3aed", hint:"顶尖水平！达到飞行员/运动员标准"};
-  if(dt<=good) return {lv:"🏆 优秀", c:"#16a34a", hint:"反应又快又准，继续保持！"};
-  if(dt<=ok)   return {lv:"👍 良好", c:"#0d9488", hint:"不错，再练几次冲击优秀！"};
-  if(dt<=pass) return {lv:"✅ 及格", c:"#f59e0b", hint:"达标了，多练稳定在良好以上"};
-  return {lv:"💪 待提高", c:"#ef4444", hint:"别急，每天练 3-5 组进步很快"};
+  if(dt<=pro)  return {lv:"专业级", c:"#7c3aed", hint:"顶尖水平！达到飞行员/运动员标准"};
+  if(dt<=good) return {lv:"优秀", c:"#16a34a", hint:"反应又快又准，继续保持！"};
+  if(dt<=ok)   return {lv:"良好", c:"#0d9488", hint:"不错，再练几次冲击优秀！"};
+  if(dt<=pass) return {lv:"及格", c:"#f59e0b", hint:"达标了，多练稳定在良好以上"};
+  return {lv:"待提高", c:"#ef4444", hint:"别急，每天练 3-5 组进步很快"};
 }
 
 var menuEl=document.getElementById("menu");
@@ -369,7 +370,7 @@ function showResult(dt){
   document.getElementById("rNew").style.display = isNew?"block":"none";
   var gr=getGrade(dt);
   var gEl=document.getElementById("rGrade");
-  gEl.innerHTML='<span class="lv" style="background:'+gr.c+'22;color:'+gr.c+'">'+gr.lv+'</span><span class="hint">'+gr.hint+'</span>';
+  gEl.innerHTML='<span class="gtag">本次评级</span><span class="lv" style="background:'+gr.c+'22;color:'+gr.c+'">'+gr.lv+'</span><span class="hint">'+gr.hint+'</span>';
   resultEl.style.display="flex";
 }
 
