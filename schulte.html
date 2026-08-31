@@ -74,6 +74,9 @@
   #result .rtime{font-size:50px;font-weight:900;color:#0d9488;line-height:1.1;}
   #result .rbest{font-size:14px;color:#64748b;margin-top:10px;}
   #result .rnew{color:#f59e0b;font-weight:800;margin-top:6px;font-size:16px;}
+  #result .rgrade{margin-top:12px;font-size:22px;font-weight:900;padding:6px 0;}
+  #result .rgrade .lv{display:inline-block;padding:4px 18px;border-radius:999px;}
+  #result .rgrade .hint{display:block;font-size:11px;color:#94a3b8;font-weight:500;margin-top:6px;}
   #result .rbtns{margin-top:18px;display:flex;gap:10px;justify-content:center;}
   #result button{border:none;border-radius:12px;padding:11px 20px;font-size:15px;font-weight:800;cursor:pointer;}
   #retryBtn{background:#0d9488;color:#fff;}
@@ -124,6 +127,7 @@
     <div class="rt">本次用时</div>
     <div class="rtime" id="rTime">0.000s</div>
     <div class="rbest" id="rBest"></div>
+    <div class="rgrade" id="rGrade"></div>
     <div class="rnew" id="rNew" style="display:none">🎉 新纪录！</div>
     <div class="rbtns">
       <button id="retryBtn">再 来 一 次</button>
@@ -234,6 +238,26 @@ function playFinish(){
   notes.forEach(function(f,i){ tone(f,0.22,"sine",0.26,ts[i]); });
 }
 
+// ===== 评级（基于 5×5 中国玩家参考时间反推单数字耗时）=====
+// 每玩法定义「优秀」「良好」「及格」的单数字耗时（秒/个），乘要点个数得总时长
+var GRADE={
+  order:  {p:0.60, g:0.80, m:1.00},  // 顺序 5×5：优秀15s/25个≈0.6
+  reverse:{p:0.80, g:1.05, m:1.30},  // 倒序 优秀20s
+  odd:    {p:0.90, g:1.20, m:1.55},  // 奇数 优秀12s/13个≈0.92
+  even:   {p:0.90, g:1.20, m:1.55},
+  step3:  {p:1.05, g:1.40, m:1.80},  // 跳三 优秀10s/9个≈1.1
+  prime:  {p:1.05, g:1.40, m:1.80}   // 质数 要想，稍慢
+};
+function getGrade(dt){
+  var g=GRADE[selMode]||GRADE.order;
+  var n=seq.length; // 实际要点个数
+  var good=g.p*n, ok=g.g*n, pass=g.m*n;
+  if(dt<=good) return {lv:"🏆 优秀", c:"#16a34a", hint:"反应又快又准，继续保持！"};
+  if(dt<=ok)   return {lv:"👍 良好", c:"#0d9488", hint:"不错，再练几次冲击优秀！"};
+  if(dt<=pass) return {lv:"✅ 及格", c:"#f59e0b", hint:"达标了，多练稳定在良好以上"};
+  return {lv:"💪 待提高", c:"#ef4444", hint:"别急，每天练 3-5 组进步很快"};
+}
+
 var menuEl=document.getElementById("menu");
 var gameEl=document.getElementById("game");
 var gridEl=document.getElementById("grid");
@@ -342,6 +366,9 @@ function showResult(dt){
     ? "用时 "+dt.toFixed(3)+"s"
     : ("最佳纪录 "+b.toFixed(3)+"s");
   document.getElementById("rNew").style.display = isNew?"block":"none";
+  var gr=getGrade(dt);
+  var gEl=document.getElementById("rGrade");
+  gEl.innerHTML='<span class="lv" style="background:'+gr.c+'22;color:'+gr.c+'">'+gr.lv+'</span><span class="hint">'+gr.hint+'</span>';
   resultEl.style.display="flex";
 }
 
