@@ -77,8 +77,10 @@
   #result .rgrade{margin-top:14px;padding:10px 0 4px;border-top:1px solid #e2e8f0;}
   #result .rgrade .gtag{display:block;font-size:12px;color:#94a3b8;font-weight:600;letter-spacing:2px;margin-bottom:10px;}
   #result .rgrade .scale{display:flex;justify-content:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
-  #result .rgrade .chip{padding:6px 14px;border-radius:10px;font-size:14px;font-weight:700;background:#f1f5f9;color:#94a3b8;transition:.15s;}
-  #result .rgrade .chip.active{background:#ef4444;color:#fff;font-size:17px;font-weight:900;box-shadow:0 3px 0 #b91c1c;transform:scale(1.1);}
+  #result .rgrade .chip{padding:6px 9px;border-radius:10px;font-size:14px;font-weight:700;background:#f1f5f9;color:#94a3b8;display:flex;flex-direction:column;align-items:center;line-height:1.25;transition:.15s;}
+  #result .rgrade .chip .ct{font-size:10px;font-weight:500;opacity:.8;margin-top:2px;font-style:normal;}
+  #result .rgrade .chip.active{background:#ef4444;color:#fff;font-size:16px;font-weight:900;box-shadow:0 3px 0 #b91c1c;transform:scale(1.08);}
+  #result .rgrade .chip.active .ct{color:#fff;opacity:.9;}
   #result .rgrade .lv{display:inline-block;padding:8px 30px;border-radius:999px;font-size:34px;background:#ef4444;color:#fff;font-weight:900;box-shadow:0 4px 0 #b91c1c;}
   #result .rgrade .hint{display:block;font-size:12px;color:#94a3b8;font-weight:500;margin-top:10px;}
   #result .rbtns{margin-top:18px;display:flex;gap:10px;justify-content:center;}
@@ -373,8 +375,18 @@ function showResult(dt){
   document.getElementById("rNew").style.display = isNew?"block":"none";
   var gr=getGrade(dt);
   var gEl=document.getElementById("rGrade");
-  var LEVELS=['专业级','优秀','良好','及格','待提高'];
-  var chips=LEVELS.map(function(lv){return '<span class="chip'+(lv===gr.lv?' active':'')+'">'+lv+'</span>';}).join('');
+  var g=GRADE[selMode]||GRADE.order;
+  var n=seq.length;
+  var pro=g.s*n, good=g.p*n, ok=g.g*n, pass=g.m*n;
+  function fmtSec(x){ var r=Math.round(x*10)/10; return (r%1===0)?String(r):r.toFixed(1); }
+  var LEVELS=[
+    {lv:'专业级', t:'≤'+fmtSec(pro)+'秒'},
+    {lv:'优秀', t:'≤'+fmtSec(good)+'秒'},
+    {lv:'良好', t:'≤'+fmtSec(ok)+'秒'},
+    {lv:'及格', t:'≤'+fmtSec(pass)+'秒'},
+    {lv:'待提高', t:'>'+fmtSec(pass)+'秒'}
+  ];
+  var chips=LEVELS.map(function(o){return '<span class="chip'+(o.lv===gr.lv?' active':'')+'">'+o.lv+'<i class="ct">'+o.t+'</i></span>';}).join('');
   gEl.innerHTML='<span class="gtag">本次评级</span><div class="scale">'+chips+'</div><span class="lv">'+gr.lv+'</span><span class="hint">'+gr.hint+'</span>';
   resultEl.style.display="flex";
 }
