@@ -35,6 +35,11 @@
   .opt .nm{font-size:13px;font-weight:800;}
   .opt .ds{font-size:9px;color:#cffafe;margin-top:1px;opacity:.85;line-height:1.3;}
   .opt:active{transform:scale(.95);}
+  #startBtn{width:100%;max-width:500px;padding:14px;border:none;border-radius:14px;
+    background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;font-size:20px;font-weight:900;
+    cursor:pointer;margin-top:2px;box-shadow:0 5px 0 #b45309,0 10px 20px rgba(0,0,0,.25);
+    letter-spacing:3px;text-shadow:0 2px 0 rgba(0,0,0,.15);position:relative;z-index:1;}
+  #startBtn:active{transform:scale(.97);box-shadow:0 2px 0 #b45309;}
 
   #game{position:fixed;inset:0;z-index:10;display:none;flex-direction:column;align-items:center;
     justify-content:center;padding:12px;}
@@ -98,6 +103,7 @@
     <h2>📐 选择难度</h2>
     <div class="grid" id="diffGrid"></div>
   </div>
+  <button id="startBtn">▶ 开 始 训 练</button>
 </div>
 
 <div id="game">
@@ -280,6 +286,7 @@ document.getElementById("menuBtn2").addEventListener("click",function(){
   cancelAnimationFrame(raf);
   resultEl.style.display="none"; gameEl.style.display="none"; menuEl.style.display="flex";
 });
+document.getElementById("startBtn").addEventListener("click",function(){ start(); });
 
 buildMenu();
 })();
