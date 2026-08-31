@@ -74,10 +74,13 @@
   #result .rtime{font-size:50px;font-weight:900;color:#0d9488;line-height:1.1;}
   #result .rbest{font-size:14px;color:#64748b;margin-top:10px;}
   #result .rnew{color:#f59e0b;font-weight:800;margin-top:6px;font-size:16px;}
-  #result .rgrade{margin-top:14px;font-size:30px;font-weight:900;padding:8px 0;border-top:1px solid #e2e8f0;}
-  #result .rgrade .gtag{display:block;font-size:12px;color:#94a3b8;font-weight:600;letter-spacing:2px;margin-bottom:6px;}
-  #result .rgrade .lv{display:inline-block;padding:8px 28px;border-radius:999px;font-size:32px;}
-  #result .rgrade .hint{display:block;font-size:12px;color:#94a3b8;font-weight:500;margin-top:8px;}
+  #result .rgrade{margin-top:14px;padding:10px 0 4px;border-top:1px solid #e2e8f0;}
+  #result .rgrade .gtag{display:block;font-size:12px;color:#94a3b8;font-weight:600;letter-spacing:2px;margin-bottom:10px;}
+  #result .rgrade .scale{display:flex;justify-content:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  #result .rgrade .chip{padding:6px 14px;border-radius:10px;font-size:14px;font-weight:700;background:#f1f5f9;color:#94a3b8;transition:.15s;}
+  #result .rgrade .chip.active{background:#ef4444;color:#fff;font-size:17px;font-weight:900;box-shadow:0 3px 0 #b91c1c;transform:scale(1.1);}
+  #result .rgrade .lv{display:inline-block;padding:8px 30px;border-radius:999px;font-size:34px;background:#ef4444;color:#fff;font-weight:900;box-shadow:0 4px 0 #b91c1c;}
+  #result .rgrade .hint{display:block;font-size:12px;color:#94a3b8;font-weight:500;margin-top:10px;}
   #result .rbtns{margin-top:18px;display:flex;gap:10px;justify-content:center;}
   #result button{border:none;border-radius:12px;padding:11px 20px;font-size:15px;font-weight:800;cursor:pointer;}
   #retryBtn{background:#0d9488;color:#fff;}
@@ -370,7 +373,9 @@ function showResult(dt){
   document.getElementById("rNew").style.display = isNew?"block":"none";
   var gr=getGrade(dt);
   var gEl=document.getElementById("rGrade");
-  gEl.innerHTML='<span class="gtag">本次评级</span><span class="lv" style="background:'+gr.c+'22;color:'+gr.c+'">'+gr.lv+'</span><span class="hint">'+gr.hint+'</span>';
+  var LEVELS=['专业级','优秀','良好','及格','待提高'];
+  var chips=LEVELS.map(function(lv){return '<span class="chip'+(lv===gr.lv?' active':'')+'">'+lv+'</span>';}).join('');
+  gEl.innerHTML='<span class="gtag">本次评级</span><div class="scale">'+chips+'</div><span class="lv">'+gr.lv+'</span><span class="hint">'+gr.hint+'</span>';
   resultEl.style.display="flex";
 }
 
