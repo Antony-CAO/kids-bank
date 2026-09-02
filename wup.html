@@ -105,13 +105,19 @@
   .notice{background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:10px 12px;font-size:12px;
     color:#854d0e;margin-bottom:12px;line-height:1.6;}
   .notice b{color:#b45309;}
+
+  .settings{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:10px 14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+  .settings .slabel{font-size:13px;font-weight:700;color:#64748b;white-space:nowrap;}
+  .settings .sbtns{display:flex;gap:6px;flex:1;}
+  .settings .sbtn{flex:1;padding:7px 0;border-radius:8px;border:2px solid #e2e8f0;background:#fff;color:#64748b;font-size:13px;font-weight:800;cursor:pointer;transition:.12s;}
+  .settings .sbtn.on{border-color:#4f46e5;background:#eef2ff;color:#4f46e5;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>📚 五年级英语 · 每日背默</h1>
-    <div class="sub">全册 132 词 · 每天 10 个 · 共 14 天</div>
+    <div class="sub" id="progDays">全册 132 词 · 每天 10 个 · 共 14 天</div>
     <div class="progress">
       <div class="bar"><i id="progBar"></i></div>
       <span class="txt" id="progTxt">0/14 天</span>
@@ -127,6 +133,14 @@
   <main>
     <!-- 今日任务 -->
     <div class="page on" id="page-plan">
+      <div class="settings">
+        <span class="slabel">每天背默</span>
+        <div class="sbtns" id="perBtns">
+          <div class="sbtn" data-p="5">5 个</div>
+          <div class="sbtn" data-p="10">10 个</div>
+          <div class="sbtn" data-p="15">15 个</div>
+        </div>
+      </div>
       <div class="notice" id="noticeRec">🎤 <b>发音纠正说明：</b>「背诵」页每个词都有 <b>🔊 标准发音</b>（手机都能用）和 <b>🎤 跟读打分</b>（需 Chrome/Edge 浏览器，微信内置浏览器不支持跟读识别，但标准发音可用）。</div>
       <div class="daycard">
         <div class="dayhead">
@@ -140,7 +154,7 @@
         </div>
       </div>
       <div class="daycard">
-        <div class="daytitle" style="font-size:15px;color:#64748b;margin-bottom:10px;">🗓️ 打卡进度（14 天）</div>
+        <div class="daytitle" id="calTitle" style="font-size:15px;color:#64748b;margin-bottom:10px;">🗓️ 打卡进度</div>
         <div class="cal" id="calendar"></div>
       </div>
     </div>
@@ -340,19 +354,25 @@ var UNITS=[
 
 var WORDS=[];
 UNITS.forEach(function(u){ WORDS=WORDS.concat(u.words); });
-var PER=10;
-var TOTAL_DAYS=Math.ceil(WORDS.length/PER); // 14
+var DEFAULT_PER=10;
 
 // ===== 存储 =====
-var LSKEY_DONE="wup_done_days";      // 已完成的天数（连续）
-var LSKEY_MEM="wup_mem_idx";         // 当前背诵到第几天
-function getDone(){ var v=localStorage.getItem(LSKEY_DONE); return v?parseInt(v):0; }
+var LSKEY_PER="wup_per";
+var LSKEY_DONE="wup_done_words";    // 已连续掌握的单词数
+var LSKEY_MEM="wup_mem_idx";
+
+function getPer(){ var v=parseInt(localStorage.getItem(LSKEY_PER)); return (v===5||v===15)?v:DEFAULT_PER; }
+function setPer(p){ localStorage.setItem(LSKEY_PER,String(p)); }
+function getDone(){ var v=parseInt(localStorage.getItem(LSKEY_DONE)); return v>0?v:0; }
 function setDone(d){ localStorage.setItem(LSKEY_DONE,String(d)); }
-function getMemIdx(){ var v=localStorage.getItem(LSKEY_MEM); return v?parseInt(v):(getDone()+1); }
+function getMemIdx(){ var v=localStorage.getItem(LSKEY_MEM); return v?parseInt(v):0; }
 function setMemIdx(d){ localStorage.setItem(LSKEY_MEM,String(d)); }
 
-// ===== 当前天数 =====
-var curDay=Math.min(getDone()+1, TOTAL_DAYS);
+var PER=getPer();
+var TOTAL_DAYS=Math.ceil(WORDS.length/PER);
+
+// 当前天（从已掌握单词数推）
+function curDay(){ return Math.min(Math.floor(getDone()/PER)+1, TOTAL_DAYS); }
 function dayWords(d){ var s=(d-1)*PER; return WORDS.slice(s, s+PER); }
 
 // ===== 元素 =====
@@ -373,19 +393,25 @@ document.querySelectorAll("nav .tab").forEach(function(t){
 // ===== 进度条 =====
 function updateProgress(){
   var done=getDone();
-  $("progBar").style.width=(done/TOTAL_DAYS*100)+"%";
-  $("progTxt").textContent=done+"/"+TOTAL_DAYS+" 天";
+  var pct=Math.min(100, done/WORDS.length*100);
+  $("progBar").style.width=pct+"%";
+  var doneDays=Math.floor(done/PER);
+  $("progTxt").textContent=doneDays+"/"+TOTAL_DAYS+" 天";
+  $("progDays").textContent="全册 "+WORDS.length+" 词 · 每天 "+PER+" 个 · 共 "+TOTAL_DAYS+" 天";
+  $("calTitle").textContent="🗓️ 打卡进度（"+TOTAL_DAYS+" 天）";
 }
 
 // ===== 日历 =====
 function renderCalendar(){
   var done=getDone();
+  var doneDays=Math.floor(done/PER);
+  var today=curDay();
   var cal=$("calendar"); cal.innerHTML="";
   for(var i=1;i<=TOTAL_DAYS;i++){
     var d=document.createElement("div");
     d.className="d";
-    if(i<=done) d.classList.add("done");
-    else if(i===done+1) d.classList.add("today");
+    if(i<=doneDays) d.classList.add("done");
+    else if(i===today) d.classList.add("today");
     else d.classList.add("lock");
     d.textContent=i;
     d.title="第"+i+"天";
@@ -395,11 +421,12 @@ function renderCalendar(){
 
 // ===== 今日任务 =====
 function renderToday(){
-  curDay=Math.min(getDone()+1, TOTAL_DAYS);
-  var words=dayWords(curDay);
-  $("dayTitle").textContent="第 "+curDay+" 天（"+(words.length)+" 个词）";
+  var d=curDay();
+  var words=dayWords(d);
+  $("dayTitle").textContent="第 "+d+" 天（"+(words.length)+" 个词）";
   var tag=$("doneTag");
-  if(getDone()>=curDay){ tag.style.display="inline-block"; } else { tag.style.display="none"; }
+  var doneDays=Math.floor(getDone()/PER);
+  if(doneDays>=d){ tag.style.display="inline-block"; } else { tag.style.display="none"; }
   var list=$("todayList"); list.innerHTML="";
   words.forEach(function(w,i){
     var row=document.createElement("div"); row.className="word-row";
@@ -408,12 +435,21 @@ function renderToday(){
   });
   updateProgress();
   renderCalendar();
+  renderPerBtns();
+}
+
+// ===== 每天词数按钮 =====
+function renderPerBtns(){
+  document.querySelectorAll("#perBtns .sbtn").forEach(function(b){
+    var p=parseInt(b.dataset.p);
+    if(p===PER) b.classList.add("on"); else b.classList.remove("on");
+  });
 }
 
 // ===== 背诵 =====
 var memIdx=0, memWords=[];
 function renderMem(){
-  memWords=dayWords(curDay);
+  memWords=dayWords(curDay());
   if(memIdx>=memWords.length) memIdx=0;
   showMemCard();
 }
@@ -500,7 +536,7 @@ function doListen(){
 var quizSubmitted=false;
 function renderQuiz(){
   quizSubmitted=false;
-  var words=dayWords(curDay);
+  var words=dayWords(curDay());
   var list=$("quizList"); list.innerHTML="";
   $("quizScore").textContent="共 "+words.length+" 题";
   words.forEach(function(w,i){
@@ -519,7 +555,7 @@ function renderQuiz(){
   });
 }
 function submitQuiz(){
-  var words=dayWords(curDay);
+  var words=dayWords(curDay());
   var inputs=$("quizList").querySelectorAll("input");
   var right=0, total=words.length;
   inputs.forEach(function(inp){
@@ -540,10 +576,11 @@ function submitQuiz(){
   $("quizScore").textContent="得分 "+right+"/"+total;
   // 全对则自动打卡
   if(right===total){
-    var done=getDone();
-    if(curDay>done){ setDone(curDay); }
+    var d=curDay();
+    var target=d*PER;
+    if(getDone()<target){ setDone(target); }
     renderToday();
-    setTimeout(function(){ alert('🎉 太棒了！第 '+curDay+' 天 10 个单词全部默写正确，已打卡！\n明天继续第 '+(curDay+1)+' 天～'); },300);
+    setTimeout(function(){ alert('🎉 太棒了！第 '+d+' 天 '+words.length+' 个单词全部默写正确，已打卡！\n明天继续第 '+(d+1)+' 天～'); },300);
   }
 }
 
@@ -567,6 +604,19 @@ $("micBtn").addEventListener("click",doListen);
 $("prevBtn").addEventListener("click",function(){ if(memIdx>0){memIdx--;showMemCard();} });
 $("nextBtn").addEventListener("click",function(){ if(memIdx<memWords.length-1){memIdx++;showMemCard();} });
 $("submitBtn").addEventListener("click",submitQuiz);
+
+// ===== 每天词数切换 =====
+document.querySelectorAll("#perBtns .sbtn").forEach(function(b){
+  b.addEventListener("click",function(){
+    var p=parseInt(b.dataset.p);
+    if(p===PER) return;
+    PER=p;
+    setPer(p);
+    TOTAL_DAYS=Math.ceil(WORDS.length/PER);
+    memIdx=0;
+    renderToday();
+  });
+});
 
 // 初始化
 renderToday();
