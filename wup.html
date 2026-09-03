@@ -111,6 +111,32 @@
   .settings .sbtns{display:flex;gap:6px;flex:1;}
   .settings .sbtn{flex:1;padding:7px 0;border-radius:8px;border:2px solid #e2e8f0;background:#fff;color:#64748b;font-size:13px;font-weight:800;cursor:pointer;transition:.12s;}
   .settings .sbtn.on{border-color:#4f46e5;background:#eef2ff;color:#4f46e5;}
+
+  /* 报告页 */
+  .report-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-bottom:12px;}
+  .report-card .rhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .report-card .rtitle{font-size:16px;font-weight:900;color:#4f46e5;}
+  .report-card .rtime{font-size:12px;color:#94a3b8;}
+  .big-score{text-align:center;padding:14px;background:#f8fafc;border-radius:12px;margin-bottom:12px;}
+  .big-score .num{font-size:42px;font-weight:900;color:#4f46e5;line-height:1;}
+  .big-score .den{font-size:15px;color:#94a3b8;margin-top:4px;}
+  .big-score .verdict{font-size:15px;font-weight:800;margin-top:6px;}
+  .verdict.great{color:#16a34a;}
+  .verdict.good{color:#0d9488;}
+  .verdict.mid{color:#f59e0b;}
+  .verdict.low{color:#ef4444;}
+  .report-meta{display:flex;gap:8px;margin-bottom:12px;}
+  .report-meta .m{flex:1;background:#eef2ff;border-radius:8px;padding:8px;text-align:center;}
+  .report-meta .m .v{font-size:17px;font-weight:900;color:#4f46e5;}
+  .report-meta .m .k{font-size:11px;color:#64748b;margin-top:2px;}
+  .wrong-list{}
+  .wrong-list .wtitle{font-size:13px;font-weight:800;color:#ef4444;margin-bottom:6px;}
+  .wrong-list .wrow{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed #f1f5f9;font-size:14px;}
+  .wrong-list .wrow .en{font-weight:700;color:#1e293b;}
+  .wrong-list .wrow .zh{color:#64748b;}
+  .empty-hint{color:#94a3b8;font-size:13px;text-align:center;padding:20px 0;}
+  .clear-btn{display:block;margin:8px auto 0;border:none;background:#fee2e2;color:#dc2626;font-size:12px;font-weight:700;padding:6px 14px;border-radius:8px;cursor:pointer;}
+  .clear-btn:active{transform:scale(.97);}
 </style>
 </head>
 <body>
@@ -128,6 +154,7 @@
     <div class="tab on" data-t="plan">📅 今日任务</div>
     <div class="tab" data-t="mem">📖 背诵</div>
     <div class="tab" data-t="quiz">✍️ 默写</div>
+    <div class="tab" data-t="report">📊 报告</div>
   </nav>
 
   <main>
@@ -190,6 +217,13 @@
         <span class="score" id="quizScore">得分 0/0</span>
         <div class="btn btn-primary" id="submitBtn">📝 交卷</div>
       </div>
+    </div>
+
+    <!-- 报告 -->
+    <div class="page" id="page-report">
+      <div class="notice">📊 孩子每完成一次默写，这里就会记录一条成绩，家长可随时查看完成情况。</div>
+      <div id="reportList"></div>
+      <button class="clear-btn" id="clearReport" style="display:none">🗑️ 清空全部记录</button>
     </div>
   </main>
 </div>
@@ -360,6 +394,7 @@ var DEFAULT_PER=10;
 var LSKEY_PER="wup_per";
 var LSKEY_DONE="wup_done_words";    // 已连续掌握的单词数
 var LSKEY_MEM="wup_mem_idx";
+var LSKEY_LOG="wup_quiz_log";       // 默写成绩记录
 
 function getPer(){ var v=parseInt(localStorage.getItem(LSKEY_PER)); return (v===5||v===15)?v:DEFAULT_PER; }
 function setPer(p){ localStorage.setItem(LSKEY_PER,String(p)); }
@@ -367,6 +402,9 @@ function getDone(){ var v=parseInt(localStorage.getItem(LSKEY_DONE)); return v>0
 function setDone(d){ localStorage.setItem(LSKEY_DONE,String(d)); }
 function getMemIdx(){ var v=localStorage.getItem(LSKEY_MEM); return v?parseInt(v):0; }
 function setMemIdx(d){ localStorage.setItem(LSKEY_MEM,String(d)); }
+function getLog(){ try{ var v=JSON.parse(localStorage.getItem(LSKEY_LOG)); return Array.isArray(v)?v:[]; }catch(e){ return []; } }
+function addLog(rec){ var l=getLog(); l.unshift(rec); if(l.length>100) l=l.slice(0,100); localStorage.setItem(LSKEY_LOG,JSON.stringify(l)); }
+function clearLog(){ localStorage.removeItem(LSKEY_LOG); }
 
 var PER=getPer();
 var TOTAL_DAYS=Math.ceil(WORDS.length/PER);
@@ -387,6 +425,7 @@ document.querySelectorAll("nav .tab").forEach(function(t){
     $("page-"+t.dataset.t).classList.add("on");
     if(t.dataset.t==="mem") renderMem();
     if(t.dataset.t==="quiz") renderQuiz();
+    if(t.dataset.t==="report") renderReport();
   });
 });
 
@@ -534,8 +573,10 @@ function doListen(){
 
 // ===== 默写 =====
 var quizSubmitted=false;
+var quizStartTime=0;
 function renderQuiz(){
   quizSubmitted=false;
+  quizStartTime=Date.now();
   var words=dayWords(curDay());
   var list=$("quizList"); list.innerHTML="";
   $("quizScore").textContent="共 "+words.length+" 题";
@@ -558,6 +599,7 @@ function submitQuiz(){
   var words=dayWords(curDay());
   var inputs=$("quizList").querySelectorAll("input");
   var right=0, total=words.length;
+  var wrongWords=[];
   inputs.forEach(function(inp){
     var i=parseInt(inp.dataset.i);
     var w=words[i];
@@ -570,19 +612,84 @@ function submitQuiz(){
     inp.classList.remove(ok?"wrong":"right");
     fb.classList.add("show");
     if(ok){ fb.className="fb show ok"; fb.textContent="✔ 正确！"; right++; }
-    else { fb.className="fb show no"; fb.textContent="✘ 拼写错误"; al.textContent="正确答案："+w.en; }
+    else { fb.className="fb show no"; fb.textContent="✘ 拼写错误"; al.textContent="正确答案："+w.en; wrongWords.push({en:w.en, zh:w.zh}); }
   });
   quizSubmitted=true;
   $("quizScore").textContent="得分 "+right+"/"+total;
+
+  // 用时
+  var used=Math.round((Date.now()-quizStartTime)/1000);
+  var mm=Math.floor(used/60), ss=used%60;
+  var usedStr=(mm>0?mm+"分":"")+ss+"秒";
+
+  // 保存成绩记录
+  var d=curDay();
+  var rec={ day:d, right:right, total:total, wrong:wrongWords, used:used, usedStr:usedStr, ts:Date.now() };
+  addLog(rec);
+
   // 全对则自动打卡
   if(right===total){
-    var d=curDay();
     var target=d*PER;
     if(getDone()<target){ setDone(target); }
     renderToday();
-    setTimeout(function(){ alert('🎉 太棒了！第 '+d+' 天 '+words.length+' 个单词全部默写正确，已打卡！\n明天继续第 '+(d+1)+' 天～'); },300);
+    setTimeout(function(){ alert('🎉 太棒了！第 '+d+' 天 '+words.length+' 个单词全部默写正确，已打卡！\n已完成情况已记入「📊 报告」，家长可查看～'); },300);
+  } else {
+    // 未全对也提示，并引导看报告
+    setTimeout(function(){
+      alert('第 '+d+' 天默写完成：答对 '+right+'/'+total+' 题。\n错词已记录在「📊 报告」里，家长可查看。\n建议把错词再练一遍再打卡哦～');
+    },300);
   }
 }
+
+// ===== 报告 =====
+function verdictOf(rate){
+  if(rate>=90) return {t:'🎉 优秀！', c:'great'};
+  if(rate>=70) return {t:'👍 良好', c:'good'};
+  if(rate>=40) return {t:'💪 加油', c:'mid'};
+  return {t:'📖 需加强', c:'low'};
+}
+function fmtTime(ts){
+  var dt=new Date(ts);
+  var p=function(n){return (n<10?"0":"")+n;};
+  return (dt.getMonth()+1)+"月"+dt.getDate()+"日 "+p(dt.getHours())+":"+p(dt.getMinutes());
+}
+function renderReport(){
+  var list=$("reportList");
+  var logs=getLog();
+  var clearBtn=$("clearReport");
+  if(logs.length===0){
+    list.innerHTML='<div class="empty-hint">还没有默写记录。\n让孩子完成一次默写，成绩就会显示在这里。</div>';
+    clearBtn.style.display="none";
+    return;
+  }
+  clearBtn.style.display="block";
+  list.innerHTML="";
+  logs.forEach(function(rec){
+    var rate=Math.round(rec.right/rec.total*100);
+    var v=verdictOf(rate);
+    var card=document.createElement("div"); card.className="report-card";
+    var html='<div class="rhead"><div class="rtitle">第 '+rec.day+' 天 · 默写</div><div class="rtime">'+fmtTime(rec.ts)+'</div></div>';
+    html+='<div class="big-score"><div class="num">'+rec.right+'<span style="font-size:22px;color:#94a3b8"> / '+rec.total+'</span></div>';
+    html+='<div class="den">用时 '+rec.usedStr+'</div>';
+    html+='<div class="verdict '+v.c+'">'+v.t+'</div></div>';
+    html+='<div class="report-meta"><div class="m"><div class="v">'+rate+'%</div><div class="k">正确率</div></div>';
+    html+='<div class="m"><div class="v">'+rec.right+'</div><div class="k">答对</div></div>';
+    html+='<div class="m"><div class="v">'+(rec.total-rec.right)+'</div><div class="k">答错</div></div></div>';
+    if(rec.wrong && rec.wrong.length>0){
+      html+='<div class="wrong-list"><div class="wtitle">✘ 本次错词（'+(rec.wrong.length)+' 个）</div>';
+      rec.wrong.forEach(function(w){ html+='<div class="wrow"><span class="en">'+w.en+'</span><span class="zh">'+w.zh+'</span></div>'; });
+      html+='</div>';
+    } else {
+      html+='<div class="wrong-list"><div class="wtitle" style="color:#16a34a">✔ 全对，无错词</div></div>';
+    }
+    html+='</div>';
+    card.innerHTML=html;
+    list.appendChild(card);
+  });
+}
+$("clearReport").addEventListener("click",function(){
+  if(confirm("确定清空全部默写记录吗？")){ clearLog(); renderReport(); }
+});
 
 // ===== 事件 =====
 $("goMem").addEventListener("click",function(){
