@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>三要素性格分析系统 · 星座 × 四象 × MBTI</title>
+<style>
+:root{
+  --bg:#faf8f4; --card:#ffffff; --dark:#1e293b; --gray:#64748b; --line:#e5e2d7;
+  --fire:#e15a37; --earth:#a57d2d; --air:#3787af; --water:#5a64b4;
+  --nt:#5064b4; --nf:#9664be; --sj:#328a5a; --sp:#dc8c28;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,"PingFang SC","Hiragino Sans GB","STHeiti","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--dark);line-height:1.6}
+.wrap{max-width:520px;margin:0 auto;padding:0 16px 40px}
+
+/* 顶部 */
+header{background:linear-gradient(135deg,#1e293b,#334155);color:#fff;padding:34px 20px 28px;text-align:center;border-radius:0 0 22px 22px}
+header h1{font-size:24px;letter-spacing:1px}
+header p{font-size:13px;color:#cbd5e1;margin-top:6px}
+header .badge{display:inline-block;margin-top:10px;font-size:12px;background:rgba(255,255,255,.15);padding:3px 12px;border-radius:20px}
+
+/* 输入区 */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:18px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.card h2{font-size:16px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card h2 .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+label{font-size:13px;color:var(--gray);display:block;margin-bottom:6px;margin-top:12px}
+label:first-of-type{margin-top:0}
+select{width:100%;height:46px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:15px;background:#fff;color:var(--dark);appearance:none;-webkit-appearance:none}
+.row{display:flex;gap:8px}
+.row select{flex:1}
+.opt-hint{font-size:12px;color:#aab;margin-top:4px}
+.btn{width:100%;height:52px;border:none;border-radius:14px;font-size:17px;font-weight:600;color:#fff;background:linear-gradient(135deg,#4f46e5,#7c3aed);margin-top:18px;letter-spacing:2px}
+.btn:active{opacity:.85}
+.reset{width:100%;height:40px;border:1px solid var(--line);border-radius:10px;font-size:14px;color:var(--gray);background:#fff;margin-top:10px}
+
+/* 结果区 */
+.tag{display:inline-block;font-size:12px;padding:3px 10px;border-radius:20px;color:#fff;margin-right:6px;margin-bottom:4px}
+.hero{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;margin-top:18px;text-align:center}
+.hero .z-name{font-size:34px;font-weight:700}
+.hero .z-sub{font-size:14px;color:var(--gray);margin-top:4px}
+.hero .z-ele{font-size:15px;margin-top:12px}
+.hero .z-ele b{padding:2px 10px;border-radius:8px;color:#fff;font-weight:600}
+.block{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:14px}
+.block h3{font-size:15px;margin-bottom:10px;padding-left:10px;border-left:4px solid;line-height:1.3}
+.block p{font-size:14px;color:#475569;margin-bottom:6px}
+.pill{display:inline-block;background:#f1f5f9;border:1px solid #e2e8f0;color:#334155;font-size:12px;padding:3px 10px;border-radius:20px;margin:2px 3px}
+.pill.hot{background:#fff1f2;border-color:#fecdd3;color:#be123c}
+.match-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.match-item{flex:1;min-width:100px;text-align:center;padding:10px 6px;border-radius:10px;color:#fff;font-size:13px}
+.note{margin-top:16px;background:#f3efe6;border-radius:12px;padding:12px 14px;font-size:12px;color:#5b5144}
+.hidden{display:none}
+.footer{text-align:center;font-size:11px;color:#aab;margin-top:24px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>三要素性格分析系统</h1>
+  <p>星座 × 四象 × MBTI · 特点与配对</p>
+  <span class="badge">填出生年月即可 · MBTI 可加可不加</span>
+</header>
+
+<div class="wrap">
+
+  <!-- 首页：输入 -->
+  <div id="home">
+    <div class="card">
+      <h2><span class="dot" style="background:var(--fire)"></span>输入你的信息</h2>
+      <label>出生年月日（阳历）· 必填</label>
+      <div class="row">
+        <select id="y"></select>
+        <select id="m"></select>
+        <select id="d"></select>
+      </div>
+      <div class="opt-hint">由出生日期自动得出你的星座和四象</div>
+
+      <label>MBTI 类型 · 可选（可不填）</label>
+      <select id="mbti">
+        <option value="">— 不填（跳过 MBTI）—</option>
+      </select>
+      <div class="opt-hint">不知道自己的类型可先跳过，只看星座四象</div>
+
+      <button class="btn" onclick="analyze()">开始分析</button>
+    </div>
+  </div>
+
+  <!-- 结果 -->
+  <div id="result" class="hidden"></div>
+
+  <div class="footer">本系统仅供娱乐参考，性格无好坏之分</div>
+</div>
+
+<script>
+// ============ 数据 ============
+const ZODIAC = [
+ {n:'白羊座',e:'火象',d:'3.21 - 4.19',c:'#e15a37',
+  t:'热情直率、行动力强、敢闯敢拼、充满活力，但有时冲动急躁、三分钟热度。',
+  s:'红色', num:'1', mb:'ENFP / ESTP / ESFP'},
+ {n:'金牛座',e:'土象',d:'4.20 - 5.20',c:'#a57d2d',
+  t:'务实稳重、踏实可靠、懂得享受生活，对金钱和安全感很看重，但有时固执。',
+  s:'绿色', num:'2', mb:'ISTJ / ESTJ / ISFJ'},
+ {n:'双子座',e:'风象',d:'5.21 - 6.21',c:'#3787af',
+  t:'聪明灵活、口才好、好奇心强、善于交流，但有时善变、不够专注。',
+  s:'黄色', num:'3', mb:'ENTP / INTP / ENFP'},
+ {n:'巨蟹座',e:'水象',d:'6.22 - 7.22',c:'#5a64b4',
+  t:'温柔体贴、顾家念旧、情感细腻、有很强的同理心，但有时敏感多疑。',
+  s:'银白', num:'4', mb:'INFJ / ISFJ / INFP'},
+ {n:'狮子座',e:'火象',d:'7.23 - 8.22',c:'#e15a37',
+  t:'自信大方、热情慷慨、天生有领导气质、爱面子，但有时自我中心。',
+  s:'金色', num:'5', mb:'ENFJ / ESFP / ENTJ'},
+ {n:'处女座',e:'土象',d:'8.23 - 9.22',c:'#a57d2d',
+  t:'细心认真、追求完美、分析能力强、做事靠谱，但有时挑剔、爱钻牛角尖。',
+  s:'灰色', num:'6', mb:'ISTJ / ISFJ / INTJ'},
+ {n:'天秤座',e:'风象',d:'9.23 - 10.23',c:'#3787af',
+  t:'优雅随和、公正讲理、擅长交际、追求和谐，但有时优柔寡断。',
+  s:'粉色', num:'7', mb:'ENFJ / ESFJ / ENFP'},
+ {n:'天蝎座',e:'水象',d:'10.24 - 11.22',c:'#5a64b4',
+  t:'深情专一、意志坚定、洞察力强、有神秘感，但有时占有欲强、爱记仇。',
+  s:'黑色', num:'8', mb:'INTJ / INFJ / ISTP'},
+ {n:'射手座',e:'火象',d:'11.23 - 12.21',c:'#e15a37',
+  t:'乐观开朗、热爱自由、喜欢冒险、心胸开阔，但有时粗心、不够靠谱。',
+  s:'紫色', num:'9', mb:'ENFP / ESFP / ENTP'},
+ {n:'摩羯座',e:'土象',d:'12.22 - 1.19',c:'#a57d2d',
+  t:'勤奋自律、责任感强、有目标有野心、踏实上进，但有时严肃、不善表达。',
+  s:'棕色', num:'10', mb:'INTJ / ISTJ / ENTJ'},
+ {n:'水瓶座',e:'风象',d:'1.20 - 2.18',c:'#3787af',
+  t:'独立创新、理性客观、思想前卫、重视自由，但有时叛逆、显得冷漠。',
+  s:'蓝色', num:'11', mb:'INTP / ENTP / INFJ'},
+ {n:'双鱼座',e:'水象',d:'2.19 - 3.20',c:'#5a64b4',
+  t:'浪漫温柔、想象力丰富、同理心强、有艺术气质，但有时多愁善感、逃避现实。',
+  s:'海蓝', num:'12', mb:'INFP / INFJ / ISFP'},
+];
+
+const ELE = {
+ '火象':{c:'#e15a37', t:'热情主动 · 直率冲动 · 行动力强', dir:'偏 E 外向 + P 知觉', mb:'ENFP / ESTP / ESFP',
+   pair:'火 + 风（火借风势，绝配）', pairE:'风象', best:'白羊 / 狮子 / 射手', bestE:'火象 + 风象'},
+ '土象':{c:'#a57d2d', t:'务实稳重 · 踏实可靠 · 现实理性', dir:'偏 S 实感 + J 判断', mb:'ISTJ / ESTJ / ISFJ',
+   pair:'土 + 水（土蓄水养，绝配）', pairE:'水象', best:'金牛 / 处女 / 摩羯', bestE:'土象 + 水象'},
+ '风象':{c:'#3787af', t:'理性灵活 · 善于社交 · 爱思考', dir:'偏 N 直觉 + T 思考', mb:'INTP / ENTP / ENTJ',
+   pair:'风 + 火（火借风势，绝配）', pairE:'火象', best:'双子 / 天秤 / 水瓶', bestE:'风象 + 火象'},
+ '水象':{c:'#5a64b4', t:'感性敏感 · 直觉力强 · 深情专一', dir:'偏 F 情感 + N 直觉', mb:'INFJ / INFP / ENFJ',
+   pair:'水 + 土（土蓄水养，绝配）', pairE:'土象', best:'巨蟹 / 天蝎 / 双鱼', bestE:'水象 + 土象'},
+};
+
+const ELE_PAIR = {
+ '火象':'火 + 风绝配（火借风势）｜火 + 水相克（水火难容）｜火 + 火激情但易冲突',
+ '土象':'土 + 水绝配（土蓄水养）｜土 + 风平淡需磨合｜土 + 土安稳但易沉闷',
+ '风象':'风 + 火绝配（火借风势）｜风 + 土平淡需磨合｜风 + 风默契但易飘忽',
+ '水象':'水 + 土绝配（土蓄水养）｜水 + 火相克（水火难容）｜水 + 水深情但易情绪化',
+};
+
+const MBTI = {
+ 'INTJ':{cn:'建筑师',g:'分析家 NT',c:'#5064b4',t:'独立有远见的战略家，理性、有计划、追求卓越。',pair:'互补型：ENFP / ENTP'},
+ 'INTP':{cn:'逻辑学家',g:'分析家 NT',c:'#5064b4',t:'爱钻研的发明家，思维缜密、热爱探索原理。',pair:'互补型：ENFJ / ENTJ'},
+ 'ENTJ':{cn:'指挥官',g:'分析家 NT',c:'#5064b4',t:'果断高效的天生领导，目标导向、执行力强。',pair:'互补型：INFP / INTP'},
+ 'ENTP':{cn:'辩论家',g:'分析家 NT',c:'#5064b4',t:'机敏善辩的点子王，思维活跃、敢于挑战。',pair:'互补型：INFJ / INTJ'},
+ 'INFJ':{cn:'提倡者',g:'外交家 NF',c:'#9664be',t:'有理想的深藏助人者，洞察人心、温和坚定。',pair:'互补型：ENTP / ENFP'},
+ 'INFP':{cn:'调停者',g:'外交家 NF',c:'#9664be',t:'内心丰富的理想主义者，真诚善良、重视价值。',pair:'互补型：ENTJ / ENFJ'},
+ 'ENFJ':{cn:'主人公',g:'外交家 NF',c:'#9664be',t:'感染力强的引领者，善于鼓舞、关心他人。',pair:'互补型：INTP / ISTP'},
+ 'ENFP':{cn:'竞选者',g:'外交家 NF',c:'#9664be',t:'热情乐观的活力派，创意满满、感染力十足。',pair:'互补型：INTJ / INFJ'},
+ 'ISTJ':{cn:'物流师',g:'守护者 SJ',c:'#328a5a',t:'踏实可靠的实干家，负责守序、讲原则。',pair:'互补型：ESFP / ESTP'},
+ 'ISFJ':{cn:'守卫者',g:'守护者 SJ',c:'#328a5a',t:'温暖细心的守护者，默默付出、体贴入微。',pair:'互补型：ESTP / ESFP'},
+ 'ESTJ':{cn:'总经理',g:'守护者 SJ',c:'#328a5a',t:'执行有力的秩序控，务实高效、注重结果。',pair:'互补型：ISFP / INFP'},
+ 'ESFJ':{cn:'执政官',g:'守护者 SJ',c:'#328a5a',t:'热心周到的协调者，善于照顾、维系关系。',pair:'互补型：ISTP / INTP'},
+ 'ISTP':{cn:'鉴赏家',g:'探险家 SP',c:'#dc8c28',t:'冷静灵活的动手派，善于解决实际问题。',pair:'互补型：ESFJ / ENFJ'},
+ 'ISFP':{cn:'探险家',g:'探险家 SP',c:'#dc8c28',t:'温和随性的创作者，安静真诚、追求美感。',pair:'互补型：ESTJ / ENTJ'},
+ 'ESTP':{cn:'企业家',g:'探险家 SP',c:'#dc8c28',t:'敢闯敢干的行动派，灵活应变、精力充沛。',pair:'互补型：ISFJ / INFJ'},
+ 'ESFP':{cn:'表演者',g:'探险家 SP',c:'#dc8c28',t:'享受当下的开心果，热情外向、有感染力。',pair:'互补型：ISTJ / INTJ'},
+};
+
+// ============ 初始化下拉 ============
+const $ = id => document.getElementById(id);
+(function init(){
+  let y = '';
+  for(let i=2025;i>=1950;i--) y += `<option value="${i}">${i}年</option>`;
+  $('y').innerHTML = y;
+  let m = '';
+  for(let i=1;i<=12;i++) m += `<option value="${i}">${i}月</option>`;
+  $('m').innerHTML = m;
+  let d = '';
+  for(let i=1;i<=31;i++) d += `<option value="${i}">${i}日</option>`;
+  $('d').innerHTML = d;
+  let mb = '';
+  for(const k in MBTI){ mb += `<option value="${k}">${k} · ${MBTI[k].cn}</option>`; }
+  $('mbti').innerHTML = `<option value="">— 不填（跳过 MBTI）—</option>` + mb;
+})();
+
+function getZodiac(m, d){
+  const ranges = [
+    [3,21,4,19,0],[4,20,5,20,1],[5,21,6,21,2],[6,22,7,22,3],
+    [7,23,8,22,4],[8,23,9,22,5],[9,23,10,23,6],[10,24,11,22,7],
+    [11,23,12,21,8],[12,22,1,19,9],[1,20,2,18,10],[2,19,3,20,11],
+  ];
+  for(const [m1,d1,m2,d2,idx] of ranges){
+    if((m===m1&&d>=d1)||(m===m2&&d<=d2)) return ZODIAC[idx];
+  }
+  // 摩羯跨年边界（12.22-12.31 已覆盖；1.1-1.19 也覆盖），兜底
+  if(m===12&&d>=22) return ZODIAC[9];
+  return ZODIAC[9];
+}
+
+function analyze(){
+  const m = parseInt($('m').value), d = parseInt($('d').value);
+  const z = getZodiac(m, d);
+  const el = ELE[z.e];
+  const mbKey = $('mbti').value;
+  const mb = mbKey ? MBTI[mbKey] : null;
+
+  const daysInMonth = [0,31,29,31,30,31,30,31,31,30,31,30,31];
+  if(d > daysInMonth[m]){ alert('该月份没有这一天，请重新选择日期'); return; }
+
+  let html = '';
+
+  // 主卡片
+  html += `<div class="hero">
+    <div class="z-name" style="color:${z.c}">${z.n}</div>
+    <div class="z-sub">${z.d} · 幸运色 ${z.s}</div>
+    <div class="z-ele">四象：<b style="background:${el.c}">${z.e}</b></div>
+    <div style="margin-top:10px;font-size:14px;color:#475569">${z.t}</div>
+  </div>`;
+
+  // 四象卡片
+  html += `<div class="block">
+    <h3 style="border-color:${el.c}">四象 · ${z.e} 特点</h3>
+    <p>${el.t}</p>
+    <p><b>MBTI 倾向：</b>${el.dir}</p>
+    <p><b>代表类型：</b>${el.mb}</p>
+    <p style="margin-top:8px"><b>最佳配对：</b>${el.pair}</p>
+  </div>`;
+
+  // 星座配对
+  html += `<div class="block">
+    <h3 style="border-color:${el.c}">星座配对倾向</h3>
+    <p>${z.n}属于<b>${z.e}</b>，最佳配对星座：<b>${el.best}</b>（同象或${el.pairE}）。</p>
+    <p style="font-size:13px;color:#94a3b8">四象配对规律：${ELE_PAIR[z.e]}</p>
+  </div>`;
+
+  // MBTI（可选）
+  if(mb){
+    html += `<div class="block">
+      <h3 style="border-color:${mb.c}">MBTI · ${mbKey}（${mb.cn}）</h3>
+      <p><span class="tag" style="background:${mb.c}">${mb.g}</span></p>
+      <p>${mb.t}</p>
+      <p><b>配对建议：</b>${mb.pair}</p>
+    </div>`;
+  }
+
+  // 三要素综合小结
+  const mbDir = mb ? ` + ${mbKey}（${mb.g}）` : '';
+  html += `<div class="block">
+    <h3 style="border-color:#4f46e5">三要素综合小结</h3>
+    <p>你的分析组合：<b>${z.n}（${z.e}）${mbDir}</b></p>
+    <p>${z.n}属于${z.e}，性格底色是「${el.t}」；${mb ? `MBTI ${mbKey} 的「${mb.t}」与星座特质` : 'MBTI 未填，可补充后看更完整的人格画像'}。</p>
+    <p style="margin-top:6px">性格不分好坏，了解自己是为了更好地发挥长处、经营关系～</p>
+  </div>`;
+
+  html += `<button class="reset" onclick="reset()">重新分析</button>`;
+
+  $('result').innerHTML = html;
+  $('home').classList.add('hidden');
+  $('result').classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+
+function reset(){
+  $('result').classList.add('hidden');
+  $('home').classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
