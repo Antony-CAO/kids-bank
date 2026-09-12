@@ -42,6 +42,8 @@ select{width:100%;height:46px;border:1px solid var(--line);border-radius:10px;pa
 .chk input{width:18px;height:18px;accent-color:#4f46e5}
 .birth-info{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px;font-size:13px}
 .birth-info span{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;padding:3px 12px;color:#334155}
+.backtop{display:block;width:100%;height:46px;border:1px solid #c7d2fe;background:#eef2ff;color:#4f46e5;border-radius:12px;font-size:15px;font-weight:600;margin-top:16px}
+.backtop:active{opacity:.8}
 
 /* 结果区 */
 .tag{display:inline-block;font-size:12px;padding:3px 10px;border-radius:20px;color:#fff;margin-right:6px;margin-bottom:4px}
@@ -354,6 +356,9 @@ function analyze(){
 
   let html = '';
 
+  // 顶部返回首页
+  html += `<button class="backtop" onclick="reset()">← 返回首页 · 再查一个人</button>`;
+
   // 主卡片
   html += `<div class="hero">
     <div class="z-name" style="color:${z.c}">${z.n}</div>
@@ -402,7 +407,7 @@ function analyze(){
     <p style="margin-top:6px">性格不分好坏，了解自己是为了更好地发挥长处、经营关系～</p>
   </div>`;
 
-  html += `<button class="reset" onclick="reset()">重新分析</button>`;
+  html += `<button class="reset" onclick="reset()">← 返回首页 · 再查一个人</button>`;
 
   $('result').innerHTML = html;
   $('home').classList.add('hidden');
