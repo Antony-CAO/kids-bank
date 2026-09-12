@@ -50,6 +50,11 @@ select{width:100%;height:46px;border:1px solid var(--line);border-radius:10px;pa
 .match-item{flex:1;min-width:100px;text-align:center;padding:10px 6px;border-radius:10px;color:#fff;font-size:13px}
 .note{margin-top:16px;background:#f3efe6;border-radius:12px;padding:12px 14px;font-size:12px;color:#5b5144}
 .hidden{display:none}
+/* 二维码区 */
+.qr-box{display:flex;align-items:center;gap:14px;margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#f8f9fa}
+.qr-box img{width:100px;height:100px;border-radius:8px;flex-shrink:0}
+.qr-text{font-size:13px;color:#475569;line-height:1.5}
+.qr-link{font-size:11px;color:#aab}
 .footer{text-align:center;font-size:11px;color:#aab;margin-top:24px}
 </style>
 </head>
@@ -80,6 +85,12 @@ select{width:100%;height:46px;border:1px solid var(--line);border-radius:10px;pa
         <option value="">— 不填（跳过 MBTI）—</option>
       </select>
       <div class="opt-hint">不知道自己的类型可先跳过，只看星座四象</div>
+
+      <!-- MBTI 测试二维码 -->
+      <div class="qr-box">
+        <img src="https://antony-cao.github.io/kids-bank/mbti_qrcode.png" alt="MBTI测试二维码" onerror="this.style.display='none'">
+        <div class="qr-text">不知道自己的 MBTI？<br>扫左侧二维码，免费测一下<br><span class="qr-link">16personalities.com · 约10分钟 · 中文版</span></div>
+      </div>
 
       <button class="btn" onclick="analyze()">开始分析</button>
     </div>
