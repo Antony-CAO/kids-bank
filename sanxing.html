@@ -33,6 +33,15 @@ select{width:100%;height:46px;border:1px solid var(--line);border-radius:10px;pa
 .btn{width:100%;height:52px;border:none;border-radius:14px;font-size:17px;font-weight:600;color:#fff;background:linear-gradient(135deg,#4f46e5,#7c3aed);margin-top:18px;letter-spacing:2px}
 .btn:active{opacity:.85}
 .reset{width:100%;height:40px;border:1px solid var(--line);border-radius:10px;font-size:14px;color:var(--gray);background:#fff;margin-top:10px}
+/* 阳历/农历切换 */
+.seg{display:flex;gap:8px;margin-bottom:10px}
+.seg-btn{flex:1;height:42px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:14px;color:var(--gray);font-weight:500}
+.seg-btn.active{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-color:transparent}
+.leap-row{margin-top:8px}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray);margin:0}
+.chk input{width:18px;height:18px;accent-color:#4f46e5}
+.birth-info{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px;font-size:13px}
+.birth-info span{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;padding:3px 12px;color:#334155}
 
 /* 结果区 */
 .tag{display:inline-block;font-size:12px;padding:3px 10px;border-radius:20px;color:#fff;margin-right:6px;margin-bottom:4px}
@@ -72,13 +81,20 @@ select{width:100%;height:46px;border:1px solid var(--line);border-radius:10px;pa
   <div id="home">
     <div class="card">
       <h2><span class="dot" style="background:var(--fire)"></span>输入你的信息</h2>
-      <label>出生年月日（阳历）· 必填</label>
+      <label>出生日期 · 必填（阳历 / 农历 二选一）</label>
+      <div class="seg">
+        <button type="button" class="seg-btn active" data-cal="solar" onclick="setCal('solar')">阳历（公历）</button>
+        <button type="button" class="seg-btn" data-cal="lunar" onclick="setCal('lunar')">农历</button>
+      </div>
       <div class="row">
         <select id="y"></select>
         <select id="m"></select>
         <select id="d"></select>
       </div>
-      <div class="opt-hint">由出生日期自动得出你的星座和四象</div>
+      <div class="leap-row hidden" id="leapRow">
+        <label class="chk"><input type="checkbox" id="leapChk"> 闰月（该年该月有闰月时勾选）</label>
+      </div>
+      <div class="opt-hint" id="calHint">阳历（公历）日期，直接计算星座</div>
 
       <label>MBTI 类型 · 可选（可不填）</label>
       <select id="mbti">
@@ -180,6 +196,102 @@ const MBTI = {
  'ESFP':{cn:'表演者',g:'探险家 SP',c:'#dc8c28',t:'享受当下的开心果，热情外向、有感染力。',pair:'互补型：ISTJ / INTJ'},
 };
 
+// ============ 农历/公历转换 ============
+var lunarInfo=[0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
+0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
+0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,
+0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
+0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,
+0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,
+0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,
+0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,
+0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,
+0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,
+0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
+0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
+0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
+0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
+0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,
+0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,
+0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,
+0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,
+0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,
+0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,
+0x0d520];
+function lYearDays(y){var i,sum=348;for(i=0x8000;i>0x8;i>>=1){sum+=(lunarInfo[y-1900]&i)?1:0;}return sum+leapDays(y);}
+function leapMonth(y){return lunarInfo[y-1900]&0xf;}
+function leapDays(y){if(leapMonth(y)){return (lunarInfo[y-1900]&0x10000)?30:29;}return 0;}
+function monthDays(y,m){return (lunarInfo[y-1900]&(0x10000>>m))?30:29;}
+function lunar2solar(ly,lm,ld,isLeap){
+  var offset=0;
+  for(var y=1900;y<ly;y++) offset+=lYearDays(y);
+  var leap=leapMonth(ly);
+  for(var m=1;m<lm;m++){ offset+=monthDays(ly,m); if(m===leap) offset+=leapDays(ly); }
+  if(isLeap) offset+=monthDays(ly,lm);
+  offset+=(ld-1);
+  var dt=new Date(Date.UTC(1900,0,31)+offset*86400000);
+  return {y:dt.getUTCFullYear(),m:dt.getUTCMonth()+1,d:dt.getUTCDate()};
+}
+function solar2lunar(sy,sm,sd){
+  var offset=Math.round((Date.UTC(sy,sm-1,sd)-Date.UTC(1900,0,31))/86400000);
+  var y=1900,temp=0;
+  for(;y<2101&&offset>0;y++){ temp=lYearDays(y); offset-=temp; }
+  if(offset<0){ offset+=temp; y--; }
+  var leap=leapMonth(y), isLeap=false, m=1;
+  for(;m<13&&offset>0;m++){
+    if(leap>0 && m===leap+1 && !isLeap){ --m; isLeap=true; temp=leapDays(y); }
+    else { temp=monthDays(y,m); }
+    if(isLeap && m===leap+1) isLeap=false;
+    offset-=temp;
+  }
+  if(offset===0 && leap>0 && m===leap+1){ if(isLeap){isLeap=false;} else {isLeap=true; --m;} }
+  if(offset<0){ offset+=temp; --m; }
+  return {y:y,m:m,d:offset+1,isLeap:isLeap};
+}
+
+// ============ 日期显示辅助 ============
+const MONTH_CN=['正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','冬月','腊月'];
+const DAY_CN=['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+let calMode='solar';
+
+function setCal(mode){
+  calMode=mode;
+  const btns=document.querySelectorAll('.seg-btn');
+  for(let i=0;i<btns.length;i++){ btns[i].classList.toggle('active', btns[i].getAttribute('data-cal')===mode); }
+  let mo='';
+  if(mode==='solar'){ for(let i=1;i<=12;i++) mo+=`<option value="${i}">${i}月</option>`; }
+  else { for(let i=1;i<=12;i++) mo+=`<option value="${i}">${MONTH_CN[i-1]}</option>`; }
+  $('m').innerHTML=mo;
+  $('m').value = (mode==='lunar'? 4 : 5);
+  $('y').value = 1990;
+  $('calHint').textContent = (mode==='solar') ? '阳历（公历）日期，直接计算星座' : '农历日期，自动换算成阳历后计算星座';
+  updateDays();
+}
+
+function updateDays(){
+  const y=parseInt($('y').value), m=parseInt($('m').value);
+  let maxD=31, isLeap=false;
+  if(calMode==='lunar'){
+    isLeap = $('leapChk').checked && (leapMonth(y)===m);
+    maxD = isLeap ? leapDays(y) : monthDays(y,m);
+  } else {
+    maxD=[0,31,28,31,30,31,30,31,31,30,31,30,31][m];
+    if(m===2 && (y%4===0 && (y%100!==0 || y%400===0))) maxD=29;
+  }
+  const cur=parseInt($('d').value)||1;
+  let dOpt='';
+  for(let i=1;i<=maxD;i++) dOpt+=`<option value="${i}">${calMode==='lunar'?DAY_CN[i-1]:i+'日'}</option>`;
+  $('d').innerHTML=dOpt;
+  $('d').value=Math.min(cur,maxD);
+  // 闰月勾选框：仅当农历该年该月存在闰月时显示
+  if(calMode==='lunar' && leapMonth(y)===m){
+    $('leapRow').classList.remove('hidden');
+  } else {
+    $('leapRow').classList.add('hidden');
+    $('leapChk').checked=false;
+  }
+}
+
 // ============ 初始化下拉 ============
 const $ = id => document.getElementById(id);
 (function init(){
@@ -195,6 +307,10 @@ const $ = id => document.getElementById(id);
   let mb = '';
   for(const k in MBTI){ mb += `<option value="${k}">${k} · ${MBTI[k].cn}</option>`; }
   $('mbti').innerHTML = `<option value="">— 不填（跳过 MBTI）—</option>` + mb;
+  $('y').addEventListener('change', updateDays);
+  $('m').addEventListener('change', updateDays);
+  $('leapChk').addEventListener('change', updateDays);
+  setCal('solar');
 })();
 
 function getZodiac(m, d){
@@ -212,14 +328,29 @@ function getZodiac(m, d){
 }
 
 function analyze(){
-  const m = parseInt($('m').value), d = parseInt($('d').value);
-  const z = getZodiac(m, d);
+  const y = parseInt($('y').value), m = parseInt($('m').value), d = parseInt($('d').value);
+  let lunar, sy, sm, sd;
+  if(calMode==='solar'){
+    sy=y; sm=m; sd=d;
+    let dim=[0,31,28,31,30,31,30,31,31,30,31,30,31][m];
+    if(m===2 && (y%4===0 && (y%100!==0 || y%400===0))) dim=29;
+    if(d > dim){ alert('该月份没有这一天，请重新选择日期'); return; }
+    lunar = solar2lunar(sy, sm, sd);
+  } else {
+    const isLeap = $('leapChk').checked && (leapMonth(y)===m);
+    const maxD = isLeap ? leapDays(y) : monthDays(y, m);
+    if(d > maxD){ alert('该农历月没有这一天，请重新选择日期'); return; }
+    const s = lunar2solar(y, m, d, isLeap);
+    sy=s.y; sm=s.m; sd=s.d;
+    lunar = {y:y, m:m, d:d, isLeap:isLeap};
+  }
+  const z = getZodiac(sm, sd);
   const el = ELE[z.e];
   const mbKey = $('mbti').value;
   const mb = mbKey ? MBTI[mbKey] : null;
 
-  const daysInMonth = [0,31,29,31,30,31,30,31,31,30,31,30,31];
-  if(d > daysInMonth[m]){ alert('该月份没有这一天，请重新选择日期'); return; }
+  const animal = '鼠牛虎兔龙蛇马羊猴鸡狗猪'[(lunar.y-4)%12];
+  const lunarStr = `${lunar.y}年${lunar.isLeap?'闰':''}${MONTH_CN[lunar.m-1]}${DAY_CN[lunar.d-1]}`;
 
   let html = '';
 
@@ -228,6 +359,11 @@ function analyze(){
     <div class="z-name" style="color:${z.c}">${z.n}</div>
     <div class="z-sub">${z.d} · 幸运色 ${z.s}</div>
     <div class="z-ele">四象：<b style="background:${el.c}">${z.e}</b></div>
+    <div class="birth-info">
+      <span>阳历 ${sy}年${sm}月${sd}日</span>
+      <span>农历 ${lunarStr}</span>
+      <span>生肖 ${animal}</span>
+    </div>
     <div style="margin-top:10px;font-size:14px;color:#475569">${z.t}</div>
   </div>`;
 
